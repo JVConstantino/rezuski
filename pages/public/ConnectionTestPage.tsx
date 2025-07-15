@@ -3,19 +3,39 @@ import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import BottomNavBar from '../../components/BottomNavBar';
-import { ShieldIcon, XIcon } from '../../components/Icons';
+import { ShieldIcon, XIcon, CheckCircleIcon } from '../../components/Icons';
+import { supabase } from '../../lib/supabaseClient';
 
-type Status = 'pending' | 'disabled' | 'error';
+type Status = 'pending' | 'connected' | 'error';
 
 const ConnectionTestPage: React.FC = () => {
     const [status, setStatus] = useState<Status>('pending');
+    const [errorMessage, setErrorMessage] = useState<string>('');
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            // Since Supabase is disabled, we directly set the status to 'disabled'.
-            setStatus('disabled');
-        }, 1000);
+        const testConnection = async () => {
+            try {
+                // Test the connection by trying to fetch from a simple query
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    console.error('Supabase connection error:', error);
+                    setErrorMessage(error.message);
+                    setStatus('error');
+                } else {
+                    setStatus('connected');
+                }
+            } catch (err) {
+                console.error('Connection test failed:', err);
+                setErrorMessage(err instanceof Error ? err.message : 'Erro desconhecido');
+                setStatus('error');
+            }
+        };
 
+        const timer = setTimeout(testConnection, 1000);
         return () => clearTimeout(timer);
     }, []);
 
@@ -29,25 +49,26 @@ const ConnectionTestPage: React.FC = () => {
                         <p className="text-slate-500">Aguarde, estamos checando o status da conexão.</p>
                     </div>
                 );
-            case 'disabled':
+            case 'connected':
                 return (
                     <div className="text-center">
-                        <ShieldIcon className="w-16 h-16 mx-auto text-slate-400" />
-                        <h2 className="mt-4 text-2xl font-bold text-slate-800">Conexão Desativada</h2>
+                        <CheckCircleIcon className="w-16 h-16 mx-auto text-green-500" />
+                        <h2 className="mt-4 text-2xl font-bold text-green-600">Conexão Ativa</h2>
                         <p className="text-slate-600 mt-2">
-                            A integração com o banco de dados (Supabase) está temporariamente desativada para desenvolvimento.
+                            A conexão com o banco de dados (Supabase) está funcionando corretamente.
                         </p>
-                        <p className="text-slate-500 mt-1 text-sm">O aplicativo está operando com dados de exemplo locais.</p>
+                        <p className="text-slate-500 mt-1 text-sm">Todos os dados estão sendo sincronizados em tempo real.</p>
                     </div>
                 );
-            case 'error': // Fallback, though not expected in disabled mode
+            case 'error':
                  return (
                     <div className="text-center">
                         <div className="mx-auto w-16 h-16 flex items-center justify-center bg-red-100 rounded-full">
                             <XIcon className="w-10 h-10 text-red-600" />
                         </div>
                         <h2 className="mt-4 text-2xl font-bold text-red-600">Ocorreu um Erro</h2>
-                        <p className="text-slate-500">Não foi possível verificar o status da conexão.</p>
+                        <p className="text-slate-600 mt-2">Não foi possível conectar ao banco de dados.</p>
+                        <p className="text-slate-500 mt-1 text-sm">{errorMessage}</p>
                     </div>
                 );
         }
