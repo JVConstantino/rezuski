@@ -1,0 +1,87 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Property, PropertyPurpose } from '../types';
+import { BedIcon, BathIcon, MaximizeIcon, HeartIcon, MapPinIcon } from './Icons';
+
+interface PropertyCardProps {
+  property: Property;
+}
+
+const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+    const getPriceDisplay = (p: Property) => {
+        let price: number | undefined;
+        let suffix = '';
+
+        switch(p.purpose) {
+            case PropertyPurpose.SALE:
+                price = p.salePrice;
+                break;
+            case PropertyPurpose.RENT:
+                price = p.rentPrice;
+                suffix = '/mês';
+                break;
+            case PropertyPurpose.SEASONAL:
+                price = p.rentPrice;
+                suffix = '/diária';
+                break;
+            default:
+                return { text: 'Sob consulta', suffix: '' };
+        }
+
+        const formattedPrice = price ? `R$ ${price.toLocaleString('pt-BR')}` : 'Sob consulta';
+        return { text: formattedPrice, suffix };
+    };
+
+  const { text: displayPrice, suffix: priceSuffix } = getPriceDisplay(property);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-lg">
+      <div className="relative">
+        <img src={property.images[0]} alt={property.title} className="w-full h-52 object-cover" />
+        {property.isPopular && (
+          <div className="absolute top-3 left-3 bg-primary-blue text-white text-xs font-bold px-2 py-1 rounded">
+            POPULAR
+          </div>
+        )}
+        <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow hover:bg-slate-100 transition-colors">
+          <HeartIcon className="w-5 h-5 text-slate-600" />
+        </button>
+      </div>
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex items-center justify-between mb-2">
+            <p className="text-xl font-bold text-primary-blue">
+                {displayPrice}
+                {priceSuffix && <span className="text-sm font-normal text-slate-500">{priceSuffix}</span>}
+            </p>
+        </div>
+        <h3 className="text-lg font-semibold text-slate-800 truncate">{property.title}</h3>
+        <p className="text-slate-500 text-sm truncate flex items-center mt-1">
+            <MapPinIcon className="w-4 h-4 mr-1.5 flex-shrink-0" />
+            {property.address}
+        </p>
+        <hr className="my-4 border-t border-slate-200" />
+        <div className="flex justify-between text-sm text-slate-600">
+          <div className="flex items-center">
+            <BedIcon className="w-4 h-4 mr-2 text-primary-blue" />
+            <span>{property.bedrooms} Quartos</span>
+          </div>
+          <div className="flex items-center">
+            <BathIcon className="w-4 h-4 mr-2 text-primary-blue" />
+            <span>{property.bathrooms} Banheiros</span>
+          </div>
+          <div className="flex items-center">
+            <MaximizeIcon className="w-4 h-4 mr-2 text-primary-blue" />
+            <span>{property.areaM2} m²</span>
+          </div>
+        </div>
+        <div className="mt-auto pt-5">
+            <Link to={`/property/${property.id}`} className="w-full block text-center bg-primary-green text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
+                Ver Imóvel
+            </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PropertyCard;
