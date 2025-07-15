@@ -115,34 +115,3 @@ export const useCategories = () => {
     }
     return context;
 };
-            setLoading(false);
-        }, 100);
-    }, []);
-
-    const addCategory = async (category: Omit<Category, 'id'>) => {
-        const newCategory = { ...category, id: `cat-${Date.now()}` };
-        setCategories(prev => [...prev, newCategory]);
-    };
-
-    const updateCategory = async (updatedCategory: Category) => {
-        setCategories(prev => prev.map(c => c.id === updatedCategory.id ? updatedCategory : c));
-    };
-
-    const deleteCategory = async (categoryId: string) => {
-        setCategories(prev => prev.filter(c => c.id !== categoryId));
-    };
-
-    return (
-        <CategoryContext.Provider value={{ categories, addCategory, updateCategory, deleteCategory, loading }}>
-            {!loading && children}
-        </CategoryContext.Provider>
-    );
-};
-
-export const useCategories = () => {
-    const context = useContext(CategoryContext);
-    if (context === undefined) {
-        throw new Error('useCategories must be used within a CategoryProvider');
-    }
-    return context;
-};

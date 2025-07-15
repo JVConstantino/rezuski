@@ -115,35 +115,3 @@ export const useResources = () => {
     }
     return context;
 };
-            setLoading(false);
-        }, 100);
-    }, []);
-
-
-    const addResource = async (resource: Omit<ResourceDocument, 'id'>) => {
-        const newResource = { ...resource, id: `res-${Date.now()}` };
-        setResources(prev => [...prev, newResource]);
-    };
-
-    const updateResource = async (updatedResource: ResourceDocument) => {
-        setResources(prev => prev.map(r => r.id === updatedResource.id ? updatedResource : r));
-    };
-
-    const deleteResource = async (resourceId: string) => {
-        setResources(prev => prev.filter(r => r.id !== resourceId));
-    };
-
-    return (
-        <ResourceContext.Provider value={{ resources, addResource, updateResource, deleteResource, loading }}>
-            {!loading && children}
-        </ResourceContext.Provider>
-    );
-};
-
-export const useResources = () => {
-    const context = useContext(ResourceContext);
-    if (context === undefined) {
-        throw new Error('useResources must be used within a ResourceProvider');
-    }
-    return context;
-};
