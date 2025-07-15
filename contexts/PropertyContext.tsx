@@ -45,8 +45,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
                 setLoading(false);
             }
         };
-
-        fetchProperties();
     }, []);
 
     const addProperty = async (property: Property) => {
