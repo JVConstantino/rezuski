@@ -130,37 +130,3 @@ export const useAuth = () => {
     }
     return context;
 };
-            closeLoginModal();
-            navigate('/admin/dashboard', { replace: true });
-        } else {
-            alert('Credenciais inválidas ou o usuário não é um administrador.');
-        }
-    };
-
-    const logout = async () => {
-        setUser(null);
-        navigate('/');
-    };
-
-    const openLoginModal = () => setLoginModalOpen(true);
-    const closeLoginModal = () => setLoginModalOpen(false);
-    
-    // An user is only authenticated in the app if they have a user object AND their role is ADMIN.
-    const isAuthenticated = !!user && user.role === UserRole.ADMIN;
-
-    const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal };
-
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};

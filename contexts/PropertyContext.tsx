@@ -140,39 +140,3 @@ export const useProperties = () => {
     }
     return context;
 };
-            setLoading(false);
-        }, 200);
-    }, []);
-
-    const addProperty = async (property: Property) => {
-        const newProperty = { ...property, id: `prop-${Date.now()}` };
-        setProperties(prev => [newProperty, ...prev]);
-    };
-
-    const updateProperty = async (updatedProperty: Property) => {
-        setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
-    };
-    
-    const toggleArchiveProperty = async (propertyId: string) => {
-        const propertyToToggle = properties.find(p => p.id === propertyId);
-        if (!propertyToToggle) return;
-
-        const newStatus = propertyToToggle.status === PropertyStatus.ARCHIVED ? PropertyStatus.AVAILABLE : PropertyStatus.ARCHIVED;
-        
-        setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, status: newStatus } : p));
-    }
-
-    return (
-        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, loading }}>
-            {!loading && children}
-        </PropertyContext.Provider>
-    );
-};
-
-export const useProperties = () => {
-    const context = useContext(PropertyContext);
-    if (context === undefined) {
-        throw new Error('useProperties must be used within a PropertyProvider');
-    }
-    return context;
-};
