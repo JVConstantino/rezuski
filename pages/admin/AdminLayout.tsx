@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { 
@@ -6,6 +7,7 @@ import {
     BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon 
 } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { LOGO_URL } from '../../constants';
 
 const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
     const navLinks = [
@@ -17,7 +19,6 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
         { name: "Mensagens", path: "/admin/messages", icon: <MessageSquareIcon className="w-5 h-5"/> },
         { name: "Relatórios", path: "/admin/reports", icon: <BarChartIcon className="w-5 h-5"/> },
     ];
-    const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
     
     return (
         <>
@@ -38,7 +39,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
             >
                 <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200">
                      <ReactRouterDOM.Link to="/" className="flex-shrink-0">
-                        <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
+                        <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
                     </ReactRouterDOM.Link>
                     <button onClick={onClose} className="md:hidden text-slate-500 hover:text-primary-blue" aria-label="Close menu">
                         <XIcon className="w-6 h-6" />
@@ -96,16 +97,14 @@ const AdminHeader: React.FC<{ onMenuToggle: () => void }> = ({ onMenuToggle }) =
                 </div>
             </div>
             <div className="flex items-center space-x-4 md:space-x-6">
-                 <a 
-                    href="/#/" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                 <ReactRouterDOM.Link 
+                    to="/"
                     className="flex items-center bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
-                    title="Abrir site em nova aba"
+                    title="Ver site"
                 >
                     <EyeIcon className="w-5 h-5 md:mr-2" />
                     <span className="hidden md:inline">Ver Site</span>
-                </a>
+                </ReactRouterDOM.Link>
                 <button className="text-slate-500 hover:text-primary-blue relative" aria-label="Notifications">
                     <BellIcon className="w-6 h-6"/>
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>

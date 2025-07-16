@@ -78,7 +78,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 rentPrice: String(initialData.rentPrice || ''),
                 salePrice: String(initialData.salePrice || ''),
                 propertyType: initialData.propertyType,
-                categoryId: initialData.categoryId || (categories.length > 0 ? categories[0].id : ''),
+                categoryId: initialData.categoryId || '',
                 bedrooms: String(initialData.bedrooms || ''),
                 bathrooms: String(initialData.bathrooms || ''),
                 areaM2: String(initialData.areaM2 || ''),
@@ -94,10 +94,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 isPrimary: index === 0,
             }));
             setImages(initialImages);
-        } else if (categories.length > 0) {
-            setFormData(prev => ({...prev, categoryId: categories[0].id}));
         }
-    }, [initialData, categories]);
+    }, [initialData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -279,6 +277,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
         const propertyData = {
             ...formData,
+            categoryId: formData.categoryId || undefined,
             rentPrice: formData.purpose !== PropertyPurpose.SALE ? (isNaN(parsedRentPrice) ? undefined : parsedRentPrice) : undefined,
             salePrice: formData.purpose === PropertyPurpose.SALE ? (isNaN(parsedSalePrice) ? undefined : parsedSalePrice) : undefined,
             bedrooms: isNaN(parsedBedrooms) ? undefined : parsedBedrooms,
@@ -407,7 +406,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Categoria</label>
-                                <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
+                                <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
+                                    <option value="">-- Selecione uma Categoria --</option>
                                     {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                                 </select>
                             </div>

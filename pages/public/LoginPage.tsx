@@ -1,7 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { LOGO_URL } from '../../constants';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,7 +11,6 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const { login, isAuthenticated } = useAuth();
   const navigate = ReactRouterDOM.useNavigate();
-  const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -32,7 +33,7 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <ReactRouterDOM.Link to="/" className="flex justify-center">
-          <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-20 object-contain" />
+          <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-20 object-contain" />
         </ReactRouterDOM.Link>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
           Acesse o painel

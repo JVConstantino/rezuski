@@ -3,6 +3,7 @@
 import React from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { LOGO_URL } from '../constants';
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout, openLoginModal } = useAuth();
@@ -16,15 +17,13 @@ const Header: React.FC = () => {
     { name: 'Sobre', path: '/about' },
   ];
 
-  const logoUrl = '../uploads/logo.png';
-
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 w-full border-b border-slate-200">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <ReactRouterDOM.Link to="/" className="flex-shrink-0">
-            <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
+            <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
           </ReactRouterDOM.Link>
 
           {/* Navigation Links */}

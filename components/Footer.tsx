@@ -2,10 +2,9 @@
 
 import React from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
+import { LOGO_URL } from '../constants';
 
 const Footer: React.FC = () => {
-  const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
-  
   const navLinks = [
     { name: 'Início', path: '/' },
     { name: 'Comprar', path: '/search?purpose=SALE' },
@@ -28,7 +27,7 @@ const Footer: React.FC = () => {
           {/* About */}
           <div className="col-span-1">
             <ReactRouterDOM.Link to="/">
-                <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-16 object-contain mb-4 filter brightness-0 invert" />
+                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain mb-4 filter brightness-0 invert" />
             </ReactRouterDOM.Link>
             <p className="text-slate-400 max-w-xs">Uma nova forma de encontrar o seu lar. Facilitamos para inquilinos e proprietários.</p>
           </div>

@@ -9,14 +9,12 @@ import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useCategories } from '../../contexts/CategoryContext';
-import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES } from '../../constants';
+import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
 import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, QuoteIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon } from '../../components/Icons';
 import { PropertyPurpose } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
 
-const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
-    
 const HeroSection = () => {
     const navigate = ReactRouterDOM.useNavigate();
     const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>(PropertyPurpose.RENT);
@@ -52,7 +50,7 @@ const HeroSection = () => {
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
             <AnimateOnScroll>
-                <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-24 mx-auto mb-6 object-contain" />
+                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-24 mx-auto mb-6 object-contain" />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">

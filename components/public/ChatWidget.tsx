@@ -232,7 +232,7 @@ const ChatWidget: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-4 right-4 z-40">
+        <div className="fixed bottom-20 left-4 md:bottom-4 md:right-4 md:left-auto z-50">
             {/* Chat Window */}
             {isOpen && (
                 <div className="bg-white rounded-lg shadow-2xl w-80 h-96 mb-2 flex flex-col">
