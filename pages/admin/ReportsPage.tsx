@@ -21,7 +21,7 @@ const ReportsPage: React.FC = () => {
         <StatCard title="Receita Total (Mês)" value="$45,231.89" icon={<DollarSignIcon className="w-6 h-6 text-primary-blue"/>} />
         <StatCard title="Taxa de Ocupação" value="92%" icon={<HomeIcon className="w-6 h-6 text-primary-blue"/>} />
       </div>
-      <div className="mt-8 bg-white p-12 rounded-lg shadow-sm text-center h-[calc(100vh-20rem)] flex flex-col justify-center items-center">
+      <div className="mt-8 bg-white p-12 rounded-lg shadow-sm text-center flex flex-col justify-center items-center">
         <BarChartIcon className="w-16 h-16 mx-auto text-slate-400" />
         <h2 className="mt-4 text-xl font-semibold text-slate-700">Gráficos Detalhados em Breve</h2>
         <p className="mt-2 text-slate-500">Relatórios visuais e interativos estarão disponíveis aqui em breve.</p>

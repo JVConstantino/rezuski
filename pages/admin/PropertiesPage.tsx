@@ -1,7 +1,8 @@
 
 
+
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { PropertyStatus, PropertyPurpose } from '../../types';
 import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon } from '../../components/Icons';
@@ -15,14 +16,30 @@ const PropertiesPage: React.FC = () => {
     (prop.code && prop.code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const propertyStatusDisplay: Record<string, string> = {
+    [PropertyStatus.AVAILABLE]: 'Disponível',
+    [PropertyStatus.RENTED]: 'Alugado',
+    [PropertyStatus.SOLD]: 'Vendido',
+    [PropertyStatus.ARCHIVED]: 'Arquivado',
+    [PropertyStatus.DRAFT]: 'Rascunho'
+  };
+
+  const propertyStatusColor: Record<string, string> = {
+      [PropertyStatus.AVAILABLE]: 'bg-green-100 text-green-800',
+      [PropertyStatus.RENTED]: 'bg-yellow-100 text-yellow-800',
+      [PropertyStatus.SOLD]: 'bg-blue-100 text-blue-800',
+      [PropertyStatus.ARCHIVED]: 'bg-slate-100 text-slate-800',
+      [PropertyStatus.DRAFT]: 'bg-gray-200 text-gray-800',
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Gerenciar Propriedades</h1>
-        <Link to="/admin/properties/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+        <ReactRouterDOM.Link to="/admin/properties/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
           <PlusIcon className="w-5 h-5 mr-2" />
           Adicionar Propriedade
-        </Link>
+        </ReactRouterDOM.Link>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -46,6 +63,7 @@ const PropertiesPage: React.FC = () => {
               <option>Alugado</option>
               <option>Vendido</option>
               <option>Arquivado</option>
+              <option>Rascunho</option>
             </select>
           </div>
         </div>
@@ -77,13 +95,8 @@ const PropertiesPage: React.FC = () => {
                   </td>
                   <td className="p-4 font-mono text-sm text-slate-600">{prop.code || '-'}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      prop.status === PropertyStatus.AVAILABLE ? 'bg-green-100 text-green-800' :
-                      prop.status === PropertyStatus.RENTED ? 'bg-yellow-100 text-yellow-800' :
-                      prop.status === PropertyStatus.SOLD ? 'bg-blue-100 text-blue-800' :
-                      'bg-slate-100 text-slate-800'
-                    }`}>
-                      {prop.status}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${propertyStatusColor[prop.status] || 'bg-slate-100 text-slate-800'}`}>
+                      {propertyStatusDisplay[prop.status] || prop.status}
                     </span>
                   </td>
                   <td className="p-4 text-slate-600">
@@ -98,12 +111,12 @@ const PropertiesPage: React.FC = () => {
                   <td className="p-4 text-slate-600">{prop.propertyType}</td>
                   <td className="p-4">
                     <div className="flex justify-center space-x-2">
-                      <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar">
+                      <ReactRouterDOM.Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar">
                         <EyeIcon className="w-5 h-5"/>
-                      </Link>
-                      <Link to={`/admin/properties/edit/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
+                      </ReactRouterDOM.Link>
+                      <ReactRouterDOM.Link to={`/admin/properties/edit/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
                         <EditIcon className="w-5 h-5"/>
-                      </Link>
+                      </ReactRouterDOM.Link>
                       <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title={prop.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}>
                         <ArchiveIcon className="w-5 h-5"/>
                       </button>

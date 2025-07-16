@@ -11,7 +11,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const { login } = useAuth();
 
     if (!isOpen) {
@@ -21,14 +20,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
-        
         try {
             await login(email, password);
+            // On success, the AuthContext will handle navigation
         } catch (err: any) {
             setError(err.message || 'Falha no login.');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -62,7 +58,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
-                                placeholder="seu@email.com"
+                                placeholder="admin@rezuski.com"
                             />
                         </div>
                     </div>
@@ -91,10 +87,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     <div>
                         <button
                             type="submit"
-                            disabled={loading}
                             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-green hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green"
                         >
-                            {loading ? 'Entrando...' : 'Entrar'}
+                            Entrar
                         </button>
                     </div>
                 </form>

@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
@@ -26,9 +27,9 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* About */}
           <div className="col-span-1">
-            <Link to="/">
+            <ReactRouterDOM.Link to="/">
                 <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-16 object-contain mb-4 filter brightness-0 invert" />
-            </Link>
+            </ReactRouterDOM.Link>
             <p className="text-slate-400 max-w-xs">Uma nova forma de encontrar o seu lar. Facilitamos para inquilinos e proprietários.</p>
           </div>
           
@@ -38,11 +39,11 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               {navLinks.map(link => (
                 <li key={link.name}>
-                  <Link to={link.path} className="text-slate-400 hover:text-white transition-colors">{link.name}</Link>
+                  <ReactRouterDOM.Link to={link.path} className="text-slate-400 hover:text-white transition-colors">{link.name}</ReactRouterDOM.Link>
                 </li>
               ))}
                <li>
-                  <Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">Testar Conexão</Link>
+                  <ReactRouterDOM.Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">Testar Conexão</ReactRouterDOM.Link>
                 </li>
             </ul>
           </div>

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useResources } from '../../contexts/ResourceContext';
 import { PlusIcon, EditIcon, TrashIcon, FileTextIcon } from '../../components/Icons';
 
@@ -16,10 +17,10 @@ const AdminResourcesPage: React.FC = () => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-slate-900">Gerenciar Recursos</h1>
-                <Link to="/admin/resources/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+                <ReactRouterDOM.Link to="/admin/resources/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
                     <PlusIcon className="w-5 h-5 mr-2" />
                     Adicionar Recurso
-                </Link>
+                </ReactRouterDOM.Link>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -42,9 +43,9 @@ const AdminResourcesPage: React.FC = () => {
                                     </td>
                                     <td className="p-4">
                                         <div className="flex justify-center space-x-2">
-                                            <Link to={`/admin/resources/edit/${resource.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
+                                            <ReactRouterDOM.Link to={`/admin/resources/edit/${resource.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
                                                 <EditIcon className="w-5 h-5" />
-                                            </Link>
+                                            </ReactRouterDOM.Link>
                                             <button onClick={() => handleDelete(resource.id, resource.title)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Remover">
                                                 <TrashIcon className="w-5 h-5" />
                                             </button>

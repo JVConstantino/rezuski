@@ -1,15 +1,16 @@
 
+
 import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useBrokers } from '../../contexts/BrokerContext';
 import BrokerForm from '../../components/admin/BrokerForm';
 import { Broker } from '../../types';
 import { ChevronLeftIcon } from '../../components/Icons';
 
 const EditBrokerPage: React.FC = () => {
-    const { brokerId } = useParams<{ brokerId: string }>();
+    const { brokerId } = ReactRouterDOM.useParams<{ brokerId: string }>();
     const { brokers, updateBroker } = useBrokers();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     const brokerToEdit = brokers.find(b => b.id === brokerId);
 
@@ -27,10 +28,10 @@ const EditBrokerPage: React.FC = () => {
 
     return (
         <div>
-            <Link to="/admin/brokers" className="flex items-center text-sm text-slate-600 hover:text-indigo-600 font-semibold mb-2">
+            <ReactRouterDOM.Link to="/admin/brokers" className="flex items-center text-sm text-slate-600 hover:text-indigo-600 font-semibold mb-2">
                 <ChevronLeftIcon className="w-5 h-5 mr-1" />
                 Voltar para Corretores
-            </Link>
+            </ReactRouterDOM.Link>
             <h1 className="text-3xl font-bold text-slate-900 mb-6">Editar Corretor</h1>
             <BrokerForm initialData={brokerToEdit} onSubmit={handleSubmit} isEditing={true} />
         </div>

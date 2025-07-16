@@ -20,84 +20,64 @@ export const ResourceProvider: React.FC<{ children: ReactNode }> = ({ children }
     useEffect(() => {
         const fetchResources = async () => {
             setLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('resources')
-                    .select('*')
-                    .order('title');
-
-                if (error) {
-                    console.error('Error fetching resources:', error);
-                    setResources([]);
-                } else {
-                    setResources(data || []);
-                }
-            } catch (error) {
+            const { data, error } = await supabase.from('resources').select('*');
+            if (error) {
                 console.error('Error fetching resources:', error);
                 setResources([]);
-            } finally {
-                setLoading(false);
+            } else {
+                setResources(data as ResourceDocument[]);
             }
+            setLoading(false);
         };
-
         fetchResources();
     }, []);
 
+
     const addResource = async (resource: Omit<ResourceDocument, 'id'>) => {
-        try {
-            const { data, error } = await supabase
-                .from('resources')
-                .insert([resource])
-                .select()
-                .single();
+        const { data, error } = await supabase
+            .from('resources')
+            .insert([resource])
+            .select()
+            .single();
 
-            if (error) {
-                console.error('Error adding resource:', error);
-                throw error;
-            }
-
-            setResources(prev => [...prev, data]);
-        } catch (error) {
+        if (error) {
             console.error('Error adding resource:', error);
-            throw error;
+        } else if (data) {
+            setResources(prev => [...prev, data as ResourceDocument]);
         }
     };
 
     const updateResource = async (updatedResource: ResourceDocument) => {
-        try {
-            const { error } = await supabase
-                .from('resources')
-                .update(updatedResource)
-                .eq('id', updatedResource.id);
-
-            if (error) {
-                console.error('Error updating resource:', error);
-                throw error;
-            }
-
-            setResources(prev => prev.map(r => r.id === updatedResource.id ? updatedResource : r));
-        } catch (error) {
+        const { error } = await supabase
+            .from('resources')
+            .update(updatedResource)
+            .eq('id', updatedResource.id);
+        
+        if (error) {
             console.error('Error updating resource:', error);
-            throw error;
+        } else {
+            setResources(prev => prev.map(r => r.id === updatedResource.id ? updatedResource : r));
         }
     };
 
     const deleteResource = async (resourceId: string) => {
-        try {
-            const { error } = await supabase
-                .from('resources')
-                .delete()
-                .eq('id', resourceId);
-
-            if (error) {
-                console.error('Error deleting resource:', error);
-                throw error;
+        const resourceToDelete = resources.find(r => r.id === resourceId);
+        if (resourceToDelete) {
+            const filePath = resourceToDelete.fileUrl.substring(resourceToDelete.fileUrl.lastIndexOf('public/') + 7);
+            if(filePath) {
+                await supabase.storage.from('resource-documents').remove([`public/${filePath}`]);
             }
+        }
 
-            setResources(prev => prev.filter(r => r.id !== resourceId));
-        } catch (error) {
+        const { error } = await supabase
+            .from('resources')
+            .delete()
+            .eq('id', resourceId);
+        
+        if (error) {
             console.error('Error deleting resource:', error);
-            throw error;
+        } else {
+            setResources(prev => prev.filter(r => r.id !== resourceId));
         }
     };
 

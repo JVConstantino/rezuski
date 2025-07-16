@@ -13,6 +13,7 @@ export enum PropertyStatus {
   RENTED = 'RENTED',
   SOLD = 'SOLD',
   ARCHIVED = 'ARCHIVED',
+  DRAFT = 'DRAFT',
 }
 
 export enum ApplicationStatus {
@@ -59,6 +60,11 @@ export enum PropertyType {
     TOWNHOUSE = 'Sobrado'
 }
 
+export enum MessageSender {
+  ADMIN = 'ADMIN',
+  CUSTOMER = 'CUSTOMER',
+}
+
 export interface User {
   id: string;
   email: string;
@@ -92,6 +98,7 @@ export interface Property {
   title: string;
   code?: string;
   address: string;
+  neighborhood: string;
   city: string;
   state: string;
   zipCode: string;
@@ -196,4 +203,23 @@ export interface ResourceDocument {
     id: string;
     title: string;
     fileUrl: string;
+}
+
+export interface Conversation {
+  id: string;
+  created_at: string;
+  customer_name: string;
+  customer_email: string;
+  property_id?: string;
+  last_message_at: string;
+  last_message_preview?: string;
+  admin_has_unread: boolean;
+}
+
+export interface Message {
+  id: string;
+  created_at: string;
+  conversation_id: string;
+  sender: MessageSender;
+  content: string;
 }

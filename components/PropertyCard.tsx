@@ -1,7 +1,8 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Property, PropertyPurpose } from '../types';
-import { BedIcon, BathIcon, MaximizeIcon, HeartIcon, MapPinIcon } from './Icons';
+import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon } from './Icons';
 
 interface PropertyCardProps {
   property: Property;
@@ -33,6 +34,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     };
 
   const { text: displayPrice, suffix: priceSuffix } = getPriceDisplay(property);
+  const locationDisplay = [property.neighborhood, property.city].filter(Boolean).join(', ');
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-lg">
@@ -43,9 +45,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             POPULAR
           </div>
         )}
-        <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow hover:bg-slate-100 transition-colors">
-          <HeartIcon className="w-5 h-5 text-slate-600" />
-        </button>
       </div>
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex items-center justify-between mb-2">
@@ -57,7 +56,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         <h3 className="text-lg font-semibold text-slate-800 truncate">{property.title}</h3>
         <p className="text-slate-500 text-sm truncate flex items-center mt-1">
             <MapPinIcon className="w-4 h-4 mr-1.5 flex-shrink-0" />
-            {property.address}
+            {locationDisplay || property.address}
         </p>
         <hr className="my-4 border-t border-slate-200" />
         <div className="flex justify-between text-sm text-slate-600">
@@ -75,9 +74,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         </div>
         <div className="mt-auto pt-5">
-            <Link to={`/property/${property.id}`} className="w-full block text-center bg-primary-green text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
+            <ReactRouterDOM.Link to={`/property/${property.id}`} className="w-full block text-center bg-primary-green text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
                 Ver Imóvel
-            </Link>
+            </ReactRouterDOM.Link>
         </div>
       </div>
     </div>

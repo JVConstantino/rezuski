@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
@@ -7,7 +8,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
   const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
 
   useEffect(() => {
@@ -30,9 +31,9 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex justify-center">
+        <ReactRouterDOM.Link to="/" className="flex justify-center">
           <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-20 object-contain" />
-        </Link>
+        </ReactRouterDOM.Link>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
           Acesse o painel
         </h2>
@@ -57,7 +58,7 @@ const LoginPage: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
                   placeholder="admin@rezuski.com"
                 />
               </div>
@@ -76,7 +77,7 @@ const LoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
                    placeholder="admin"
                 />
               </div>
@@ -87,7 +88,7 @@ const LoginPage: React.FC = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-blue hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue"
               >
                 Entrar
               </button>

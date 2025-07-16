@@ -20,85 +20,59 @@ export const BrokerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     useEffect(() => {
         const fetchBrokers = async () => {
             setLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('brokers')
-                    .select('*')
-                    .order('name');
-
-                if (error) {
-                    console.error('Error fetching brokers:', error);
-                    setBrokers([]);
-                } else {
-                    setBrokers(data || []);
-                }
-            } catch (error) {
+            const { data, error } = await supabase.from('brokers').select('*');
+            if (error) {
                 console.error('Error fetching brokers:', error);
                 setBrokers([]);
-            } finally {
-                setLoading(false);
+            } else {
+                setBrokers(data as Broker[]);
             }
+            setLoading(false);
         };
-
         fetchBrokers();
     }, []);
 
-    const addBroker = async (broker: Omit<Broker, 'id'>): Promise<Broker | null> => {
-        try {
-            const { data, error } = await supabase
-                .from('brokers')
-                .insert([broker])
-                .select()
-                .single();
-
-            if (error) {
-                console.error('Error adding broker:', error);
-                throw error;
-            }
-
-            setBrokers(prev => [...prev, data]);
-            return data;
-        } catch (error) {
+    const addBroker = async (broker: Omit<Broker, 'id'>) => {
+        const { data, error } = await supabase
+            .from('brokers')
+            .insert([broker])
+            .select()
+            .single();
+        
+        if (error) {
             console.error('Error adding broker:', error);
-            throw error;
+            return null;
         }
+        if (data) {
+            setBrokers(prev => [...prev, data as Broker]);
+            return data as Broker;
+        }
+        return null;
     };
 
     const updateBroker = async (updatedBroker: Broker) => {
-        try {
-            const { error } = await supabase
-                .from('brokers')
-                .update(updatedBroker)
-                .eq('id', updatedBroker.id);
+        const { error } = await supabase
+            .from('brokers')
+            .update(updatedBroker)
+            .eq('id', updatedBroker.id);
 
-            if (error) {
-                console.error('Error updating broker:', error);
-                throw error;
-            }
-
-            setBrokers(prev => prev.map(b => b.id === updatedBroker.id ? updatedBroker : b));
-        } catch (error) {
+        if (error) {
             console.error('Error updating broker:', error);
-            throw error;
+        } else {
+            setBrokers(prev => prev.map(b => b.id === updatedBroker.id ? updatedBroker : b));
         }
     };
 
     const deleteBroker = async (brokerId: string) => {
-        try {
-            const { error } = await supabase
-                .from('brokers')
-                .delete()
-                .eq('id', brokerId);
-
-            if (error) {
-                console.error('Error deleting broker:', error);
-                throw error;
-            }
-
-            setBrokers(prev => prev.filter(b => b.id !== brokerId));
-        } catch (error) {
+        const { error } = await supabase
+            .from('brokers')
+            .delete()
+            .eq('id', brokerId);
+        
+        if (error) {
             console.error('Error deleting broker:', error);
-            throw error;
+        } else {
+            setBrokers(prev => prev.filter(b => b.id !== brokerId));
         }
     };
 

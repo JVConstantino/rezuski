@@ -1,13 +1,15 @@
 
+
+
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useCategories } from '../../contexts/CategoryContext';
-import { TESTIMONIALS } from '../../constants';
+import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES } from '../../constants';
 import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, QuoteIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon } from '../../components/Icons';
 import { PropertyPurpose } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
@@ -16,11 +18,10 @@ import BottomNavBar from '../../components/BottomNavBar';
 const logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAAAhCAYAAABa2yJwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADISURBVGhD7dNPCsMgDAbgey918iQ/oA7LqIo22vT8k1I4H7hFF0Ea1D/f6/V6e2gI4W+e3/0/VUJ4AOFJCOFP+TSE8Af8NIQwCH4aQhgm/w0hDEc/DSGcB38NIYzFPw0hDGg/DSH8x34aQjjc/DSGcDv+NIQwfP00hDBs/DSEME7+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAP/jSEEA/+NIQQD/40hBAf/xV/X4YQ/tV+AQg52s4sLFrrAAAAAElFTkSuQmCC';
     
 const HeroSection = () => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>(PropertyPurpose.RENT);
     const [location, setLocation] = useState('');
-    const [minPrice, setMinPrice] = useState('0');
-    const [maxPrice, setMaxPrice] = useState('2000000');
+    const [priceRange, setPriceRange] = useState('any');
     const [code, setCode] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
@@ -29,9 +30,8 @@ const HeroSection = () => {
         params.append('purpose', searchPurpose);
         if (location) params.append('location', location);
         if (code) params.append('code', code);
-        if (minPrice !== '0' || maxPrice !== '2000000') {
-            params.append('minPrice', minPrice);
-            params.append('maxPrice', maxPrice);
+        if (priceRange && priceRange !== 'any') {
+            params.append('priceRange', priceRange);
         }
         
         navigate(`/search?${params.toString()}`);
@@ -39,9 +39,10 @@ const HeroSection = () => {
     
     const handlePurposeChange = (purpose: PropertyPurpose) => {
         setSearchPurpose(purpose);
-        setMinPrice('0');
-        setMaxPrice('2000000');
+        setPriceRange('any');
     }
+    
+    const currentPriceRanges = searchPurpose === PropertyPurpose.SALE ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
 
   return (
     <div className="relative bg-slate-100 overflow-hidden">
@@ -91,12 +92,12 @@ const HeroSection = () => {
                     <form onSubmit={handleSearch}>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Localização</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Nome ou Localização</label>
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <MapPinIcon className="w-5 h-5 text-slate-400" />
                                     </span>
-                                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="Digite uma cidade ou bairro..." className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="Digite um nome, bairro ou cidade..." className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                                 </div>
                             </div>
                            
@@ -111,50 +112,24 @@ const HeroSection = () => {
                             </div>
 
                             <div className="md:col-span-4">
-                                <label className="block text-sm font-medium text-slate-700">Faixa de Preço</label>
-                                <div className="mt-2 pt-2">
-                                    <div className="flex justify-between items-center text-sm text-slate-600 mb-2">
-                                        <span>R$ {Number(minPrice).toLocaleString('pt-BR')}</span>
-                                        <span>R$ {Number(maxPrice).toLocaleString('pt-BR')}</span>
-                                    </div>
-                                    <div className="relative h-5">
-                                        <div className="absolute w-full h-1 bg-slate-200 rounded-full top-1/2 -translate-y-1/2"></div>
-                                        <div
-                                            className="absolute h-1 bg-primary-blue rounded-full top-1/2 -translate-y-1/2"
-                                            style={{
-                                                left: `${(Number(minPrice) / 2000000) * 100}%`,
-                                                right: `${100 - (Number(maxPrice) / 2000000) * 100}%`
-                                            }}
-                                        ></div>
-                                        <div className="absolute w-full h-5 -top-1">
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="2000000"
-                                                step="10000"
-                                                value={minPrice}
-                                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                                    const value = Math.min(Number(e.currentTarget.value), Number(maxPrice) - 10000);
-                                                    setMinPrice(String(value));
-                                                }}
-                                                className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none top-1/2 -translate-y-1/2 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-slate-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-slate-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-slate-500 [&::-moz-range-thumb]:cursor-pointer"
-                                                style={{ zIndex: 3 }}
-                                            />
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="2000000"
-                                                step="10000"
-                                                value={maxPrice}
-                                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                                    const value = Math.max(Number(e.currentTarget.value), Number(minPrice) + 10000);
-                                                    setMaxPrice(String(value));
-                                                }}
-                                                className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none top-1/2 -translate-y-1/2 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-slate-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-slate-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-slate-500 [&::-moz-range-thumb]:cursor-pointer"
-                                                style={{ zIndex: 4 }}
-                                            />
-                                        </div>
-                                    </div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Faixa de Preço</label>
+                                 <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <DollarSignIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                    <select 
+                                        name="priceRange" 
+                                        value={priceRange} 
+                                        onChange={e => setPriceRange(e.target.value)} 
+                                        className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none"
+                                    >
+                                        {Object.entries(currentPriceRanges).map(([key, value]) => (
+                                            <option key={key} value={key}>{value}</option>
+                                        ))}
+                                    </select>
+                                     <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
                                 </div>
                             </div>
                             
@@ -271,9 +246,9 @@ const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; 
             </div>
             <AnimateOnScroll delay={300}>
                 <div className="text-center mt-12">
-                    <Link to={`/search?purpose=${purpose}`} className="inline-block bg-primary-green text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:opacity-95 transition-all">
+                    <ReactRouterDOM.Link to={`/search?purpose=${purpose}`} className="inline-block bg-primary-green text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:opacity-95 transition-all">
                         Ver Mais
-                    </Link>
+                    </ReactRouterDOM.Link>
                 </div>
             </AnimateOnScroll>
         </Section>

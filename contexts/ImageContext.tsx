@@ -1,5 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 interface ImageContextType {
     galleryImages: string[];
@@ -13,10 +14,23 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [galleryImages, setGalleryImages] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchGalleryImages = () => {
+    const fetchGalleryImages = async () => {
         setLoading(true);
-        const mockImages = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/gallery${i + 1}/400/400`);
-        setGalleryImages(mockImages);
+        const { data, error } = await supabase.storage.from('property-images').list('public', {
+            limit: 100,
+            offset: 0,
+            sortBy: { column: 'created_at', order: 'desc' },
+        });
+
+        if (error) {
+            console.error('Error listing storage images:', error);
+            setGalleryImages([]);
+        } else if (data) {
+            const urls = data.map(file => {
+                return supabase.storage.from('property-images').getPublicUrl(`public/${file.name}`).data.publicUrl;
+            });
+            setGalleryImages(urls);
+        }
         setLoading(false);
     }
 

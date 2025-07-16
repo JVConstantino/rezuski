@@ -1,10 +1,9 @@
 
-
 import React, { useState } from 'react';
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { 
     LayoutGridIcon, HomeIcon, FileTextIcon, UsersIcon, MessageSquareIcon, 
-    BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon 
+    BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon 
 } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,8 +11,6 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
     const navLinks = [
         { name: "Painel", path: "/admin/dashboard", icon: <LayoutGridIcon className="w-5 h-5"/> },
         { name: "Propriedades", path: "/admin/properties", icon: <HomeIcon className="w-5 h-5"/> },
-        { name: "Aplicações", path: "/admin/applications", icon: <FileTextIcon className="w-5 h-5"/> },
-        { name: "Inquilinos", path: "/admin/tenants", icon: <UsersIcon className="w-5 h-5"/> },
         { name: "Corretores", path: "/admin/brokers", icon: <UsersIcon className="w-5 h-5"/> },
         { name: "Categorias", path: "/admin/categories", icon: <LayoutGridIcon className="w-5 h-5"/> },
         { name: "Recursos", path: "/admin/resources", icon: <FileTextIcon className="w-5 h-5"/> },
@@ -40,16 +37,16 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200">
-                     <Link to="/" className="flex-shrink-0">
+                     <ReactRouterDOM.Link to="/" className="flex-shrink-0">
                         <img src={logoUrl} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
-                    </Link>
+                    </ReactRouterDOM.Link>
                     <button onClick={onClose} className="md:hidden text-slate-500 hover:text-primary-blue" aria-label="Close menu">
                         <XIcon className="w-6 h-6" />
                     </button>
                 </div>
                 <nav className="flex-1 px-4 py-6 space-y-2">
                     {navLinks.map(link => (
-                        <NavLink
+                        <ReactRouterDOM.NavLink
                             key={link.name}
                             to={link.path}
                             onClick={onClose} // Close sidebar on mobile navigation
@@ -61,11 +58,11 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
                         >
                             {link.icon}
                             <span>{link.name}</span>
-                        </NavLink>
+                        </ReactRouterDOM.NavLink>
                     ))}
                 </nav>
                 <div className="px-4 py-6 border-t border-slate-200">
-                     <NavLink
+                     <ReactRouterDOM.NavLink
                         to="/admin/settings"
                         onClick={onClose}
                         className={({ isActive }) => 
@@ -76,7 +73,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
                     >
                         <SettingsIcon className="w-5 h-5"/>
                         <span>Configurações</span>
-                    </NavLink>
+                    </ReactRouterDOM.NavLink>
                 </div>
             </aside>
         </>
@@ -99,6 +96,16 @@ const AdminHeader: React.FC<{ onMenuToggle: () => void }> = ({ onMenuToggle }) =
                 </div>
             </div>
             <div className="flex items-center space-x-4 md:space-x-6">
+                 <a 
+                    href="/#/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
+                    title="Abrir site em nova aba"
+                >
+                    <EyeIcon className="w-5 h-5 md:mr-2" />
+                    <span className="hidden md:inline">Ver Site</span>
+                </a>
                 <button className="text-slate-500 hover:text-primary-blue relative" aria-label="Notifications">
                     <BellIcon className="w-6 h-6"/>
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -122,12 +129,12 @@ const AdminLayout: React.FC = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-slate-50 overflow-hidden md:overflow-auto">
+        <div className="flex h-screen bg-slate-50 overflow-hidden">
             <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)}/>
             <div className="flex-1 flex flex-col overflow-hidden">
                 <AdminHeader onMenuToggle={() => setSidebarOpen(true)}/>
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6 md:p-8">
-                    <Outlet/>
+                    <ReactRouterDOM.Outlet/>
                 </main>
             </div>
         </div>

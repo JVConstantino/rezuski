@@ -1,16 +1,16 @@
 
-
-
 import React, { useState, useEffect } from 'react';
-import { Property, PropertyType, PropertyPurpose, Amenity } from '../../types';
+import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
 import { useImages } from '../../contexts/ImageContext';
 import ImageGalleryModal from './ImageGalleryModal';
-import { StarIcon, TrashIcon, PlusIcon } from '../Icons';
+import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
+import { supabase } from '../../lib/supabaseClient';
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface PropertyFormProps {
     initialData?: Property;
-    onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[] }) => void;
+    onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[] }, status: PropertyStatus) => void;
     isEditing: boolean;
 }
 
@@ -31,12 +31,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const { categories } = useCategories();
     const { addImages: addImagesToGallery } = useImages();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+    const [isOptimizing, setIsOptimizing] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
         code: '',
         address: '',
+        neighborhood: '',
         city: '',
         state: '',
         zipCode: '',
@@ -49,7 +51,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         bedrooms: '',
         bathrooms: '',
         areaM2: '',
-        repairQuality: 'Good',
+        repairQuality: 'Bom',
         yearBuilt: '',
         availableDate: new Date().toISOString().split('T')[0],
         isPopular: false,
@@ -67,6 +69,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 title: initialData.title,
                 code: initialData.code || '',
                 address: initialData.address,
+                neighborhood: initialData.neighborhood || '',
                 city: initialData.city,
                 state: initialData.state,
                 zipCode: initialData.zipCode,
@@ -79,7 +82,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 bedrooms: String(initialData.bedrooms || ''),
                 bathrooms: String(initialData.bathrooms || ''),
                 areaM2: String(initialData.areaM2 || ''),
-                repairQuality: initialData.repairQuality || 'Good',
+                repairQuality: initialData.repairQuality || 'Bom',
                 yearBuilt: String(initialData.yearBuilt || ''),
                 availableDate: initialData.availableDate ? new Date(initialData.availableDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                 isPopular: initialData.isPopular || false,
@@ -119,14 +122,35 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     };
 
     const handleImageUpload = async (files: FileList) => {
-        setIsUploading(true);
-        const newImageStates = Array.from(files).map(file => ({
-            preview: URL.createObjectURL(file), // Use local blob URL for preview
-            isPrimary: false,
-        }));
+        const totalFiles = files.length;
+        if (totalFiles === 0) return;
 
-        // Simulate upload delay
-        setTimeout(() => {
+        setUploadProgress({ current: 0, total: totalFiles });
+        const uploadedUrls: string[] = [];
+
+        for (let i = 0; i < totalFiles; i++) {
+            const file = files[i];
+            const filePath = `public/${Date.now()}-${file.name}`;
+
+            try {
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage.from('property-images').getPublicUrl(filePath);
+                uploadedUrls.push(data.publicUrl);
+            } catch (error) {
+                console.error(`Error uploading file ${file.name}:`, error);
+                alert(`Erro ao enviar o arquivo: ${file.name}`);
+            }
+            
+            setUploadProgress({ current: i + 1, total: totalFiles });
+        }
+
+        if (uploadedUrls.length > 0) {
+            const newImageStates = uploadedUrls.map(url => ({ preview: url, isPrimary: false }));
             setImages(prev => {
                 const updatedImages = [...prev, ...newImageStates];
                 if (prev.length === 0 && updatedImages.length > 0) {
@@ -134,10 +158,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 }
                 return updatedImages;
             });
-             // Also add to gallery context for consistency
-            addImagesToGallery(newImageStates.map(i => i.preview));
-            setIsUploading(false);
-        }, 1000);
+            addImagesToGallery(uploadedUrls);
+        }
+
+        setTimeout(() => {
+            setUploadProgress({ current: 0, total: 0 });
+        }, 1500);
     };
 
     const handleSelectFromGallery = (selectedImages: string[]) => {
@@ -170,9 +196,78 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         setImages(newImages);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleOptimizeWithAI = async () => {
+        setIsOptimizing(true);
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+            const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
+            
+            const prompt = `
+                Você é um especialista em marketing imobiliário e SEO.
+                Com base nos detalhes da propriedade a seguir, gere um título e uma descrição que sejam atraentes, profissionais e otimizados para SEO.
+                O tom deve ser convidativo, destacando as principais características. Foque em um português claro e vendedor para o mercado brasileiro.
+
+                Detalhes da Propriedade:
+                - Tipo: ${formData.propertyType}
+                - Finalidade: ${formData.purpose === 'RENT' ? 'Aluguel' : 'Venda'}
+                - Localização: ${formData.address}, ${formData.neighborhood}, ${formData.city}, ${formData.state}
+                - Quartos: ${formData.bedrooms || 'Não informado'}
+                - Banheiros: ${formData.bathrooms || 'Não informado'}
+                - Área: ${formData.areaM2 ? formData.areaM2 + ' m²' : 'Não informada'}
+                - Comodidades: ${amenitiesString || 'Nenhuma listada'}
+                - Título Atual (para referência): "${formData.title}"
+                - Descrição Atual (para referência): "${formData.description}"
+
+                Por favor, melhore o título e a descrição atuais. A resposta deve ser concisa e focada nos pontos fortes do imóvel.
+            `;
+
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    title: {
+                        type: Type.STRING,
+                        description: "O título otimizado para SEO para o imóvel. Deve ser cativante e incluir detalhes chave como tipo do imóvel e localização.",
+                    },
+                    description: {
+                        type: Type.STRING,
+                        description: "A descrição otimizada, detalhada e engajante do imóvel. Deve ser bem estruturada, de fácil leitura e destacar os principais pontos de venda e comodidades.",
+                    },
+                },
+                required: ["title", "description"],
+            };
+
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                },
+            });
+            
+            const responseText = response.text.trim();
+            const jsonResponse = JSON.parse(responseText);
+            
+            if (jsonResponse.title && jsonResponse.description) {
+                setFormData(prev => ({
+                    ...prev,
+                    title: jsonResponse.title,
+                    description: jsonResponse.description,
+                }));
+            } else {
+                throw new Error("Formato de resposta da IA inválido.");
+            }
+
+        } catch (error) {
+            console.error("Erro ao otimizar com IA:", error);
+            alert("Ocorreu um erro durante a otimização com IA. Verifique o console para mais detalhes.");
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
+
+    const triggerSubmit = (status: PropertyStatus) => {
         const parsedRentPrice = parseFloat(formData.rentPrice);
         const parsedSalePrice = parseFloat(formData.salePrice);
         const parsedBedrooms = parseInt(formData.bedrooms, 10);
@@ -184,7 +279,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
         const propertyData = {
             ...formData,
-            rentPrice: formData.purpose === PropertyPurpose.RENT ? (isNaN(parsedRentPrice) ? undefined : parsedRentPrice) : undefined,
+            rentPrice: formData.purpose !== PropertyPurpose.SALE ? (isNaN(parsedRentPrice) ? undefined : parsedRentPrice) : undefined,
             salePrice: formData.purpose === PropertyPurpose.SALE ? (isNaN(parsedSalePrice) ? undefined : parsedSalePrice) : undefined,
             bedrooms: isNaN(parsedBedrooms) ? undefined : parsedBedrooms,
             bathrooms: isNaN(parsedBathrooms) ? undefined : parsedBathrooms,
@@ -193,12 +288,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             images: primaryImageFirst.map(img => img.preview),
             amenities: amenities,
         };
-        onSubmit(propertyData);
+        onSubmit(propertyData, status);
     };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const mainActionStatus = (isEditing && initialData?.status !== PropertyStatus.DRAFT) ? initialData!.status : PropertyStatus.AVAILABLE;
+        triggerSubmit(mainActionStatus);
+    }
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-lg shadow-sm">
+            <form onSubmit={handleFormSubmit} className="space-y-8 bg-white p-8 rounded-lg shadow-sm">
                 <div className="space-y-6">
                      <div>
                         <h2 className="text-xl font-bold text-slate-800">Informações Básicas</h2>
@@ -211,9 +312,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                                 <label className="block text-sm font-medium text-slate-700">Código do Imóvel</label>
                                 <input type="text" name="code" value={formData.code} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Endereço</label>
+                        </div>
+                    </div>
+                    
+                    <hr/>
+
+                     <div>
+                        <h2 className="text-xl font-bold text-slate-800">Localização</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-slate-700">Rua / Logradouro</label>
                                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700">Bairro</label>
+                                <input type="text" name="neighborhood" value={formData.neighborhood} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Cidade</label>
@@ -227,29 +340,56 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                                 <label className="block text-sm font-medium text-slate-700">CEP</label>
                                 <input type="text" name="zipCode" value={formData.zipCode} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                             </div>
+                        </div>
+                    </div>
+
+                    <hr/>
+                    
+                    <div>
+                         <h2 className="text-xl font-bold text-slate-800">Preços e Finalidade</h2>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Finalidade</label>
                                 <select name="purpose" value={formData.purpose} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
                                     <option value={PropertyPurpose.RENT}>Aluguel</option>
                                     <option value={PropertyPurpose.SALE}>Venda</option>
+                                    <option value={PropertyPurpose.SEASONAL}>Temporada</option>
                                 </select>
                             </div>
 
-                            {formData.purpose === PropertyPurpose.RENT ? (
+                            {formData.purpose !== PropertyPurpose.SALE && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700">Preço do Aluguel (/mês)</label>
+                                    <label className="block text-sm font-medium text-slate-700">Preço do Aluguel (/mês ou /diária)</label>
                                     <input type="number" name="rentPrice" value={formData.rentPrice} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                                 </div>
-                            ) : (
+                            )} 
+                            
+                            {formData.purpose === PropertyPurpose.SALE && (
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700">Preço de Venda</label>
                                     <input type="number" name="salePrice" value={formData.salePrice} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                                 </div>
                             )}
-                            
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700">Descrição</label>
-                                <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"></textarea>
+                         </div>
+                    </div>
+
+                    <hr/>
+
+                     <div>
+                        <h2 className="text-xl font-bold text-slate-800">Descrição e Otimização</h2>
+                         <div className="md:col-span-2 mt-4">
+                            <label className="block text-sm font-medium text-slate-700">Descrição</label>
+                            <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"></textarea>
+                            <div className="mt-2 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={handleOptimizeWithAI}
+                                    disabled={isOptimizing}
+                                    className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-secondary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                                >
+                                    <SparklesIcon className={`w-5 h-5 mr-2 ${isOptimizing ? 'animate-spin' : ''}`} />
+                                    {isOptimizing ? 'Otimizando...' : 'Otimizar com IA'}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -286,10 +426,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Qualidade da Manutenção</label>
                                 <select name="repairQuality" value={formData.repairQuality} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    <option>Excellent</option>
-                                    <option>Good</option>
-                                    <option>Fair</option>
-                                    <option>Poor</option>
+                                    <option value="Excelente">Excelente</option>
+                                    <option value="Bom">Bom</option>
+                                    <option value="Razoável">Razoável</option>
+                                    <option value="Ruim">Ruim</option>
                                 </select>
                             </div>
                             <div>
@@ -393,8 +533,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                              </button>
                          </div>
                          <div className="mt-4 border-2 border-dashed border-slate-300 rounded-lg p-6">
-                            <input type="file" multiple onChange={(e) => e.target.files && handleImageUpload(e.target.files)} accept="image/*" className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue/10 file:text-primary-blue hover:file:bg-primary-blue/20" disabled={isUploading} />
-                            {isUploading && <p className="text-sm text-slate-500 mt-2">Enviando imagens...</p>}
+                            <input 
+                                type="file" 
+                                multiple 
+                                onChange={(e) => e.target.files && handleImageUpload(e.target.files)} 
+                                accept="image/*" 
+                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue/10 file:text-primary-blue hover:file:bg-primary-blue/20" 
+                                disabled={uploadProgress.total > 0} 
+                            />
+                            {uploadProgress.total > 0 && (
+                                <div className="mt-4">
+                                    <p className="text-sm font-medium text-slate-600 mb-1">
+                                        Enviando Imagem {uploadProgress.current} de {uploadProgress.total}... ({Math.round((uploadProgress.current / uploadProgress.total) * 100)}%)
+                                    </p>
+                                    <div className="w-full bg-slate-200 rounded-full h-2.5">
+                                        <div 
+                                            className="bg-primary-blue h-2.5 rounded-full transition-all duration-300 ease-linear" 
+                                            style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                 {images.map((image, index) => (
                                     <div key={index} className="relative group">
@@ -417,8 +576,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 <div className="pt-5">
                     <div className="flex justify-end">
                         <button type="button" className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
-                        <button type="submit" disabled={isUploading} className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-green hover:opacity-95 disabled:opacity-50">
-                             {isUploading ? 'Enviando...' : isEditing ? 'Salvar Alterações' : 'Adicionar Propriedade'}
+                        
+                        {(!isEditing || (isEditing && initialData?.status === PropertyStatus.DRAFT)) && (
+                            <button
+                                type="button"
+                                onClick={() => triggerSubmit(PropertyStatus.DRAFT)}
+                                disabled={uploadProgress.total > 0}
+                                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-600 hover:bg-slate-700 disabled:opacity-50"
+                            >
+                                Salvar Rascunho
+                            </button>
+                        )}
+
+                        <button type="submit" disabled={uploadProgress.total > 0} className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-green hover:opacity-95 disabled:opacity-50">
+                             {isEditing 
+                                ? (initialData?.status === PropertyStatus.DRAFT ? 'Salvar e Publicar' : 'Salvar Alterações') 
+                                : 'Publicar Imóvel'
+                             }
                         </button>
                     </div>
                 </div>

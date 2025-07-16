@@ -20,84 +20,55 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     useEffect(() => {
         const fetchCategories = async () => {
             setLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('categories')
-                    .select('*')
-                    .order('name');
-
-                if (error) {
-                    console.error('Error fetching categories:', error);
-                    setCategories([]);
-                } else {
-                    setCategories(data || []);
-                }
-            } catch (error) {
+            const { data, error } = await supabase.from('categories').select('*');
+            if (error) {
                 console.error('Error fetching categories:', error);
                 setCategories([]);
-            } finally {
-                setLoading(false);
+            } else {
+                setCategories(data as Category[]);
             }
+            setLoading(false);
         };
-
         fetchCategories();
     }, []);
 
     const addCategory = async (category: Omit<Category, 'id'>) => {
-        try {
-            const { data, error } = await supabase
-                .from('categories')
-                .insert([category])
-                .select()
-                .single();
+        const { data, error } = await supabase
+            .from('categories')
+            .insert([category])
+            .select()
+            .single();
 
-            if (error) {
-                console.error('Error adding category:', error);
-                throw error;
-            }
-
-            setCategories(prev => [...prev, data]);
-        } catch (error) {
+        if (error) {
             console.error('Error adding category:', error);
-            throw error;
+        } else if (data) {
+            setCategories(prev => [...prev, data as Category]);
         }
     };
 
     const updateCategory = async (updatedCategory: Category) => {
-        try {
-            const { error } = await supabase
-                .from('categories')
-                .update(updatedCategory)
-                .eq('id', updatedCategory.id);
+        const { error } = await supabase
+            .from('categories')
+            .update(updatedCategory)
+            .eq('id', updatedCategory.id);
 
-            if (error) {
-                console.error('Error updating category:', error);
-                throw error;
-            }
-
-            setCategories(prev => prev.map(c => c.id === updatedCategory.id ? updatedCategory : c));
-        } catch (error) {
+        if (error) {
             console.error('Error updating category:', error);
-            throw error;
+        } else {
+            setCategories(prev => prev.map(c => c.id === updatedCategory.id ? updatedCategory : c));
         }
     };
 
     const deleteCategory = async (categoryId: string) => {
-        try {
-            const { error } = await supabase
-                .from('categories')
-                .delete()
-                .eq('id', categoryId);
-
-            if (error) {
-                console.error('Error deleting category:', error);
-                throw error;
-            }
-
-            setCategories(prev => prev.filter(c => c.id !== categoryId));
-        } catch (error) {
+        const { error } = await supabase
+            .from('categories')
+            .delete()
+            .eq('id', categoryId);
+        
+        if (error) {
             console.error('Error deleting category:', error);
-            throw error;
+        } else {
+            setCategories(prev => prev.filter(c => c.id !== categoryId));
         }
     };
 

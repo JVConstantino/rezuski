@@ -1,9 +1,8 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { ResourceDocument } from '../../types';
 import { FileTextIcon } from '../Icons';
-import { dummyPdfUrl } from '../../constants';
+import { supabase } from '../../lib/supabaseClient';
 
 interface ResourceFormProps {
     initialData?: ResourceDocument;
@@ -35,13 +34,27 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, onSubmit, isEd
             }
             setIsUploading(true);
             setFileName(`Enviando ${file.name}...`);
-            
-            // Simulate upload delay and use a dummy URL
-            setTimeout(() => {
-                setFileUrl(dummyPdfUrl);
-                setFileName(file.name);
+
+            const filePath = `public/${Date.now()}-${file.name}`;
+            const { error: uploadError } = await supabase.storage
+                .from('resource-documents')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error('Error uploading file:', uploadError);
+                alert('Erro ao enviar arquivo.');
                 setIsUploading(false);
-            }, 1000);
+                setFileName('');
+                return;
+            }
+
+            const { data } = supabase.storage
+                .from('resource-documents')
+                .getPublicUrl(filePath);
+            
+            setFileUrl(data.publicUrl);
+            setFileName(file.name);
+            setIsUploading(false);
         }
     };
 

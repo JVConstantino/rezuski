@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 
 interface PropertyContextType {
     properties: Property[];
-    addProperty: (property: Property) => Promise<void>;
+    addProperty: (property: Omit<Property, 'id'>) => Promise<void>;
     updateProperty: (updatedProperty: Property) => Promise<void>;
     toggleArchiveProperty: (propertyId: string) => Promise<void>;
     loading: boolean;
@@ -17,116 +17,79 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchProperties = async () => {
-            setLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('properties')
-                    .select('*')
-                    .order('createdAt', { ascending: false });
+    const fetchProperties = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('properties')
+            .select('*')
+            .order('createdAt', { ascending: false });
 
-                if (error) {
-                    console.error('Error fetching properties:', error);
-                    setProperties([]);
-                } else {
-                    // Transform the data to match our Property interface
-                    const transformedProperties = data.map(prop => ({
-                        ...prop,
-                        amenities: prop.amenities as any,
-                        priceHistory: prop.priceHistory as any
-                    }));
-                    setProperties(transformedProperties);
-                }
-            } catch (error) {
-                console.error('Error fetching properties:', error);
-                setProperties([]);
-            } finally {
-                setLoading(false);
-            }
-        };
+        if (error) {
+            console.error('Error fetching properties:', error);
+            setProperties([]);
+        } else {
+            setProperties(data as Property[]);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchProperties();
     }, []);
 
-    const addProperty = async (property: Property) => {
-        try {
-            const { data, error } = await supabase
-                .from('properties')
-                .insert([{
-                    ...property,
-                    amenities: property.amenities,
-                    priceHistory: property.priceHistory
-                }])
-                .select()
-                .single();
-
-            if (error) {
-                console.error('Error adding property:', error);
-                throw error;
-            }
-
-            const transformedProperty = {
-                ...data,
-                amenities: data.amenities as any,
-                priceHistory: data.priceHistory as any
-            };
-
-            setProperties(prev => [transformedProperty, ...prev]);
-        } catch (error) {
-            console.error('Error adding property:', error);
-            throw error;
+    const addProperty = async (property: Omit<Property, 'id'>) => {
+        const { data, error } = await supabase
+            .from('properties')
+            .insert([property])
+            .select();
+        
+        if (error) {
+            console.error('Error adding property:', error.message);
+            alert(`Error adding property: ${error.message}`);
+        } else if (data) {
+            setProperties(prev => [data[0] as Property, ...prev]);
         }
     };
 
     const updateProperty = async (updatedProperty: Property) => {
-        try {
-            const { error } = await supabase
-                .from('properties')
-                .update({
-                    ...updatedProperty,
-                    amenities: updatedProperty.amenities,
-                    priceHistory: updatedProperty.priceHistory
-                })
-                .eq('id', updatedProperty.id);
+        const { id, ...updateData } = updatedProperty;
+        const { data, error } = await supabase
+            .from('properties')
+            .update(updateData)
+            .eq('id', id)
+            .select();
 
-            if (error) {
-                console.error('Error updating property:', error);
-                throw error;
-            }
-
-            setProperties(prev => prev.map(p => p.id === updatedProperty.id ? updatedProperty : p));
-        } catch (error) {
-            console.error('Error updating property:', error);
-            throw error;
+        if (error) {
+            console.error('Error updating property:', error.message);
+            alert(`Error updating property: ${error.message}`);
+        } else if (data) {
+            setProperties(prev => prev.map(p => p.id === updatedProperty.id ? (data[0] as Property) : p));
         }
     };
     
     const toggleArchiveProperty = async (propertyId: string) => {
-        try {
-            const propertyToToggle = properties.find(p => p.id === propertyId);
-            if (!propertyToToggle) return;
+        const propertyToToggle = properties.find(p => p.id === propertyId);
+        if (!propertyToToggle) return;
 
-            const newStatus = propertyToToggle.status === PropertyStatus.ARCHIVED ? PropertyStatus.AVAILABLE : PropertyStatus.ARCHIVED;
-            
-            const { error } = await supabase
-                .from('properties')
-                .update({ status: newStatus })
-                .eq('id', propertyId);
+        const newStatus = propertyToToggle.status === PropertyStatus.ARCHIVED ? PropertyStatus.AVAILABLE : PropertyStatus.ARCHIVED;
+        
+        const { data, error } = await supabase
+            .from('properties')
+            .update({ status: newStatus })
+            .eq('id', propertyId)
+            .select();
 
-            if (error) {
-                console.error('Error toggling property archive status:', error);
-                throw error;
-            }
-
-            setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, status: newStatus } : p));
-        } catch (error) {
-            console.error('Error toggling property archive status:', error);
-            throw error;
+        if (error) {
+            console.error('Error toggling archive status:', error.message);
+            alert(`Error toggling archive status: ${error.message}`);
+        } else if (data) {
+             setProperties(prev => prev.map(p => p.id === propertyId ? (data[0] as Property) : p));
         }
-    };
+    }
 
     return (
         <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, loading }}>
-            {!loading && children}
+            {children}
         </PropertyContext.Provider>
     );
 };

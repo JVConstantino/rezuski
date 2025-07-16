@@ -1,6 +1,8 @@
 
+
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import PropertyForm from '../../components/admin/PropertyForm';
 import { Property, PropertyStatus, PriceHistoryEvent, PropertyPurpose, Amenity } from '../../types';
@@ -8,13 +10,12 @@ import { ChevronLeftIcon } from '../../components/Icons';
 
 const AddPropertyPage: React.FC = () => {
     const { addProperty } = useProperties();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
-    const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities' | 'listedByUserId'|'viewCount'> & { amenities: Amenity[] }) => {
-        const newProperty: Property = {
+    const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities' | 'listedByUserId'|'viewCount'> & { amenities: Amenity[] }, status: PropertyStatus) => {
+        const newProperty: Omit<Property, 'id'> = {
             ...data,
-            id: `prop-new-${data.code}-${Date.now()}`, // Supabase can auto-generate this, but for now we keep it
-            status: PropertyStatus.AVAILABLE,
+            status: status,
             listedByUserId: undefined, // Should be set to current user's ID
             viewCount: 0,
             priceHistory: [

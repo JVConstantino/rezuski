@@ -1,6 +1,8 @@
 
+
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { APPLICATIONS, USERS } from '../../constants';
 import { useProperties } from '../../contexts/PropertyContext';
 import { Application, Property, User } from '../../types';
@@ -41,7 +43,7 @@ interface ApplicationDetailViewProps {
 }
 
 const ApplicationDetailView: React.FC<ApplicationDetailViewProps> = ({ application, user, property }) => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     if (!application || !user || !property) {
         return (
@@ -112,7 +114,7 @@ const ApplicationsPage: React.FC = () => {
     return (
         <div>
             <h1 className="text-3xl font-bold text-slate-900">Aplicações de Locação</h1>
-            <div className="mt-6 flex space-x-6 h-[calc(100vh-12rem)]">
+            <div className="mt-6 flex space-x-6">
                 <div className="w-1/3 bg-white p-4 rounded-lg shadow-sm flex flex-col">
                     <div className="relative mb-4">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

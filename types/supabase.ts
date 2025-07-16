@@ -1,4 +1,6 @@
-import { PropertyPurpose, PropertyStatus, PropertyType, UserRole } from "../types";
+
+
+import { Amenity, PriceHistory, PropertyPurpose, PropertyStatus, PropertyType, UserRole } from ".";
 
 export type Json =
   | string
@@ -18,6 +20,7 @@ export type Database = {
           title: string;
           code?: string;
           address: string;
+          neighborhood: string;
           city: string;
           state: string;
           zipCode: string;
@@ -34,10 +37,10 @@ export type Database = {
           status: PropertyStatus;
           yearBuilt?: number;
           images: string[];
-          amenities: Json;
+          amenities: Amenity[];
           availableDate?: string;
           listedByUserId?: string;
-          priceHistory: Json;
+          priceHistory: PriceHistory[];
           isPopular?: boolean;
           tourUrl?: string;
           viewCount?: number;
@@ -48,6 +51,7 @@ export type Database = {
           title: string;
           code?: string;
           address: string;
+          neighborhood: string;
           city: string;
           state: string;
           zipCode: string;
@@ -64,10 +68,10 @@ export type Database = {
           status: PropertyStatus;
           yearBuilt?: number;
           images: string[];
-          amenities: Json;
+          amenities: Amenity[];
           availableDate?: string;
           listedByUserId?: string;
-          priceHistory: Json;
+          priceHistory: PriceHistory[];
           isPopular?: boolean;
           tourUrl?: string;
           viewCount?: number;
@@ -78,6 +82,7 @@ export type Database = {
           title?: string;
           code?: string;
           address?: string;
+          neighborhood?: string;
           city?: string;
           state?: string;
           zipCode?: string;
@@ -94,10 +99,10 @@ export type Database = {
           status?: PropertyStatus;
           yearBuilt?: number;
           images?: string[];
-          amenities?: Json;
+          amenities?: Amenity[];
           availableDate?: string;
           listedByUserId?: string;
-          priceHistory?: Json;
+          priceHistory?: PriceHistory[];
           isPopular?: boolean;
           tourUrl?: string;
           viewCount?: number;
@@ -188,6 +193,61 @@ export type Database = {
             title?: string;
             fileUrl?: string;
         };
+      };
+      conversations: {
+        Row: {
+          id: string
+          created_at: string
+          customer_name: string
+          customer_email: string
+          property_id: string | null
+          last_message_at: string
+          last_message_preview: string | null
+          admin_has_unread: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          customer_name: string
+          customer_email: string
+          property_id?: string | null
+          last_message_at?: string
+          last_message_preview?: string | null
+          admin_has_unread?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          customer_name?: string
+          customer_email?: string
+          property_id?: string | null
+          last_message_at?: string
+          last_message_preview?: string | null
+          admin_has_unread?: boolean
+        }
+      };
+      messages: {
+        Row: {
+          id: string
+          created_at: string
+          conversation_id: string
+          sender: "CUSTOMER" | "ADMIN"
+          content: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          conversation_id: string
+          sender: "CUSTOMER" | "ADMIN"
+          content: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          conversation_id?: string
+          sender?: "CUSTOMER" | "ADMIN"
+          content?: string
+        }
       }
     }
     Views: {

@@ -1,14 +1,17 @@
 
 
+
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import PropertyListItem from '../../components/PropertyListItem';
 import { useProperties } from '../../contexts/PropertyContext';
-import { MapPinIcon, DollarSignIcon, ChevronLeftIcon, ChevronRightIcon, LayoutGridIcon, ListIcon, HashIcon, FilterIcon, XIcon, ChevronsLeftIcon, ChevronsRightIcon } from '../../components/Icons';
+import { MapPinIcon, DollarSignIcon, ChevronLeftIcon, ChevronRightIcon, LayoutGridIcon, ListIcon, HashIcon, FilterIcon, XIcon, ChevronsLeftIcon, ChevronsRightIcon, ChevronDownIcon, BedIcon, BathIcon } from '../../components/Icons';
 import { PropertyStatus, PropertyPurpose } from '../../types';
+import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS, COMMON_AMENITIES } from '../../constants';
 import BottomNavBar from '../../components/BottomNavBar';
 
 const FilterPanel = ({ filters, onFilterChange, onApply }) => {
@@ -16,6 +19,17 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
         e.preventDefault();
         onApply();
     };
+    
+    const handleAmenityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, checked } = e.target;
+        const currentAmenities = filters.amenities || [];
+        const newAmenities = checked
+            ? [...currentAmenities, name]
+            : currentAmenities.filter(a => a !== name);
+        onFilterChange('amenities', newAmenities);
+    };
+
+    const currentPriceRanges = (filters.purpose === PropertyPurpose.SALE) ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
 
     return (
         <form onSubmit={handleFormSubmit} className="bg-white p-6 rounded-lg shadow-sm">
@@ -32,12 +46,12 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Localização</label>
+                    <label className="block text-sm font-medium text-slate-700">Nome, Bairro ou Cidade</label>
                     <div className="relative mt-1">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <MapPinIcon className="w-5 h-5 text-slate-400" />
                         </span>
-                        <input type="text" name="location" value={filters.location} onChange={e => onFilterChange(e.target.name, e.target.value)} placeholder="Cidade ou bairro" className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                        <input type="text" name="location" value={filters.location} onChange={e => onFilterChange(e.target.name, e.target.value)} placeholder="Busque por nome ou local" className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                     </div>
                 </div>
                 <div>
@@ -51,51 +65,65 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-700">Faixa de Preço</label>
-                    <div className="mt-2 pt-2">
-                        <div className="flex justify-between items-center text-sm text-slate-600 mb-2">
-                            <span>R$ {Number(filters.minPrice).toLocaleString('pt-BR')}</span>
-                            <span>R$ {Number(filters.maxPrice).toLocaleString('pt-BR')}</span>
+                    <div className="relative mt-1">
+                        <select name="priceRange" value={filters.priceRange} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                             {Object.entries(currentPriceRanges).map(([key, value]) => (
+                                <option key={key} value={key}>{value}</option>
+                            ))}
+                        </select>
+                         <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                     <div>
+                        <label className="block text-sm font-medium text-slate-700">Quartos</label>
+                        <div className="relative mt-1">
+                           <select name="bedrooms" value={filters.bedrooms} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                                {Object.entries(BEDROOM_OPTIONS).map(([key, value]) => (
+                                    <option key={key} value={key}>{value}</option>
+                                ))}
+                           </select>
+                           <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                            </span>
                         </div>
-                        <div className="relative h-5">
-                            <div className="absolute w-full h-1 bg-slate-200 rounded-full top-1/2 -translate-y-1/2"></div>
-                            <div
-                                className="absolute h-1 bg-primary-blue rounded-full top-1/2 -translate-y-1/2"
-                                style={{
-                                    left: `${(Number(filters.minPrice) / 2000000) * 100}%`,
-                                    right: `${100 - (Number(filters.maxPrice) / 2000000) * 100}%`
-                                }}
-                            ></div>
-                            <div className="absolute w-full h-5 -top-1">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="2000000"
-                                    step="10000"
-                                    value={filters.minPrice}
-                                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                        const value = Math.min(Number(e.currentTarget.value), Number(filters.maxPrice) - 10000);
-                                        onFilterChange('minPrice', String(value));
-                                    }}
-                                    className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none top-1/2 -translate-y-1/2 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-slate-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-slate-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-slate-500 [&::-moz-range-thumb]:cursor-pointer"
-                                    style={{ zIndex: 3 }}
-                                />
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="2000000"
-                                    step="10000"
-                                    value={filters.maxPrice}
-                                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                        const value = Math.max(Number(e.currentTarget.value), Number(filters.minPrice) + 10000);
-                                        onFilterChange('maxPrice', String(value));
-                                    }}
-                                    className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none top-1/2 -translate-y-1/2 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-slate-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-slate-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-slate-500 [&::-moz-range-thumb]:cursor-pointer"
-                                    style={{ zIndex: 4 }}
-                                />
-                            </div>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-slate-700">Banheiros</label>
+                        <div className="relative mt-1">
+                           <select name="bathrooms" value={filters.bathrooms} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                                {Object.entries(BATHROOM_OPTIONS).map(([key, value]) => (
+                                    <option key={key} value={key}>{value}</option>
+                                ))}
+                           </select>
+                           <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                            </span>
                         </div>
                     </div>
                 </div>
+
+                 <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Comodidades</label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                        {COMMON_AMENITIES.map((amenity) => (
+                            <label key={amenity} className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name={amenity}
+                                    checked={filters.amenities.includes(amenity)}
+                                    onChange={handleAmenityChange}
+                                    className="h-4 w-4 rounded border-slate-300 text-primary-blue focus:ring-primary-blue"
+                                />
+                                <span className="text-slate-700">{amenity}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="md:hidden pt-4 mb-4">
                     <button type="submit" className="w-full bg-primary-green text-white font-semibold py-3 rounded-lg hover:opacity-95">Aplicar Filtros</button>
                 </div>
@@ -106,14 +134,16 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
 
 const SearchResultsPage: React.FC = () => {
     const { properties } = useProperties();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = ReactRouterDOM.useSearchParams();
     
     const [filters, setFilters] = useState({
         purpose: searchParams.get('purpose') || PropertyPurpose.RENT,
         location: searchParams.get('location') || '',
-        minPrice: searchParams.get('minPrice') || '0',
-        maxPrice: searchParams.get('maxPrice') || '2000000',
+        priceRange: searchParams.get('priceRange') || 'any',
         code: searchParams.get('code') || '',
+        bedrooms: searchParams.get('bedrooms') || 'any',
+        bathrooms: searchParams.get('bathrooms') || 'any',
+        amenities: searchParams.getAll('amenities') || [],
     });
     
     const [isFilterModalOpen, setFilterModalOpen] = useState(false);
@@ -122,9 +152,11 @@ const SearchResultsPage: React.FC = () => {
         const urlFilters = {
             purpose: searchParams.get('purpose') || PropertyPurpose.RENT,
             location: searchParams.get('location') || '',
-            minPrice: searchParams.get('minPrice') || '0',
-            maxPrice: searchParams.get('maxPrice') || '2000000',
+            priceRange: searchParams.get('priceRange') || 'any',
             code: searchParams.get('code') || '',
+            bedrooms: searchParams.get('bedrooms') || 'any',
+            bathrooms: searchParams.get('bathrooms') || 'any',
+            amenities: searchParams.getAll('amenities') || [],
         };
         setFilters(urlFilters);
     }, [searchParams]);
@@ -134,10 +166,13 @@ const SearchResultsPage: React.FC = () => {
         newParams.set('purpose', currentFilters.purpose as string);
         if (currentFilters.location) newParams.set('location', currentFilters.location);
         if (currentFilters.code) newParams.set('code', currentFilters.code);
-
-        if (currentFilters.minPrice !== '0' || currentFilters.maxPrice !== '2000000') {
-            newParams.set('minPrice', currentFilters.minPrice);
-            newParams.set('maxPrice', currentFilters.maxPrice);
+        if (currentFilters.priceRange && currentFilters.priceRange !== 'any') newParams.set('priceRange', currentFilters.priceRange);
+        if (currentFilters.bedrooms && currentFilters.bedrooms !== 'any') newParams.set('bedrooms', currentFilters.bedrooms);
+        if (currentFilters.bathrooms && currentFilters.bathrooms !== 'any') newParams.set('bathrooms', currentFilters.bathrooms);
+        
+        newParams.delete('amenities');
+        if (currentFilters.amenities && currentFilters.amenities.length > 0) {
+            currentFilters.amenities.forEach(amenity => newParams.append('amenities', amenity));
         }
         
         setSearchParams(newParams, { replace: true });
@@ -147,8 +182,7 @@ const SearchResultsPage: React.FC = () => {
     const handleFilterChange = (field, value) => {
         const newFilters = { ...filters, [field]: value };
         if (field === 'purpose') {
-            newFilters.minPrice = '0';
-            newFilters.maxPrice = '2000000';
+            newFilters.priceRange = 'any';
         }
         setFilters(newFilters);
         // Auto-apply on desktop
@@ -159,23 +193,56 @@ const SearchResultsPage: React.FC = () => {
     
     const filteredProperties = useMemo(() => {
         let results = properties.filter(p => p.status === PropertyStatus.AVAILABLE);
+        
         const purpose = searchParams.get('purpose');
         const location = searchParams.get('location')?.toLowerCase();
-        const minPrice = parseFloat(searchParams.get('minPrice') || '0');
-        const maxPrice = parseFloat(searchParams.get('maxPrice') || '2000000');
         const code = searchParams.get('code')?.toLowerCase();
+        const priceRangeKey = searchParams.get('priceRange');
+        const bedrooms = searchParams.get('bedrooms');
+        const bathrooms = searchParams.get('bathrooms');
+        const amenities = searchParams.getAll('amenities');
 
         if (purpose) { results = results.filter(p => p.purpose === purpose); }
-        if (location) { results = results.filter(p => p.address.toLowerCase().includes(location) || p.city.toLowerCase().includes(location)); }
+        if (location) { 
+            results = results.filter(p => 
+                p.title.toLowerCase().includes(location) || 
+                p.address.toLowerCase().includes(location) || 
+                p.city.toLowerCase().includes(location) ||
+                (p.neighborhood && p.neighborhood.toLowerCase().includes(location))
+            ); 
+        }
         if (code) { results = results.filter(p => p.code?.toLowerCase().includes(code)); }
+        
+        if (priceRangeKey && priceRangeKey !== 'any') {
+            const [minStr, maxStr] = priceRangeKey.split('-');
+            const minPrice = parseInt(minStr);
+            const maxPrice = maxStr.includes('+') ? Infinity : parseInt(maxStr);
 
-        if (minPrice > 0 || maxPrice < 2000000) {
             results = results.filter(p => {
                 const pPrice = p.purpose === PropertyPurpose.SALE ? p.salePrice : p.rentPrice;
                 if (pPrice === undefined) return false;
                 return pPrice >= minPrice && pPrice <= maxPrice;
             });
         }
+        
+        if (bedrooms && bedrooms !== 'any') {
+            const minBedrooms = parseInt(bedrooms, 10);
+            results = results.filter(p => p.bedrooms !== undefined && p.bedrooms >= minBedrooms);
+        }
+
+        if (bathrooms && bathrooms !== 'any') {
+            const minBathrooms = parseInt(bathrooms, 10);
+            results = results.filter(p => p.bathrooms !== undefined && p.bathrooms >= minBathrooms);
+        }
+
+        if (amenities.length > 0) {
+            results = results.filter(p => 
+                amenities.every(am => 
+                    p.amenities.some(propAm => propAm.name === am)
+                )
+            );
+        }
+
         return results;
     }, [properties, searchParams]);
 
@@ -233,7 +300,7 @@ const SearchResultsPage: React.FC = () => {
                         ) : (
                             <>
                                 {viewMode === 'grid' ? (
-                                    <div className="grid grid-cols-2 gap-6 lg:grid-cols-4"><>{paginatedProperties.map(p => <PropertyCard key={p.id} property={p} />)}</></div>
+                                    <div className="grid grid-cols-2 gap-6 lg:grid-cols-3"><>{paginatedProperties.map(p => <PropertyCard key={p.id} property={p} />)}</></div>
                                 ) : (
                                     <div className="space-y-4"><>{paginatedProperties.map(p => <PropertyListItem key={p.id} property={p} />)}</></div>
                                 )}
