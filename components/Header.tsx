@@ -16,7 +16,7 @@ const Header: React.FC = () => {
     { name: 'Sobre', path: '/about' },
   ];
 
-  const logoUrl = 'uploads/LOGO - REZUSKI.png';
+  const logoUrl = 'uploads/logo.png';
 
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 w-full border-b border-slate-200">
