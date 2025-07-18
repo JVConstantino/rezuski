@@ -38,6 +38,7 @@ import EditCategoryPage from './pages/admin/EditCategoryPage';
 import AdminResourcesPage from './pages/admin/ResourcesPage';
 import AddResourcePage from './pages/admin/AddResourcePage';
 import EditResourcePage from './pages/admin/EditResourcePage';
+import GalleryPage from './pages/admin/GalleryPage';
 
 const AppContent: React.FC = () => {
     const location = useLocation();
@@ -82,6 +83,7 @@ const AppContent: React.FC = () => {
                                         <Route path="resources" element={<AdminResourcesPage />} />
                                         <Route path="resources/new" element={<AddResourcePage />} />
                                         <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
+                                        <Route path="gallery" element={<GalleryPage />} />
                                         <Route path="messages" element={<MessagesPage />} />
                                         <Route path="reports" element={<ReportsPage />} />
                                         <Route path="settings" element={<SettingsPage />} />

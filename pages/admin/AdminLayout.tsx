@@ -1,11 +1,10 @@
 
 
-
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { 
     LayoutGridIcon, HomeIcon, FileTextIcon, UsersIcon, MessageSquareIcon, 
-    BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon 
+    BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon, FolderIcon
 } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { LOGO_URL } from '../../constants';
@@ -17,6 +16,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
         { name: "Corretores", path: "/admin/brokers", icon: <UsersIcon className="w-5 h-5"/> },
         { name: "Categorias", path: "/admin/categories", icon: <LayoutGridIcon className="w-5 h-5"/> },
         { name: "Recursos", path: "/admin/resources", icon: <FileTextIcon className="w-5 h-5"/> },
+        { name: "Galeria", path: "/admin/gallery", icon: <FolderIcon className="w-5 h-5"/> },
         { name: "Mensagens", path: "/admin/messages", icon: <MessageSquareIcon className="w-5 h-5"/> },
         { name: "Relatórios", path: "/admin/reports", icon: <BarChartIcon className="w-5 h-5"/> },
     ];

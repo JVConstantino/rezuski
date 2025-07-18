@@ -1,9 +1,8 @@
 
 
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useImages } from '../../contexts/ImageContext';
-import { XIcon, SearchIcon, FolderIcon } from '../Icons';
+import { XIcon, SearchIcon, FolderIcon, FolderPlusIcon, UploadCloudIcon } from '../Icons';
 
 interface ImageGalleryModalProps {
     isOpen: boolean;
@@ -13,9 +12,10 @@ interface ImageGalleryModalProps {
 }
 
 const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({ isOpen, onClose, onSelectImages, currentImages }) => {
-    const { galleryItems, currentPath, setPath, loading } = useImages();
+    const { galleryItems, currentPath, setPath, loading, createFolder, uploadFiles } = useImages();
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!isOpen) return null;
 
@@ -34,6 +34,19 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({ isOpen, onClose, 
     const handleFolderClick = (folderName: string) => {
         const newPath = `${currentPath}/${folderName}`;
         setPath(newPath);
+    };
+
+    const handleCreateFolder = () => {
+        const folderName = prompt('Digite o nome da nova pasta:');
+        if (folderName) {
+            createFolder(folderName);
+        }
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            uploadFiles(e.target.files, currentPath);
+        }
     };
     
     const renderBreadcrumbs = () => {
@@ -70,14 +83,25 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({ isOpen, onClose, 
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col"
+                className="bg-white rounded-lg shadow-xl w-full max-w-5xl h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
                 <header className="p-4 border-b border-slate-200 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800">Galeria de Imagens</h2>
-                    <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700">
-                        <XIcon className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center space-x-2">
+                        <button onClick={handleCreateFolder} className="flex items-center bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-slate-50 text-xs">
+                            <FolderPlusIcon className="w-4 h-4 mr-2" />
+                            Criar Pasta
+                        </button>
+                        <button onClick={() => fileInputRef.current?.click()} className="flex items-center bg-primary-blue text-white font-semibold py-2 px-3 rounded-lg shadow-sm hover:opacity-95 text-xs">
+                            <UploadCloudIcon className="w-4 h-4 mr-2" />
+                            Enviar
+                        </button>
+                        <input type="file" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+                        <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700">
+                            <XIcon className="w-6 h-6" />
+                        </button>
+                    </div>
                 </header>
                 
                 <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
