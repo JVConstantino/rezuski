@@ -1,6 +1,6 @@
 
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Property, PropertyPurpose } from '../types';
 import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon } from './Icons';
 
@@ -74,9 +74,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         </div>
         <div className="mt-auto pt-5">
-            <ReactRouterDOM.Link to={`/property/${property.id}`} className="w-full block text-center bg-primary-green text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
+            <Link to={`/property/${property.id}`} className="w-full block text-center bg-primary-green text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
                 Ver Imóvel
-            </ReactRouterDOM.Link>
+            </Link>
         </div>
       </div>
     </div>

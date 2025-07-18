@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
@@ -29,7 +30,7 @@ const AVAILABLE_AMENITIES = [
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing }) => {
     const { categories } = useCategories();
-    const { addImages: addImagesToGallery } = useImages();
+    const { refresh: refreshGallery } = useImages();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isOptimizing, setIsOptimizing] = useState(false);
@@ -156,7 +157,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 }
                 return updatedImages;
             });
-            addImagesToGallery(uploadedUrls);
+            refreshGallery();
         }
 
         setTimeout(() => {
@@ -292,9 +293,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const mainActionStatus = (isEditing && initialData?.status !== PropertyStatus.DRAFT) ? initialData!.status : PropertyStatus.AVAILABLE;
+        const mainActionStatus = (isEditing && initialData?.status) ? initialData.status : PropertyStatus.AVAILABLE;
         triggerSubmit(mainActionStatus);
-    }
+    };
 
     return (
         <>
@@ -577,22 +578,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                     <div className="flex justify-end">
                         <button type="button" className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
                         
-                        {(!isEditing || (isEditing && initialData?.status === PropertyStatus.DRAFT)) && (
-                            <button
-                                type="button"
-                                onClick={() => triggerSubmit(PropertyStatus.DRAFT)}
-                                disabled={uploadProgress.total > 0}
-                                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-600 hover:bg-slate-700 disabled:opacity-50"
-                            >
-                                Salvar Rascunho
-                            </button>
-                        )}
-
                         <button type="submit" disabled={uploadProgress.total > 0} className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-green hover:opacity-95 disabled:opacity-50">
-                             {isEditing 
-                                ? (initialData?.status === PropertyStatus.DRAFT ? 'Salvar e Publicar' : 'Salvar Alterações') 
-                                : 'Publicar Imóvel'
-                             }
+                             {isEditing ? 'Salvar Alterações' : 'Publicar Imóvel'}
                         </button>
                     </div>
                 </div>

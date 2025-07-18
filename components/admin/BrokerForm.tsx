@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Broker } from '../../types';
+import { supabase } from '../../lib/supabaseClient';
 
 interface BrokerFormProps {
     initialData?: Broker;
@@ -16,7 +17,8 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
         email: '',
     });
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [avatarFile, setAvatarFile] = useState<string>('');
+    const [avatarUrl, setAvatarUrl] = useState<string>('');
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         if (initialData) {
@@ -27,7 +29,7 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
                 email: initialData.email,
             });
             setAvatarPreview(initialData.avatarUrl);
-            setAvatarFile(initialData.avatarUrl);
+            setAvatarUrl(initialData.avatarUrl);
         }
     }, [initialData]);
 
@@ -36,23 +38,49 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+
+            // Show local preview immediately
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatarPreview(reader.result as string);
-                setAvatarFile(reader.result as string);
             };
             reader.readAsDataURL(file);
+            
+            setIsUploading(true);
+
+            const filePath = `public/avatars/${Date.now()}-${file.name}`;
+            try {
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage.from('property-images').getPublicUrl(filePath);
+                setAvatarUrl(data.publicUrl);
+
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                alert('Erro ao enviar a imagem do avatar.');
+                setAvatarPreview(initialData?.avatarUrl || null); // Revert preview on error
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!avatarUrl) {
+            alert('Por favor, aguarde o upload da imagem do avatar ou selecione uma imagem.');
+            return;
+        }
         const brokerData = {
             ...formData,
-            avatarUrl: avatarFile,
+            avatarUrl: avatarUrl,
         };
         onSubmit(brokerData);
     };
@@ -63,16 +91,24 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
                 <div className="md:col-span-1">
                     <h3 className="text-lg font-medium text-slate-800">Foto de Perfil</h3>
                     <div className="mt-4">
-                        <img 
-                            src={avatarPreview || 'https://via.placeholder.com/150'} 
-                            alt="Avatar Preview" 
-                            className="w-40 h-40 rounded-full object-cover mx-auto"
-                        />
+                        <div className="relative w-40 h-40 mx-auto">
+                            <img 
+                                src={avatarPreview || 'https://via.placeholder.com/150'} 
+                                alt="Avatar Preview" 
+                                className="w-40 h-40 rounded-full object-cover"
+                            />
+                            {isUploading && (
+                                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                                </div>
+                            )}
+                        </div>
                         <input 
                             type="file" 
                             onChange={handleImageChange} 
                             accept="image/*" 
-                            className="mt-4 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue/10 file:text-primary-blue hover:file:bg-primary-blue/20"
+                            disabled={isUploading}
+                            className="mt-4 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue/10 file:text-primary-blue hover:file:bg-primary-blue/20 disabled:opacity-50"
                         />
                     </div>
                 </div>
@@ -98,8 +134,8 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
             <div className="pt-5">
                 <div className="flex justify-end">
                     <button type="button" onClick={() => window.history.back()} className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
-                    <button type="submit" className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-green hover:opacity-95">
-                        {isEditing ? 'Salvar Alterações' : 'Adicionar Corretor'}
+                    <button type="submit" disabled={isUploading} className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-green hover:opacity-95 disabled:opacity-50">
+                        {isUploading ? 'Enviando...' : (isEditing ? 'Salvar Alterações' : 'Adicionar Corretor')}
                     </button>
                 </div>
             </div>

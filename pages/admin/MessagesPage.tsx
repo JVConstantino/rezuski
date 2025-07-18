@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Conversation, Message, MessageSender } from '../../types';
 import { MessageSquareIcon, SearchIcon, UserCircleIcon } from '../../components/Icons';
+import { Database } from '../../types/supabase';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const SendIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -92,7 +94,7 @@ const ChatWindow: React.FC<{
                 schema: 'public',
                 table: 'messages',
                 filter: `conversation_id=eq.${conversation.id}`
-            }, (payload) => {
+            }, (payload: RealtimePostgresChangesPayload<Message>) => {
                 setMessages(prev => {
                     if (prev.find(m => m.id === (payload.new as Message).id)) {
                         return prev;
@@ -114,22 +116,26 @@ const ChatWindow: React.FC<{
         const messageContent = newMessage.trim();
         setNewMessage('');
         
+        const messagePayload: Database['public']['Tables']['messages']['Insert'] = {
+            conversation_id: conversation.id,
+            sender: MessageSender.ADMIN,
+            content: messageContent
+        };
+        
         const { error: msgError } = await supabase
             .from('messages')
-            .insert({
-                conversation_id: conversation.id,
-                sender: MessageSender.ADMIN,
-                content: messageContent
-            });
+            .insert([messagePayload] as any);
 
         if (msgError) {
             console.error("Error sending message:", msgError);
             setNewMessage(messageContent);
         } else {
-            await supabase.from('conversations').update({
+            const conversationUpdate: Database['public']['Tables']['conversations']['Update'] = {
                 last_message_at: new Date().toISOString(),
                 last_message_preview: messageContent,
-            }).eq('id', conversation.id);
+                admin_has_unread: true
+            };
+            await supabase.from('conversations').update(conversationUpdate as any).eq('id', conversation.id);
         }
     };
     
@@ -196,7 +202,7 @@ const MessagesPage: React.FC = () => {
 
         const channel = supabase.channel('conversations')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, 
-            (payload) => {
+            (payload: RealtimePostgresChangesPayload<Conversation>) => {
                 const updatedConvo = payload.new as Conversation;
                 setConversations(prev => {
                     const existing = prev.find(c => c.id === updatedConvo.id);
@@ -223,7 +229,7 @@ const MessagesPage: React.FC = () => {
         if (conversation.admin_has_unread) {
             const { error } = await supabase
                 .from('conversations')
-                .update({ admin_has_unread: false })
+                .update({ admin_has_unread: false } as any)
                 .eq('id', conversation.id);
             if (error) console.error('Error marking conversation as read:', error);
         }

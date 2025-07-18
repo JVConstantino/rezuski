@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { APPLICATIONS, USERS } from '../../constants';
 import { useProperties } from '../../contexts/PropertyContext';
 import { Application, Property, User, CreditReport, BackgroundCheck } from '../../types';
@@ -105,7 +106,7 @@ const ApplicantInfoCard: React.FC<{ applicant: User, application: Application }>
 );
 
 const ApplicationSummaryPage: React.FC = () => {
-    const { applicationId } = ReactRouterDOM.useParams<{ applicationId: string }>();
+    const { applicationId } = useParams<{ applicationId: string }>();
     const { properties } = useProperties();
     const application = APPLICATIONS.find(a => a.id === applicationId);
     const applicant = USERS.find(u => u.id === application?.applicantId);
@@ -119,10 +120,10 @@ const ApplicationSummaryPage: React.FC = () => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <div>
-                     <ReactRouterDOM.Link to="/admin/applications" className="flex items-center text-sm text-slate-600 hover:text-primary-blue font-semibold">
+                     <Link to="/admin/applications" className="flex items-center text-sm text-slate-600 hover:text-primary-blue font-semibold">
                         <ChevronLeftIcon className="w-5 h-5 mr-1" />
                         Voltar para todas as aplicações
-                    </ReactRouterDOM.Link>
+                    </Link>
                     <h1 className="text-3xl font-bold text-slate-900 mt-1">Resumo da Aplicação</h1>
                 </div>
                 <div className="flex space-x-3">

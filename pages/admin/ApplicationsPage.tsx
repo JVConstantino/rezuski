@@ -1,8 +1,9 @@
 
 
 
+
 import React, { useState } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { APPLICATIONS, USERS } from '../../constants';
 import { useProperties } from '../../contexts/PropertyContext';
 import { Application, Property, User } from '../../types';
@@ -43,7 +44,7 @@ interface ApplicationDetailViewProps {
 }
 
 const ApplicationDetailView: React.FC<ApplicationDetailViewProps> = ({ application, user, property }) => {
-    const navigate = ReactRouterDOM.useNavigate();
+    const navigate = useNavigate();
 
     if (!application || !user || !property) {
         return (

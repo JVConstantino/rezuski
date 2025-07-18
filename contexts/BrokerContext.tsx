@@ -51,10 +51,11 @@ export const BrokerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const updateBroker = async (updatedBroker: Broker) => {
+        const { id, ...updateData } = updatedBroker;
         const { error } = await supabase
             .from('brokers')
-            .update(updatedBroker)
-            .eq('id', updatedBroker.id);
+            .update(updateData)
+            .eq('id', id);
 
         if (error) {
             console.error('Error updating broker:', error);
@@ -64,13 +65,38 @@ export const BrokerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const deleteBroker = async (brokerId: string) => {
-        const { error } = await supabase
+        const brokerToDelete = brokers.find(b => b.id === brokerId);
+        if (!brokerToDelete) return;
+
+        // 1. Delete avatar from storage
+        if (brokerToDelete.avatarUrl) {
+            const bucketName = 'property-images'; // As per BrokerForm logic
+            try {
+                const url = new URL(brokerToDelete.avatarUrl);
+                const filePath = url.pathname.split(`/${bucketName}/`)[1];
+                if (filePath) {
+                    const { error: storageError } = await supabase.storage
+                        .from(bucketName)
+                        .remove([filePath]);
+                    if (storageError) {
+                        console.error('Error deleting broker avatar:', storageError.message);
+                        // We log and proceed, not blocking the DB deletion.
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not parse avatar URL to delete from storage:', brokerToDelete.avatarUrl);
+            }
+        }
+
+        // 2. Delete the broker record from the database
+        const { error: dbError } = await supabase
             .from('brokers')
             .delete()
             .eq('id', brokerId);
         
-        if (error) {
-            console.error('Error deleting broker:', error);
+        if (dbError) {
+            console.error('Error deleting broker:', dbError);
+            alert(`Erro ao remover corretor: ${dbError.message}`);
         } else {
             setBrokers(prev => prev.filter(b => b.id !== brokerId));
         }

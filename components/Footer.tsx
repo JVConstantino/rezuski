@@ -1,7 +1,8 @@
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { LOGO_URL } from '../constants';
 
 const Footer: React.FC = () => {
@@ -26,9 +27,9 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* About */}
           <div className="col-span-1">
-            <ReactRouterDOM.Link to="/">
+            <Link to="/">
                 <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain mb-4 filter brightness-0 invert" />
-            </ReactRouterDOM.Link>
+            </Link>
             <p className="text-slate-400 max-w-xs">Uma nova forma de encontrar o seu lar. Facilitamos para inquilinos e proprietários.</p>
           </div>
           
@@ -38,11 +39,11 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               {navLinks.map(link => (
                 <li key={link.name}>
-                  <ReactRouterDOM.Link to={link.path} className="text-slate-400 hover:text-white transition-colors">{link.name}</ReactRouterDOM.Link>
+                  <Link to={link.path} className="text-slate-400 hover:text-white transition-colors">{link.name}</Link>
                 </li>
               ))}
                <li>
-                  <ReactRouterDOM.Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">Testar Conexão</ReactRouterDOM.Link>
+                  <Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">Testar Conexão</Link>
                 </li>
             </ul>
           </div>

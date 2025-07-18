@@ -1,7 +1,8 @@
 
 
+
 import React, { useState } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { 
     LayoutGridIcon, HomeIcon, FileTextIcon, UsersIcon, MessageSquareIcon, 
     BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon 
@@ -38,16 +39,16 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200">
-                     <ReactRouterDOM.Link to="/" className="flex-shrink-0">
+                     <Link to="/" className="flex-shrink-0">
                         <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
-                    </ReactRouterDOM.Link>
+                    </Link>
                     <button onClick={onClose} className="md:hidden text-slate-500 hover:text-primary-blue" aria-label="Close menu">
                         <XIcon className="w-6 h-6" />
                     </button>
                 </div>
                 <nav className="flex-1 px-4 py-6 space-y-2">
                     {navLinks.map(link => (
-                        <ReactRouterDOM.NavLink
+                        <NavLink
                             key={link.name}
                             to={link.path}
                             onClick={onClose} // Close sidebar on mobile navigation
@@ -59,11 +60,11 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
                         >
                             {link.icon}
                             <span>{link.name}</span>
-                        </ReactRouterDOM.NavLink>
+                        </NavLink>
                     ))}
                 </nav>
                 <div className="px-4 py-6 border-t border-slate-200">
-                     <ReactRouterDOM.NavLink
+                     <NavLink
                         to="/admin/settings"
                         onClick={onClose}
                         className={({ isActive }) => 
@@ -74,7 +75,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
                     >
                         <SettingsIcon className="w-5 h-5"/>
                         <span>Configurações</span>
-                    </ReactRouterDOM.NavLink>
+                    </NavLink>
                 </div>
             </aside>
         </>
@@ -97,14 +98,14 @@ const AdminHeader: React.FC<{ onMenuToggle: () => void }> = ({ onMenuToggle }) =
                 </div>
             </div>
             <div className="flex items-center space-x-4 md:space-x-6">
-                 <ReactRouterDOM.Link 
+                 <Link 
                     to="/"
                     className="flex items-center bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
                     title="Ver site"
                 >
                     <EyeIcon className="w-5 h-5 md:mr-2" />
                     <span className="hidden md:inline">Ver Site</span>
-                </ReactRouterDOM.Link>
+                </Link>
                 <button className="text-slate-500 hover:text-primary-blue relative" aria-label="Notifications">
                     <BellIcon className="w-6 h-6"/>
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -133,7 +134,7 @@ const AdminLayout: React.FC = () => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <AdminHeader onMenuToggle={() => setSidebarOpen(true)}/>
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6 md:p-8">
-                    <ReactRouterDOM.Outlet/>
+                    <Outlet/>
                 </main>
             </div>
         </div>

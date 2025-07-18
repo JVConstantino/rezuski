@@ -2,8 +2,9 @@
 
 
 
+
 import React, { useState, useMemo, useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
@@ -134,7 +135,7 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
 
 const SearchResultsPage: React.FC = () => {
     const { properties } = useProperties();
-    const [searchParams, setSearchParams] = ReactRouterDOM.useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     
     const [filters, setFilters] = useState({
         purpose: searchParams.get('purpose') || PropertyPurpose.RENT,

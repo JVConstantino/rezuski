@@ -1,14 +1,15 @@
 
 
 
+
 import React, { useState } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { PropertyStatus, PropertyPurpose } from '../../types';
-import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon } from '../../components/Icons';
+import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon } from '../../components/Icons';
 
 const PropertiesPage: React.FC = () => {
-  const { properties, toggleArchiveProperty } = useProperties();
+  const { properties, toggleArchiveProperty, deleteProperty } = useProperties();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredProperties = properties.filter(prop => 
@@ -16,12 +17,17 @@ const PropertiesPage: React.FC = () => {
     (prop.code && prop.code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleDelete = async (id: string, title: string) => {
+    if (window.confirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE o imóvel "${title}"? Esta ação não pode ser desfeita.`)) {
+        await deleteProperty(id);
+    }
+  }
+
   const propertyStatusDisplay: Record<string, string> = {
     [PropertyStatus.AVAILABLE]: 'Disponível',
     [PropertyStatus.RENTED]: 'Alugado',
     [PropertyStatus.SOLD]: 'Vendido',
     [PropertyStatus.ARCHIVED]: 'Arquivado',
-    [PropertyStatus.DRAFT]: 'Rascunho'
   };
 
   const propertyStatusColor: Record<string, string> = {
@@ -29,17 +35,16 @@ const PropertiesPage: React.FC = () => {
       [PropertyStatus.RENTED]: 'bg-yellow-100 text-yellow-800',
       [PropertyStatus.SOLD]: 'bg-blue-100 text-blue-800',
       [PropertyStatus.ARCHIVED]: 'bg-slate-100 text-slate-800',
-      [PropertyStatus.DRAFT]: 'bg-gray-200 text-gray-800',
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Gerenciar Propriedades</h1>
-        <ReactRouterDOM.Link to="/admin/properties/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+        <Link to="/admin/properties/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
           <PlusIcon className="w-5 h-5 mr-2" />
           Adicionar Propriedade
-        </ReactRouterDOM.Link>
+        </Link>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -63,7 +68,6 @@ const PropertiesPage: React.FC = () => {
               <option>Alugado</option>
               <option>Vendido</option>
               <option>Arquivado</option>
-              <option>Rascunho</option>
             </select>
           </div>
         </div>
@@ -111,14 +115,17 @@ const PropertiesPage: React.FC = () => {
                   <td className="p-4 text-slate-600">{prop.propertyType}</td>
                   <td className="p-4">
                     <div className="flex justify-center space-x-2">
-                      <ReactRouterDOM.Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar">
+                      <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar">
                         <EyeIcon className="w-5 h-5"/>
-                      </ReactRouterDOM.Link>
-                      <ReactRouterDOM.Link to={`/admin/properties/edit/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
+                      </Link>
+                      <Link to={`/admin/properties/edit/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
                         <EditIcon className="w-5 h-5"/>
-                      </ReactRouterDOM.Link>
-                      <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title={prop.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}>
+                      </Link>
+                      <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-yellow-600 rounded-md hover:bg-slate-100" title={prop.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}>
                         <ArchiveIcon className="w-5 h-5"/>
+                      </button>
+                      <button onClick={() => handleDelete(prop.id, prop.title)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Excluir">
+                        <TrashIcon className="w-5 h-5"/>
                       </button>
                     </div>
                   </td>

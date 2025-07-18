@@ -1,8 +1,9 @@
 
 
 
+
 import React, { useState } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
@@ -16,7 +17,7 @@ import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
 
 const HeroSection = () => {
-    const navigate = ReactRouterDOM.useNavigate();
+    const navigate = useNavigate();
     const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>(PropertyPurpose.RENT);
     const [location, setLocation] = useState('');
     const [priceRange, setPriceRange] = useState('any');
@@ -43,9 +44,9 @@ const HeroSection = () => {
     const currentPriceRanges = searchPurpose === PropertyPurpose.SALE ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
 
   return (
-    <div className="relative bg-slate-100 overflow-hidden">
+    <div className="relative bg-emerald-800 overflow-hidden">
       <div className="absolute inset-0">
-        <img src="https://picsum.photos/seed/hero/1920/1080" className="w-full h-full object-cover opacity-20" alt="Hero background" />
+        <img src="https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/FUNDO.jpg" className="w-full h-full object-cover opacity-60" alt="Hero background" />
       </div>
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
@@ -53,12 +54,12 @@ const HeroSection = () => {
                 <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-24 mx-auto mb-6 object-contain" />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
-                <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">
                 Dê o próximo passo!
                 </h1>
             </AnimateOnScroll>
             <AnimateOnScroll delay={200}>
-                <p className="mt-6 max-w-2xl mx-auto text-lg text-slate-600">
+                <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-50">
                 Aqui você está conectado com os melhores imóveis da Região!
                 </p>
             </AnimateOnScroll>
@@ -244,9 +245,9 @@ const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; 
             </div>
             <AnimateOnScroll delay={300}>
                 <div className="text-center mt-12">
-                    <ReactRouterDOM.Link to={`/search?purpose=${purpose}`} className="inline-block bg-primary-green text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:opacity-95 transition-all">
+                    <Link to={`/search?purpose=${purpose}`} className="inline-block bg-primary-green text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:opacity-95 transition-all">
                         Ver Mais
-                    </ReactRouterDOM.Link>
+                    </Link>
                 </div>
             </AnimateOnScroll>
         </Section>

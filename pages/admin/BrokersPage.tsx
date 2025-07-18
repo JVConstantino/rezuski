@@ -1,7 +1,8 @@
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { PlusIcon, EditIcon, TrashIcon } from '../../components/Icons';
 
@@ -18,10 +19,10 @@ const BrokersPage: React.FC = () => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-slate-900">Gerenciar Corretores</h1>
-                <ReactRouterDOM.Link to="/admin/brokers/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+                <Link to="/admin/brokers/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
                     <PlusIcon className="w-5 h-5 mr-2" />
                     Adicionar Corretor
-                </ReactRouterDOM.Link>
+                </Link>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -53,9 +54,9 @@ const BrokersPage: React.FC = () => {
                                     </td>
                                     <td className="p-4">
                                         <div className="flex justify-center space-x-2">
-                                            <ReactRouterDOM.Link to={`/admin/brokers/edit/${broker.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
+                                            <Link to={`/admin/brokers/edit/${broker.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
                                                 <EditIcon className="w-5 h-5" />
-                                            </ReactRouterDOM.Link>
+                                            </Link>
                                             <button onClick={() => handleDelete(broker.id)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Remover">
                                                 <TrashIcon className="w-5 h-5" />
                                             </button>

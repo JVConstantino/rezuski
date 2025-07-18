@@ -1,12 +1,13 @@
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { PropertyStatus, PropertyPurpose } from '../../types';
 import { ChevronLeftIcon, EditIcon, ArchiveIcon, MapPinIcon, DollarSignIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon } from '../../components/Icons';
 
 const PropertyDetailPage: React.FC = () => {
-    const { propertyId } = ReactRouterDOM.useParams<{ propertyId: string }>();
+    const { propertyId } = useParams<{ propertyId: string }>();
     const { properties, toggleArchiveProperty } = useProperties();
     const property = properties.find(p => p.id === propertyId);
 
@@ -14,9 +15,9 @@ const PropertyDetailPage: React.FC = () => {
         return (
             <div className="text-center p-8">
                 <h1 className="text-2xl text-slate-600">Imóvel não encontrado.</h1>
-                <ReactRouterDOM.Link to="/admin/properties" className="mt-4 inline-block text-primary-blue hover:underline">
+                <Link to="/admin/properties" className="mt-4 inline-block text-primary-blue hover:underline">
                     Voltar para a lista de propriedades
-                </ReactRouterDOM.Link>
+                </Link>
             </div>
         );
     }
@@ -34,10 +35,10 @@ const PropertyDetailPage: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <ReactRouterDOM.Link to="/admin/properties" className="flex items-center text-sm text-slate-600 hover:text-primary-blue font-semibold">
+                    <Link to="/admin/properties" className="flex items-center text-sm text-slate-600 hover:text-primary-blue font-semibold">
                         <ChevronLeftIcon className="w-5 h-5 mr-1" />
                         Voltar para Propriedades
-                    </ReactRouterDOM.Link>
+                    </Link>
                     <h1 className="text-3xl font-bold text-slate-900 mt-1">{property.title}</h1>
                     <div className="flex items-center text-slate-500 mt-1">
                         <MapPinIcon className="w-4 h-4 mr-1.5" />
@@ -45,10 +46,10 @@ const PropertyDetailPage: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex space-x-3">
-                    <ReactRouterDOM.Link to={`/admin/properties/edit/${property.id}`} className="flex items-center bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
+                    <Link to={`/admin/properties/edit/${property.id}`} className="flex items-center bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
                         <EditIcon className="w-5 h-5 mr-2" />
                         Editar
-                    </ReactRouterDOM.Link>
+                    </Link>
                     <button onClick={() => toggleArchiveProperty(property.id)} className={`flex items-center text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors ${property.status === PropertyStatus.ARCHIVED ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-500 hover:bg-red-600'}`}>
                         <ArchiveIcon className="w-5 h-5 mr-2" />
                         {property.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}

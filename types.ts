@@ -13,7 +13,6 @@ export enum PropertyStatus {
   RENTED = 'RENTED',
   SOLD = 'SOLD',
   ARCHIVED = 'ARCHIVED',
-  DRAFT = 'DRAFT',
 }
 
 export enum ApplicationStatus {

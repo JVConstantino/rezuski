@@ -3,52 +3,73 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { supabase } from '../lib/supabaseClient';
 
 interface ImageContextType {
-    galleryImages: string[];
-    addImages: (newImages: string[]) => void;
+    galleryItems: any[];
+    currentPath: string;
+    setPath: (path: string) => void;
+    refresh: () => void;
     loading: boolean;
 }
 
 const ImageContext = createContext<ImageContextType | undefined>(undefined);
 
 export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [galleryImages, setGalleryImages] = useState<string[]>([]);
+    const [galleryItems, setGalleryItems] = useState<any[]>([]);
+    const [currentPath, setCurrentPath] = useState('public');
     const [loading, setLoading] = useState(true);
 
-    const fetchGalleryImages = async () => {
+    const fetchItemsForPath = async (path: string) => {
         setLoading(true);
-        const { data, error } = await supabase.storage.from('property-images').list('public', {
+        const { data, error } = await supabase.storage.from('property-images').list(path, {
             limit: 100,
             offset: 0,
-            sortBy: { column: 'created_at', order: 'desc' },
+            sortBy: { column: 'name', order: 'asc' },
         });
 
         if (error) {
-            console.error('Error listing storage images:', error);
-            setGalleryImages([]);
+            console.error(`Error listing storage items for path "${path}":`, error);
+            setGalleryItems([]);
         } else if (data) {
-            const urls = data.map(file => {
-                return supabase.storage.from('property-images').getPublicUrl(`public/${file.name}`).data.publicUrl;
+            const itemsWithUrls = data.map(item => {
+                // if id is null, it's a folder
+                if (item.id !== null) {
+                    const fullPath = `${path}/${item.name}`;
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('property-images')
+                        .getPublicUrl(fullPath);
+                    return { ...item, publicUrl };
+                }
+                return item;
             });
-            setGalleryImages(urls);
+
+            // Sort folders first, then by name
+            const sortedData = itemsWithUrls.sort((a, b) => {
+                const aIsFolder = a.id === null;
+                const bIsFolder = b.id === null;
+                if (aIsFolder && !bIsFolder) return -1;
+                if (!aIsFolder && bIsFolder) return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            setGalleryItems(sortedData);
         }
         setLoading(false);
-    }
+    };
 
     useEffect(() => {
-        fetchGalleryImages();
-    }, []);
+        fetchItemsForPath(currentPath);
+    }, [currentPath]);
 
-    const addImages = (newImages: string[]) => {
-        setGalleryImages(prevImages => {
-            const combined = [...newImages, ...prevImages];
-            const uniqueImages = [...new Set(combined)];
-            return uniqueImages;
-        });
+    const setPath = (newPath: string) => {
+        setCurrentPath(newPath);
+    };
+
+    const refresh = () => {
+        fetchItemsForPath(currentPath);
     };
     
     return (
-        <ImageContext.Provider value={{ galleryImages, addImages, loading }}>
-            {!loading && children}
+        <ImageContext.Provider value={{ galleryItems, currentPath, setPath, refresh, loading }}>
+            {children}
         </ImageContext.Provider>
     );
 };

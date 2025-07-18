@@ -1,8 +1,9 @@
 
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Property, PropertyPurpose } from '../types';
 import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon } from './Icons';
 
@@ -39,15 +40,15 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col md:flex-row transition-shadow hover:shadow-md">
       <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
-        <ReactRouterDOM.Link to={`/property/${property.id}`}>
+        <Link to={`/property/${property.id}`}>
          <img src={property.images[0]} alt={property.title} className="w-full h-48 md:h-full object-cover" />
-        </ReactRouterDOM.Link>
+        </Link>
       </div>
       <div className="p-5 flex flex-col flex-grow md:w-2/3 lg:w-3/4">
         <div className="flex justify-between items-start">
             <div>
                  <h3 className="text-xl font-bold text-slate-800 hover:text-primary-blue transition-colors">
-                    <ReactRouterDOM.Link to={`/property/${property.id}`}>{property.title}</ReactRouterDOM.Link>
+                    <Link to={`/property/${property.id}`}>{property.title}</Link>
                  </h3>
                  <p className="text-slate-500 text-sm flex items-center mt-1">
                     <MapPinIcon className="w-4 h-4 mr-1.5 flex-shrink-0" />
@@ -82,9 +83,9 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property }) => {
                   </div>
                 </div>
                 <div className="mt-4 sm:mt-0 flex-shrink-0">
-                    <ReactRouterDOM.Link to={`/property/${property.id}`} className="inline-block bg-primary-green text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
+                    <Link to={`/property/${property.id}`} className="inline-block bg-primary-green text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
                         Ver Imóvel
-                    </ReactRouterDOM.Link>
+                    </Link>
                 </div>
             </div>
         </div>

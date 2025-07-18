@@ -1,8 +1,9 @@
 
 
+
 import React, { useState } from 'react';
 import { useImages } from '../../contexts/ImageContext';
-import { XIcon, SearchIcon } from '../Icons';
+import { XIcon, SearchIcon, FolderIcon } from '../Icons';
 
 interface ImageGalleryModalProps {
     isOpen: boolean;
@@ -12,15 +13,14 @@ interface ImageGalleryModalProps {
 }
 
 const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({ isOpen, onClose, onSelectImages, currentImages }) => {
-    const { galleryImages } = useImages();
+    const { galleryItems, currentPath, setPath, loading } = useImages();
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     if (!isOpen) return null;
 
     const handleToggleSelect = (image: string) => {
-        if (currentImages.includes(image)) return; // Don't allow re-selecting images already on the property
-        
+        if (currentImages.includes(image)) return;
         setSelectedImages(prev =>
             prev.includes(image) ? prev.filter(i => i !== image) : [...prev, image]
         );
@@ -31,8 +31,37 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({ isOpen, onClose, 
         onClose();
     };
 
-    const filteredImages = galleryImages.filter(image =>
-        image.toLowerCase().includes(searchTerm.toLowerCase())
+    const handleFolderClick = (folderName: string) => {
+        const newPath = `${currentPath}/${folderName}`;
+        setPath(newPath);
+    };
+    
+    const renderBreadcrumbs = () => {
+        const pathSegments = currentPath === 'public' ? [] : currentPath.substring('public/'.length).split('/');
+        
+        return (
+            <div className="flex items-center text-sm text-slate-600">
+                <button onClick={() => setPath('public')} className="hover:underline font-medium">Galeria</button>
+                {pathSegments.map((segment, index) => {
+                    const pathToThisSegment = `public/${pathSegments.slice(0, index + 1).join('/')}`;
+                    return (
+                        <React.Fragment key={segment}>
+                            <span className="mx-2 text-slate-400">/</span>
+                            <button
+                                onClick={() => setPath(pathToThisSegment)}
+                                className="hover:underline"
+                            >
+                                {segment}
+                            </button>
+                        </React.Fragment>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const filteredItems = galleryItems.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -51,51 +80,74 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({ isOpen, onClose, 
                     </button>
                 </header>
                 
-                <div className="p-4 border-b border-slate-200">
-                     <div className="relative">
+                <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                     <div className="relative w-full sm:w-auto sm:flex-grow">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <SearchIcon className="w-5 h-5 text-slate-400" />
                         </span>
                         <input
                             type="text"
-                            placeholder="Buscar imagem..."
+                            placeholder="Buscar na pasta atual..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
                         />
                     </div>
+                    {renderBreadcrumbs()}
                 </div>
 
                 <main className="flex-1 overflow-y-auto p-4">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                        {filteredImages.map((image, index) => {
-                            const isSelected = selectedImages.includes(image);
-                            const isAlreadyOnProperty = currentImages.includes(image);
+                    {loading ? (
+                         <div className="flex justify-center items-center h-full">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                            {filteredItems.map((item, index) => {
+                                const isFolder = item.id === null;
 
-                            return (
-                                <div
-                                    key={index}
-                                    className={`relative rounded-lg overflow-hidden cursor-pointer group aspect-square
-                                        ${isAlreadyOnProperty ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
-                                        ${isSelected ? 'ring-4 ring-primary-blue' : ''}
-                                    `}
-                                    onClick={() => handleToggleSelect(image)}
-                                >
-                                    <img src={image} alt={`Imagem da galeria ${index}`} className="w-full h-full object-cover" />
-                                    {isAlreadyOnProperty && (
-                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                            <span className="text-white text-xs font-bold text-center">Já adicionada</span>
+                                if (isFolder) {
+                                    return (
+                                        <div
+                                            key={item.name}
+                                            onClick={() => handleFolderClick(item.name)}
+                                            className="relative rounded-lg overflow-hidden cursor-pointer group aspect-square bg-slate-100 hover:bg-slate-200 flex flex-col items-center justify-center p-2 transition-colors"
+                                        >
+                                            <FolderIcon className="w-16 h-16 text-primary-blue" />
+                                            <p className="mt-2 text-sm font-medium text-slate-700 text-center truncate w-full">{item.name}</p>
                                         </div>
-                                    )}
-                                    {isSelected && (
-                                        <div className="absolute inset-0 bg-primary-blue/50 flex items-center justify-center">
-                                            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
+                                    )
+                                }
+
+                                const imageUrl = item.publicUrl;
+                                const isSelected = selectedImages.includes(imageUrl);
+                                const isAlreadyOnProperty = currentImages.includes(imageUrl);
+
+                                return (
+                                    <div
+                                        key={imageUrl}
+                                        className={`relative rounded-lg overflow-hidden cursor-pointer group aspect-square
+                                            ${isAlreadyOnProperty ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
+                                            ${isSelected ? 'ring-4 ring-primary-blue' : ''}
+                                        `}
+                                        onClick={() => !isAlreadyOnProperty && handleToggleSelect(imageUrl)}
+                                    >
+                                        <img src={imageUrl} alt={`Imagem da galeria ${index}`} className="w-full h-full object-cover" />
+                                        {isAlreadyOnProperty && (
+                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                <span className="text-white text-xs font-bold text-center">Já adicionada</span>
+                                            </div>
+                                        )}
+                                        {isSelected && (
+                                            <div className="absolute inset-0 bg-primary-blue/50 flex items-center justify-center">
+                                                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
                 </main>
 
                 <footer className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end items-center space-x-3">

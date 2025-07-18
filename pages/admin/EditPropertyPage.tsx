@@ -1,17 +1,18 @@
 
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import PropertyForm from '../../components/admin/PropertyForm';
 import { Property, Amenity, PropertyStatus } from '../../types';
 import { ChevronLeftIcon } from '../../components/Icons';
 
 const EditPropertyPage: React.FC = () => {
-    const { propertyId } = ReactRouterDOM.useParams<{ propertyId: string }>();
+    const { propertyId } = useParams<{ propertyId: string }>();
     const { properties, updateProperty } = useProperties();
-    const navigate = ReactRouterDOM.useNavigate();
+    const navigate = useNavigate();
 
     const propertyToEdit = properties.find(p => p.id === propertyId);
 

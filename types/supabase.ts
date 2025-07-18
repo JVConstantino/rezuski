@@ -1,6 +1,11 @@
 
-
-import { Amenity, PriceHistory, PropertyPurpose, PropertyStatus, PropertyType, UserRole } from ".";
+import {
+  PropertyPurpose,
+  PropertyType,
+  PropertyStatus,
+  UserRole,
+  MessageSender,
+} from "../types"
 
 export type Json =
   | string
@@ -15,99 +20,99 @@ export type Database = {
     Tables: {
       properties: {
         Row: {
-          id: string;
-          createdAt?: string;
-          title: string;
-          code?: string;
-          address: string;
-          neighborhood: string;
-          city: string;
-          state: string;
-          zipCode: string;
-          description: string;
-          purpose: PropertyPurpose;
-          rentPrice?: number;
-          salePrice?: number;
-          propertyType: PropertyType;
-          categoryId?: string;
-          bedrooms?: number;
-          bathrooms?: number;
-          areaM2?: number;
-          repairQuality?: string;
-          status: PropertyStatus;
-          yearBuilt?: number;
-          images: string[];
-          amenities: Amenity[];
-          availableDate?: string;
-          listedByUserId?: string;
-          priceHistory: PriceHistory[];
-          isPopular?: boolean;
-          tourUrl?: string;
-          viewCount?: number;
-        };
+          id: string
+          createdAt?: string
+          title: string
+          code?: string
+          address: string
+          neighborhood: string
+          city: string
+          state: string
+          zipCode: string
+          description: string
+          purpose: PropertyPurpose
+          rentPrice?: number
+          salePrice?: number
+          propertyType: PropertyType
+          categoryId?: string
+          bedrooms?: number
+          bathrooms?: number
+          areaM2?: number
+          repairQuality?: string
+          status: PropertyStatus
+          yearBuilt?: number
+          images: string[]
+          amenities: Json
+          availableDate?: string
+          listedByUserId?: string
+          priceHistory: Json
+          isPopular?: boolean
+          tourUrl?: string
+          viewCount?: number
+        }
         Insert: {
-          id?: string;
-          createdAt?: string;
-          title: string;
-          code?: string;
-          address: string;
-          neighborhood: string;
-          city: string;
-          state: string;
-          zipCode: string;
-          description: string;
-          purpose: PropertyPurpose;
-          rentPrice?: number;
-          salePrice?: number;
-          propertyType: PropertyType;
-          categoryId?: string;
-          bedrooms?: number;
-          bathrooms?: number;
-          areaM2?: number;
-          repairQuality?: string;
-          status: PropertyStatus;
-          yearBuilt?: number;
-          images: string[];
-          amenities: Amenity[];
-          availableDate?: string;
-          listedByUserId?: string;
-          priceHistory: PriceHistory[];
-          isPopular?: boolean;
-          tourUrl?: string;
-          viewCount?: number;
-        };
+          id?: string
+          createdAt?: string
+          title: string
+          code?: string
+          address: string
+          neighborhood: string
+          city: string
+          state: string
+          zipCode: string
+          description: string
+          purpose: PropertyPurpose
+          rentPrice?: number
+          salePrice?: number
+          propertyType: PropertyType
+          categoryId?: string
+          bedrooms?: number
+          bathrooms?: number
+          areaM2?: number
+          repairQuality?: string
+          status: PropertyStatus
+          yearBuilt?: number
+          images: string[]
+          amenities: Json
+          availableDate?: string
+          listedByUserId?: string
+          priceHistory: Json
+          isPopular?: boolean
+          tourUrl?: string
+          viewCount?: number
+        }
         Update: {
-          id?: string;
-          createdAt?: string;
-          title?: string;
-          code?: string;
-          address?: string;
-          neighborhood?: string;
-          city?: string;
-          state?: string;
-          zipCode?: string;
-          description?: string;
-          purpose?: PropertyPurpose;
-          rentPrice?: number;
-          salePrice?: number;
-          propertyType?: PropertyType;
-          categoryId?: string;
-          bedrooms?: number;
-          bathrooms?: number;
-          areaM2?: number;
-          repairQuality?: string;
-          status?: PropertyStatus;
-          yearBuilt?: number;
-          images?: string[];
-          amenities?: Amenity[];
-          availableDate?: string;
-          listedByUserId?: string;
-          priceHistory?: PriceHistory[];
-          isPopular?: boolean;
-          tourUrl?: string;
-          viewCount?: number;
-        };
-      };
+          id?: string
+          createdAt?: string
+          title?: string
+          code?: string
+          address?: string
+          neighborhood?: string
+          city?: string
+          state?: string
+          zipCode?: string
+          description?: string
+          purpose?: PropertyPurpose
+          rentPrice?: number
+          salePrice?: number
+          propertyType?: PropertyType
+          categoryId?: string
+          bedrooms?: number
+          bathrooms?: number
+          areaM2?: number
+          repairQuality?: string
+          status?: PropertyStatus
+          yearBuilt?: number
+          images?: string[]
+          amenities?: Json
+          availableDate?: string
+          listedByUserId?: string
+          priceHistory?: Json
+          isPopular?: boolean
+          tourUrl?: string
+          viewCount?: number
+        }
+      }
       profiles: {
         Row: {
           id: string
@@ -133,7 +138,7 @@ export type Database = {
           avatarUrl?: string
           role?: UserRole
         }
-      };
+      }
       brokers: {
         Row: {
           id: string
@@ -159,7 +164,7 @@ export type Database = {
           phone?: string
           email?: string
         }
-      };
+      }
       categories: {
         Row: {
           id: string
@@ -176,7 +181,7 @@ export type Database = {
           name?: string
           iconUrl?: string
         }
-      };
+      }
       resources: {
         Row: {
             id: string;
@@ -193,7 +198,7 @@ export type Database = {
             title?: string;
             fileUrl?: string;
         };
-      };
+      }
       conversations: {
         Row: {
           id: string
@@ -225,27 +230,27 @@ export type Database = {
           last_message_preview?: string | null
           admin_has_unread?: boolean
         }
-      };
+      }
       messages: {
         Row: {
           id: string
           created_at: string
           conversation_id: string
-          sender: "CUSTOMER" | "ADMIN"
+          sender: MessageSender
           content: string
         }
         Insert: {
           id?: string
           created_at?: string
           conversation_id: string
-          sender: "CUSTOMER" | "ADMIN"
+          sender: MessageSender
           content: string
         }
         Update: {
           id?: string
           created_at?: string
           conversation_id?: string
-          sender?: "CUSTOMER" | "ADMIN"
+          sender?: MessageSender
           content?: string
         }
       }

@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useMatch } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { Conversation, Message, MessageSender } from '../../types';
 import { MessageSquareIcon, XIcon, UserCircleIcon, ChevronUpIcon } from '../Icons';
+import { Database } from '../../types/supabase';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const SendIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -22,7 +24,7 @@ const ChatWidget: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const match = ReactRouterDOM.useMatch('/property/:propertyId');
+    const match = useMatch('/property/:propertyId');
     const propertyId = match?.params.propertyId;
 
     useEffect(() => {
@@ -45,7 +47,7 @@ const ChatWidget: React.FC = () => {
                     schema: 'public',
                     table: 'messages',
                     filter: `conversation_id=eq.${conversation.id}`
-                }, (payload) => {
+                }, (payload: RealtimePostgresChangesPayload<Message>) => {
                     setMessages(prev => {
                         if (prev.find(m => m.id === (payload.new as Message).id)) {
                             return prev;
@@ -105,16 +107,17 @@ const ChatWidget: React.FC = () => {
             await fetchConversation(data.id);
             localStorage.setItem(LOCAL_STORAGE_KEY, data.id);
         } else {
+            const newConvoPayload: Database['public']['Tables']['conversations']['Insert'] = {
+                customer_name: name,
+                customer_email: email,
+                property_id: propertyId || null,
+                last_message_at: new Date().toISOString(),
+                last_message_preview: "Nova conversa iniciada",
+                admin_has_unread: true
+            };
             const { data: newConvo, error: insertError } = await supabase
                 .from('conversations')
-                .insert({
-                    customer_name: name,
-                    customer_email: email,
-                    property_id: propertyId || null,
-                    last_message_at: new Date().toISOString(),
-                    last_message_preview: "Nova conversa iniciada",
-                    admin_has_unread: true
-                })
+                .insert([newConvoPayload] as any)
                 .select()
                 .single();
             
@@ -136,24 +139,27 @@ const ChatWidget: React.FC = () => {
 
         const messageContent = newMessage.trim();
         setNewMessage('');
+
+        const messagePayload: Database['public']['Tables']['messages']['Insert'] = {
+            conversation_id: conversation.id,
+            sender: MessageSender.CUSTOMER,
+            content: messageContent
+        };
         
         const { error: msgError } = await supabase
             .from('messages')
-            .insert({
-                conversation_id: conversation.id,
-                sender: MessageSender.CUSTOMER,
-                content: messageContent
-            });
+            .insert([messagePayload] as any);
         
         if (msgError) {
              console.error("Error sending message:", msgError);
              setNewMessage(messageContent);
         } else {
-            await supabase.from('conversations').update({
+            const conversationUpdate: Database['public']['Tables']['conversations']['Update'] = {
                 last_message_at: new Date().toISOString(),
                 last_message_preview: messageContent,
                 admin_has_unread: true
-            }).eq('id', conversation.id);
+            };
+            await supabase.from('conversations').update(conversationUpdate as any).eq('id', conversation.id);
         }
     };
     
@@ -232,7 +238,7 @@ const ChatWidget: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-20 left-4 md:bottom-4 md:right-4 md:left-auto z-50">
+        <div className="fixed bottom-20 right-4 md:bottom-4 z-50 flex flex-col items-end">
             {/* Chat Window */}
             {isOpen && (
                 <div className="bg-white rounded-lg shadow-2xl w-80 h-96 mb-2 flex flex-col">

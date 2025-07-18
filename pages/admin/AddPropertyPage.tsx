@@ -1,8 +1,9 @@
 
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import PropertyForm from '../../components/admin/PropertyForm';
 import { Property, PropertyStatus, PriceHistoryEvent, PropertyPurpose, Amenity } from '../../types';
@@ -10,7 +11,7 @@ import { ChevronLeftIcon } from '../../components/Icons';
 
 const AddPropertyPage: React.FC = () => {
     const { addProperty } = useProperties();
-    const navigate = ReactRouterDOM.useNavigate();
+    const navigate = useNavigate();
 
     const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities' | 'listedByUserId'|'viewCount'> & { amenities: Amenity[] }, status: PropertyStatus) => {
         const newProperty: Omit<Property, 'id'> = {

@@ -1,7 +1,6 @@
 
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import type { Session, User as SupabaseUser, AuthChangeEvent } from '@supabase/supabase-js';
@@ -14,6 +13,7 @@ interface AuthContextType {
     logout: () => void;
     openLoginModal: () => void;
     closeLoginModal: () => void;
+    sendPasswordResetEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +22,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<User | null>(null);
     const [isLoginModalOpen, setLoginModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const navigate = ReactRouterDOM.useNavigate();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const getSession = async () => {
@@ -34,8 +34,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         getSession();
 
         const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (_event: AuthChangeEvent, session: Session | null) => {
-                await updateUserState(session);
+            (_event: AuthChangeEvent, session: Session | null) => {
+                updateUserState(session);
             }
         );
 
@@ -52,8 +52,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 .eq('id', session.user.id)
                 .single();
             
-            // Handle case where profile doesn't exist (e.g., new user)
-            // PGRST116 error code from PostgREST means no rows were found
             if (error && error.code !== 'PGRST116') {
                 console.error('Error fetching profile:', error.message);
                 setUser(null);
@@ -61,7 +59,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
 
             if (profile) {
-                // If profile exists, map it to our app's User type
                 const appUser: User = {
                     id: profile.id,
                     email: session.user.email!,
@@ -71,8 +68,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 };
                 setUser(appUser);
             } else {
-                // If no profile exists, the user is authenticated with Supabase but not a valid user in our app's public.profiles table.
-                // For an admin panel, this is an invalid state. We log a warning and treat them as not logged in.
                 console.warn(`Authentication successful, but no profile found for user ID: ${session.user.id}. Please ensure a profile exists in the 'profiles' table.`);
                 setUser(null);
             }
@@ -83,8 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const login = async (email: string, password?: string) => {
         if (!password) {
-            alert('Password is required for login.');
-            return;
+            throw new Error('A senha é obrigatória.');
         }
 
         const { error } = await supabase.auth.signInWithPassword({
@@ -93,13 +87,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
 
         if (error) {
-            alert(error.message);
-        } else {
-            // Successful Supabase login will trigger onAuthStateChange,
-            // which handles fetching the profile and setting the user state.
-            closeLoginModal();
-            navigate('/admin/dashboard', { replace: true });
+            throw error;
         }
+        
+        closeLoginModal();
+        navigate('/admin/dashboard', { replace: true });
     };
 
     const logout = async () => {
@@ -110,14 +102,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
         navigate('/');
     };
+    
+    const sendPasswordResetEmail = async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin, // Or a specific password reset page
+        });
+
+        if (error) {
+            // Don't expose specific Supabase errors to the user for security
+            console.error('Password reset error:', error);
+            throw new Error('Não foi possível enviar o email de recuperação.');
+        }
+    };
 
     const openLoginModal = () => setLoginModalOpen(true);
     const closeLoginModal = () => setLoginModalOpen(false);
     
-    // An user is only authenticated in the app if they have a user object AND their role is ADMIN.
     const isAuthenticated = !!user && user.role === UserRole.ADMIN;
 
-    const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal };
+    const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal, sendPasswordResetEmail };
 
     return (
         <AuthContext.Provider value={value}>

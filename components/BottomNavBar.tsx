@@ -1,7 +1,8 @@
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { HomeIcon, DollarSignIcon, BuildingIcon, UserCircleIcon } from './Icons';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -15,7 +16,7 @@ const BottomNavBar: React.FC = () => {
     return (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-t-lg z-50">
             <div className="flex justify-around items-center h-16">
-                <ReactRouterDOM.NavLink 
+                <NavLink 
                     to="/" 
                     end
                     className="flex flex-col items-center justify-center text-slate-600 hover:text-primary-blue transition-colors"
@@ -23,32 +24,32 @@ const BottomNavBar: React.FC = () => {
                 >
                     <HomeIcon className="w-6 h-6" />
                     <span className="text-xs font-medium">Início</span>
-                </ReactRouterDOM.NavLink>
-                <ReactRouterDOM.NavLink 
+                </NavLink>
+                <NavLink 
                     to="/search?purpose=SALE" 
                     className="flex flex-col items-center justify-center text-slate-600 hover:text-primary-blue transition-colors"
                     style={({ isActive }) => isActive ? activeLinkStyle : {}}
                 >
                     <DollarSignIcon className="w-6 h-6" />
                     <span className="text-xs font-medium">Comprar</span>
-                </ReactRouterDOM.NavLink>
-                <ReactRouterDOM.NavLink 
+                </NavLink>
+                <NavLink 
                     to="/search?purpose=RENT" 
                     className="flex flex-col items-center justify-center text-slate-600 hover:text-primary-blue transition-colors"
                     style={({ isActive }) => isActive ? activeLinkStyle : {}}
                 >
                     <BuildingIcon className="w-6 h-6" />
                     <span className="text-xs font-medium">Alugar</span>
-                </ReactRouterDOM.NavLink>
+                </NavLink>
                  {isAuthenticated ? (
-                     <ReactRouterDOM.NavLink 
+                     <NavLink 
                         to="/admin" 
                         className="flex flex-col items-center justify-center text-slate-600 hover:text-primary-blue transition-colors"
                         style={({ isActive }) => isActive ? activeLinkStyle : {}}
                     >
                         <UserCircleIcon className="w-6 h-6" />
                         <span className="text-xs font-medium">Painel</span>
-                    </ReactRouterDOM.NavLink>
+                    </NavLink>
                  ) : (
                     <button 
                         onClick={openLoginModal}

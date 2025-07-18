@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
@@ -271,7 +272,7 @@ const PriceHistoryTable: React.FC<{ history: PriceHistory[] }> = ({ history }) =
 
 
 const PropertyDetailsPage: React.FC = () => {
-  const { propertyId } = ReactRouterDOM.useParams<{ propertyId: string }>();
+  const { propertyId } = useParams<{ propertyId: string }>();
   const { properties } = useProperties();
   const property = properties.find(p => p.id === propertyId);
   const similarProperties = properties.filter(p => p.id !== propertyId && p.city === property?.city).slice(0, 3);

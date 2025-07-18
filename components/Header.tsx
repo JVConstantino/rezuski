@@ -1,7 +1,8 @@
 
 
+
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LOGO_URL } from '../constants';
 
@@ -22,16 +23,16 @@ const Header: React.FC = () => {
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <ReactRouterDOM.Link to="/" className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0">
             <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
-          </ReactRouterDOM.Link>
+          </Link>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8">
             {navLinksConfig.map(link => (
-              <ReactRouterDOM.Link key={link.name} to={link.path} className="text-slate-600 hover:text-primary-blue font-medium transition-colors">
+              <Link key={link.name} to={link.path} className="text-slate-600 hover:text-primary-blue font-medium transition-colors">
                 {link.name}
-              </ReactRouterDOM.Link>
+              </Link>
             ))}
           </nav>
 
@@ -39,12 +40,12 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-4">
              {isAuthenticated ? (
                 <>
-                    <ReactRouterDOM.Link
+                    <Link
                         to="/admin/dashboard"
                         className="hidden md:inline-flex items-center px-4 py-2 bg-secondary-blue text-white font-semibold rounded-lg shadow-md hover:opacity-95 transition-all duration-200"
                     >
                         Voltar ao Painel
-                    </ReactRouterDOM.Link>
+                    </Link>
                     <button
                         onClick={logout}
                         className="hidden md:inline-flex px-4 py-2 bg-primary-green text-white font-semibold rounded-lg shadow-md hover:opacity-95 transition-all duration-200"

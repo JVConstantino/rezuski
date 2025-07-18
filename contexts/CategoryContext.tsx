@@ -47,10 +47,11 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     const updateCategory = async (updatedCategory: Category) => {
+        const { id, ...updateData } = updatedCategory;
         const { error } = await supabase
             .from('categories')
-            .update(updatedCategory)
-            .eq('id', updatedCategory.id);
+            .update(updateData)
+            .eq('id', id);
 
         if (error) {
             console.error('Error updating category:', error);

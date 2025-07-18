@@ -1,6 +1,7 @@
 
+
 import React, { useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { PropertyProvider } from './contexts/PropertyContext';
@@ -38,25 +39,8 @@ import AdminResourcesPage from './pages/admin/ResourcesPage';
 import AddResourcePage from './pages/admin/AddResourcePage';
 import EditResourcePage from './pages/admin/EditResourcePage';
 
-const SessionInitializer: React.FC = () => {
-    const navigate = ReactRouterDOM.useNavigate();
-    const location = ReactRouterDOM.useLocation();
-
-    useEffect(() => {
-        const sessionStarted = sessionStorage.getItem('rezuski_session_started');
-        if (!sessionStarted) {
-            sessionStorage.setItem('rezuski_session_started', 'true');
-            if (!location.pathname.startsWith('/admin') && location.pathname !== '/') {
-                navigate('/', { replace: true });
-            }
-        }
-    }, []); 
-
-    return null;
-};
-
 const AppContent: React.FC = () => {
-    const location = ReactRouterDOM.useLocation();
+    const location = useLocation();
     const isAdminPage = location.pathname.startsWith('/admin');
 
     useEffect(() => {
@@ -71,43 +55,42 @@ const AppContent: React.FC = () => {
                         <PropertyProvider>
                             <ImageProvider>
                                 <LoginModalController />
-                                <SessionInitializer />
-                                <ReactRouterDOM.Routes>
+                                <Routes>
                                     {/* Public Routes */}
-                                    <ReactRouterDOM.Route path="/" element={<HomePage />} />
-                                    <ReactRouterDOM.Route path="/search" element={<SearchResultsPage />} />
-                                    <ReactRouterDOM.Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
-                                    <ReactRouterDOM.Route path="/resources" element={<ResourcesPage />} />
-                                    <ReactRouterDOM.Route path="/about" element={<AboutPage />} />
-                                    <ReactRouterDOM.Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
+                                    <Route path="/" element={<HomePage />} />
+                                    <Route path="/search" element={<SearchResultsPage />} />
+                                    <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
+                                    <Route path="/resources" element={<ResourcesPage />} />
+                                    <Route path="/about" element={<AboutPage />} />
+                                    <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
 
                                     {/* Admin Routes */}
-                                    <ReactRouterDOM.Route element={<ProtectedRoute />}>
-                                        <ReactRouterDOM.Route path="/admin" element={<AdminLayout />}>
-                                        <ReactRouterDOM.Route index element={<ReactRouterDOM.Navigate to="/admin/dashboard" replace />} />
-                                        <ReactRouterDOM.Route path="dashboard" element={<DashboardPage />} />
-                                        <ReactRouterDOM.Route path="properties" element={<PropertiesPage />} />
-                                        <ReactRouterDOM.Route path="properties/new" element={<AddPropertyPage />} />
-                                        <ReactRouterDOM.Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
-                                        <ReactRouterDOM.Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                        <ReactRouterDOM.Route path="brokers" element={<BrokersPage />} />
-                                        <ReactRouterDOM.Route path="brokers/new" element={<AddBrokerPage />} />
-                                        <ReactRouterDOM.Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
-                                        <ReactRouterDOM.Route path="categories" element={<CategoriesPage />} />
-                                        <ReactRouterDOM.Route path="categories/new" element={<AddCategoryPage />} />
-                                        <ReactRouterDOM.Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
-                                        <ReactRouterDOM.Route path="resources" element={<AdminResourcesPage />} />
-                                        <ReactRouterDOM.Route path="resources/new" element={<AddResourcePage />} />
-                                        <ReactRouterDOM.Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
-                                        <ReactRouterDOM.Route path="messages" element={<MessagesPage />} />
-                                        <ReactRouterDOM.Route path="reports" element={<ReportsPage />} />
-                                        <ReactRouterDOM.Route path="settings" element={<SettingsPage />} />
-                                        </ReactRouterDOM.Route>
-                                    </ReactRouterDOM.Route>
+                                    <Route element={<ProtectedRoute />}>
+                                        <Route path="/admin" element={<AdminLayout />}>
+                                        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                                        <Route path="dashboard" element={<DashboardPage />} />
+                                        <Route path="properties" element={<PropertiesPage />} />
+                                        <Route path="properties/new" element={<AddPropertyPage />} />
+                                        <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
+                                        <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
+                                        <Route path="brokers" element={<BrokersPage />} />
+                                        <Route path="brokers/new" element={<AddBrokerPage />} />
+                                        <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
+                                        <Route path="categories" element={<CategoriesPage />} />
+                                        <Route path="categories/new" element={<AddCategoryPage />} />
+                                        <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
+                                        <Route path="resources" element={<AdminResourcesPage />} />
+                                        <Route path="resources/new" element={<AddResourcePage />} />
+                                        <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
+                                        <Route path="messages" element={<MessagesPage />} />
+                                        <Route path="reports" element={<ReportsPage />} />
+                                        <Route path="settings" element={<SettingsPage />} />
+                                        </Route>
+                                    </Route>
 
                                     {/* Fallback Route */}
-                                    <ReactRouterDOM.Route path="*" element={<ReactRouterDOM.Navigate to="/" replace />} />
-                                </ReactRouterDOM.Routes>
+                                    <Route path="*" element={<Navigate to="/" replace />} />
+                                </Routes>
                                 {!isAdminPage && <ChatWidget />}
                             </ImageProvider>
                         </PropertyProvider>
@@ -120,9 +103,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ReactRouterDOM.HashRouter>
+    <HashRouter>
       <AppContent />
-    </ReactRouterDOM.HashRouter>
+    </HashRouter>
   );
 };
 
