@@ -3,6 +3,10 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+interface ItemToMove {
+    name: string;
+    isFolder: boolean;
+}
 interface ImageContextType {
     galleryItems: any[];
     currentPath: string;
@@ -13,19 +17,41 @@ interface ImageContextType {
     createFolder: (folderName: string) => Promise<void>;
     deleteFile: (filePath: string) => Promise<void>;
     deleteFolder: (folderPath: string) => Promise<void>;
+    moveItems: (items: ItemToMove[], destinationPath: string) => Promise<void>;
 }
 
 const ImageContext = createContext<ImageContextType | undefined>(undefined);
 
 export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const BUCKET_NAME = 'property-images';
     const [galleryItems, setGalleryItems] = useState<any[]>([]);
     const [currentPath, setCurrentPath] = useState('public');
     const [loading, setLoading] = useState(true);
 
+    const listAllFiles = async (path: string): Promise<string[]> => {
+        const { data, error } = await supabase.storage.from(BUCKET_NAME).list(path);
+        if (error) {
+            console.error(`Error listing files for deletion in ${path}:`, error);
+            return [];
+        }
+    
+        const filePaths: string[] = [];
+        for (const file of data) {
+            const fullPath = `${path}/${file.name}`;
+            if (file.id === null) { // It's a folder
+                const subFiles = await listAllFiles(fullPath);
+                filePaths.push(...subFiles);
+            } else {
+                filePaths.push(fullPath);
+            }
+        }
+        return filePaths;
+    };
+
     const fetchItemsForPath = async (path: string) => {
         setLoading(true);
-        const { data, error } = await supabase.storage.from('property-images').list(path, {
-            limit: 100,
+        const { data, error } = await supabase.storage.from(BUCKET_NAME).list(path, {
+            limit: 200,
             offset: 0,
             sortBy: { column: 'name', order: 'asc' },
         });
@@ -35,18 +61,16 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setGalleryItems([]);
         } else if (data) {
             const itemsWithUrls = data.map(item => {
-                // if id is null, it's a folder
                 if (item.id !== null) {
                     const fullPath = `${path}/${item.name}`;
                     const { data: { publicUrl } } = supabase.storage
-                        .from('property-images')
+                        .from(BUCKET_NAME)
                         .getPublicUrl(fullPath);
                     return { ...item, publicUrl };
                 }
                 return item;
             });
 
-            // Sort folders first, then by name
             const sortedData = itemsWithUrls.sort((a, b) => {
                 const aIsFolder = a.id === null;
                 const bIsFolder = b.id === null;
@@ -70,16 +94,10 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLoading(true);
         const uploadPromises = Array.from(files).map(file => {
             const filePath = `${path}/${file.name}`;
-            return supabase.storage.from('property-images').upload(filePath, file);
+            return supabase.storage.from(BUCKET_NAME).upload(filePath, file);
         });
 
-        const results = await Promise.all(uploadPromises);
-        const errors = results.filter(result => result.error);
-
-        if (errors.length > 0) {
-            console.error('Errors uploading files:', errors);
-            alert(`Falha ao enviar ${errors.length} de ${files.length} arquivos.`);
-        }
+        await Promise.all(uploadPromises);
         refresh();
     };
 
@@ -92,48 +110,18 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const filePath = `${currentPath}/${cleanFolderName}/.emptyFolder`;
         
         setLoading(true);
-        const { error } = await supabase.storage
-            .from('property-images')
+        await supabase.storage
+            .from(BUCKET_NAME)
             .upload(filePath, new Blob(['']));
-
-        if (error) {
-            console.error('Error creating folder:', error);
-            alert(`Erro ao criar pasta: ${error.message}`);
-        }
         refresh();
     };
     
     const deleteFile = async (filePath: string) => {
         setLoading(true);
-        const { error } = await supabase.storage
-            .from('property-images')
+        await supabase.storage
+            .from(BUCKET_NAME)
             .remove([filePath]);
-
-        if (error) {
-            console.error('Error deleting file:', error);
-            alert(`Erro ao deletar arquivo: ${error.message}`);
-        }
         refresh();
-    };
-
-    const listAllFiles = async (path: string): Promise<string[]> => {
-        const { data, error } = await supabase.storage.from('property-images').list(path);
-        if (error) {
-            console.error(`Error listing files for deletion in ${path}:`, error);
-            return [];
-        }
-    
-        const filePaths: string[] = [];
-        for (const file of data) {
-            const fullPath = `${path}/${file.name}`;
-            if (file.id === null) { // It's a folder
-                const subFiles = await listAllFiles(fullPath);
-                filePaths.push(...subFiles);
-            } else {
-                filePaths.push(fullPath);
-            }
-        }
-        return filePaths;
     };
     
     const deleteFolder = async (folderPath: string) => {
@@ -144,13 +132,46 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             filesToDelete.push(`${folderPath}/.emptyFolder`);
         }
         
-        const { error } = await supabase.storage
-            .from('property-images')
+        await supabase.storage
+            .from(BUCKET_NAME)
             .remove(filesToDelete);
         
-        if (error && !(error.message.includes('Not Found') && filesToDelete.length === 1)) {
-            console.error('Error deleting folder contents:', error);
-            alert(`Erro ao deletar a pasta e seu conteúdo: ${error.message}`);
+        refresh();
+    };
+
+    const moveItems = async (items: ItemToMove[], destinationPath: string) => {
+        setLoading(true);
+    
+        for (const item of items) {
+            const fromPath = `${currentPath}/${item.name}`;
+            
+            // Skip if trying to move into itself or the same directory
+            if (fromPath === destinationPath || destinationPath.startsWith(fromPath + '/')) {
+                console.warn(`Skipping move of ${item.name}: cannot move into itself.`);
+                continue;
+            }
+    
+            if (item.isFolder) {
+                const filesToMove = await listAllFiles(fromPath);
+                if (filesToMove.length === 0) {
+                    filesToMove.push(`${fromPath}/.emptyFolder`);
+                }
+    
+                for (const oldFilePath of filesToMove) {
+                    const relativePath = oldFilePath.substring(fromPath.length);
+                    const newFilePath = `${destinationPath}/${item.name}${relativePath}`;
+                    const { error } = await supabase.storage.from(BUCKET_NAME).move(oldFilePath, newFilePath);
+                    if (error) {
+                        console.error(`Error moving file ${oldFilePath} to ${newFilePath}:`, error);
+                    }
+                }
+            } else { // It's a file
+                const newFilePath = `${destinationPath}/${item.name}`;
+                const { error } = await supabase.storage.from(BUCKET_NAME).move(fromPath, newFilePath);
+                if (error) {
+                    console.error(`Error moving file ${fromPath} to ${newFilePath}:`, error);
+                }
+            }
         }
         refresh();
     };
@@ -168,7 +189,7 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
     
     return (
-        <ImageContext.Provider value={{ galleryItems, currentPath, setPath, refresh, loading, uploadFiles, createFolder, deleteFile, deleteFolder }}>
+        <ImageContext.Provider value={{ galleryItems, currentPath, setPath, refresh, loading, uploadFiles, createFolder, deleteFile, deleteFolder, moveItems }}>
             {children}
         </ImageContext.Provider>
     );
