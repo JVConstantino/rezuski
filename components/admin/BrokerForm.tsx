@@ -15,8 +15,8 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
         title: '',
         phone: '',
         email: '',
+        avatarUrl: '',
     });
-    const [avatarUrl, setAvatarUrl] = useState<string>('');
     const [isGalleryOpen, setGalleryOpen] = useState(false);
 
     useEffect(() => {
@@ -26,8 +26,8 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
                 title: initialData.title,
                 phone: initialData.phone,
                 email: initialData.email,
+                avatarUrl: initialData.avatarUrl,
             });
-            setAvatarUrl(initialData.avatarUrl);
         }
     }, [initialData]);
 
@@ -37,20 +37,16 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
     };
 
     const handleSelectAvatarFromGallery = (imageUrl: string) => {
-        setAvatarUrl(imageUrl);
+        setFormData(prev => ({ ...prev, avatarUrl: imageUrl }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!avatarUrl) {
+        if (!formData.avatarUrl) {
             alert('Por favor, selecione uma imagem de perfil da galeria.');
             return;
         }
-        const brokerData = {
-            ...formData,
-            avatarUrl,
-        };
-        onSubmit(brokerData);
+        onSubmit(formData);
     };
 
     return (
@@ -62,7 +58,7 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
                         <div className="mt-4">
                             <div className="relative w-40 h-40 mx-auto">
                                 <img
-                                    src={avatarUrl || 'https://via.placeholder.com/150'}
+                                    src={formData.avatarUrl || 'https://via.placeholder.com/150'}
                                     alt="Avatar Preview"
                                     className="w-40 h-40 rounded-full object-cover border"
                                 />
