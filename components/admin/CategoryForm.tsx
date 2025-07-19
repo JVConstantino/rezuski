@@ -30,8 +30,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, onSubmit, isEd
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSelectIconFromGallery = (imageUrl: string) => {
-        setFormData(prev => ({ ...prev, iconUrl: imageUrl }));
+    const handleSelectIconFromGallery = (images: string[]) => {
+        if (images.length > 0) {
+            setFormData(prev => ({ ...prev, iconUrl: images[0] }));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -78,7 +80,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, onSubmit, isEd
             <ImageGalleryModal
                 isOpen={isGalleryOpen}
                 onClose={() => setGalleryOpen(false)}
-                onSelectSingleImage={handleSelectIconFromGallery}
+                onSelectImages={handleSelectIconFromGallery}
                 selectionMode="single"
                 currentImages={[]}
             />
