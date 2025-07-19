@@ -12,8 +12,7 @@ interface ItemToMove {
 interface ImageGalleryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelectImages?: (images: string[]) => void;
-    onSelectSingleImage?: (imageUrl: string) => void;
+    onSelectImages: (images: string[]) => void;
     selectionMode?: 'single' | 'multiple';
     currentImages?: string[];
 }
@@ -22,7 +21,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     isOpen,
     onClose,
     onSelectImages,
-    onSelectSingleImage,
     selectionMode = 'multiple',
     currentImages = []
 }) => {
@@ -34,18 +32,21 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Reset state on close
     useEffect(() => {
         if (!isOpen) {
             setSelectedItems([]);
             setSearchTerm('');
         }
     }, [isOpen]);
+    
+    useEffect(() => {
+        setSelectedItems([]);
+    }, [currentPath])
 
-    const handleToggleSelect = (itemUrlOrName: string) => {
+    const handleToggleSelect = (itemName: string) => {
         if (selectionMode === 'multiple') {
             setSelectedItems(prev =>
-                prev.includes(itemUrlOrName) ? prev.filter(i => i !== itemUrlOrName) : [...prev, itemUrlOrName]
+                prev.includes(itemName) ? prev.filter(i => i !== itemName) : [...prev, itemName]
             );
         }
     };
@@ -59,16 +60,20 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
             if (currentImages.includes(imageUrl)) return;
 
             if (selectionMode === 'single') {
-                if (onSelectSingleImage) onSelectSingleImage(imageUrl);
+                if (onSelectImages) onSelectImages([imageUrl]);
                 onClose();
             } else {
-                handleToggleSelect(imageUrl);
+                handleToggleSelect(item.name);
             }
         }
     };
     
     const handleConfirm = () => {
-        if (onSelectImages) onSelectImages(selectedItems);
+        const selectedUrls = selectedItems
+            .map(name => galleryItems.find(item => item.name === name && item.id !== null)?.publicUrl)
+            .filter((url): url is string => !!url);
+        
+        if (onSelectImages) onSelectImages(selectedUrls);
         onClose();
     };
 
@@ -82,8 +87,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     };
 
     const getSelectedItemsData = (): ItemToMove[] => {
-        return selectedItems.map(nameOrUrl => {
-            const item = galleryItems.find(i => i.name === nameOrUrl || i.publicUrl === nameOrUrl);
+        return selectedItems.map(itemName => {
+            const item = galleryItems.find(i => i.name === itemName)!;
             return {
                 name: item.name,
                 isFolder: item.id === null,
@@ -135,27 +140,27 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
         return filteredItems.filter(item => {
             const isFolder = item.id === null;
             if (isFolder) return false; 
-            if (currentImages.includes(item.publicUrl)) return false;
+            if (!item.publicUrl || currentImages.includes(item.publicUrl)) return false;
             return true;
         });
     }, [filteredItems, currentImages]);
 
     const allSelectableSelected = useMemo(() => {
         if (selectableItems.length === 0) return false;
-        const selectableUrls = selectableItems.map(item => item.publicUrl);
-        return selectableUrls.every(url => selectedItems.includes(url));
+        const selectableNames = selectableItems.map(item => item.name);
+        return selectableNames.every(name => selectedItems.includes(name));
     }, [selectableItems, selectedItems]);
 
     const handleSelectAll = () => {
-        const selectableUrls = selectableItems.map(item => item.publicUrl);
+        const selectableNames = selectableItems.map(item => item.name);
         if (allSelectableSelected) {
-            setSelectedItems(prev => prev.filter(url => !selectableUrls.includes(url)));
+            setSelectedItems(prev => prev.filter(name => !selectableNames.includes(name)));
         } else {
-            setSelectedItems(prev => [...new Set([...prev, ...selectableUrls])]);
+            setSelectedItems(prev => [...new Set([...prev, ...selectableNames])]);
         }
     };
 
-    const showActionsBar = selectionMode === 'multiple' && selectedItems.length > 0;
+    const showActionsBar = selectedItems.length > 0;
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
@@ -210,13 +215,12 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                             {filteredItems.map((item) => {
                                 const isFolder = item.id === null;
-                                const id = isFolder ? item.name : item.publicUrl;
-                                const isSelected = selectedItems.includes(id);
-                                const isAlreadyOnProperty = !isFolder && currentImages.includes(item.publicUrl);
+                                const isSelected = selectedItems.includes(item.name);
+                                const isAlreadyOnProperty = !isFolder && item.publicUrl && currentImages.includes(item.publicUrl);
                                 const isDisabled = isAlreadyOnProperty && selectionMode === 'multiple';
 
                                 return (
-                                    <div key={id} className="relative group aspect-square">
+                                    <div key={item.id || item.name} className="relative group aspect-square">
                                         <div onClick={() => handleItemClick(item)} className={`w-full h-full rounded-lg border-2 flex items-center justify-center p-2 text-center transition-all ${isSelected ? 'border-primary-blue' : 'border-slate-200'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary-blue/50'}`}>
                                             {isFolder ? (
                                                 <div className="flex flex-col items-center">
@@ -228,7 +232,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                                             )}
                                         </div>
                                         {selectionMode === 'multiple' && !isDisabled && !isFolder &&(
-                                            <input type="checkbox" checked={isSelected} onChange={() => handleToggleSelect(id)} className="absolute top-2 left-2 h-5 w-5 rounded text-primary-blue focus:ring-primary-blue cursor-pointer"/>
+                                            <input type="checkbox" checked={isSelected} onChange={() => handleToggleSelect(item.name)} className="absolute top-2 left-2 h-5 w-5 rounded text-primary-blue focus:ring-primary-blue cursor-pointer"/>
                                         )}
                                         {isDisabled && <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center"><span className="text-white text-xs font-bold text-center">Já adicionada</span></div>}
                                     </div>

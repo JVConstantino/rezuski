@@ -36,8 +36,10 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSelectAvatarFromGallery = (imageUrl: string) => {
-        setFormData(prev => ({ ...prev, avatarUrl: imageUrl }));
+    const handleSelectAvatarFromGallery = (images: string[]) => {
+        if (images.length > 0) {
+            setFormData(prev => ({ ...prev, avatarUrl: images[0] }));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -103,9 +105,9 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
             <ImageGalleryModal
                 isOpen={isGalleryOpen}
                 onClose={() => setGalleryOpen(false)}
-                onSelectSingleImage={handleSelectAvatarFromGallery}
+                onSelectImages={handleSelectAvatarFromGallery}
                 selectionMode="single"
-                currentImages={[]}
+                currentImages={formData.avatarUrl ? [formData.avatarUrl] : []}
             />
         </>
     );
