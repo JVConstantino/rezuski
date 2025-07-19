@@ -67,7 +67,7 @@ const GalleryPage: React.FC = () => {
                 {pathSegments.map((segment, index) => {
                     const pathToThisSegment = `public/${pathSegments.slice(0, index + 1).join('/')}`;
                     return (
-                        <React.Fragment key={segment}>
+                        <React.Fragment key={pathToThisSegment}>
                             <ChevronRightIcon className="w-4 h-4 text-slate-400 mx-1" />
                             <button onClick={() => { setSelectedItems([]); setPath(pathToThisSegment); }} className="hover:text-primary-blue">{segment}</button>
                         </React.Fragment>
@@ -140,11 +140,12 @@ const GalleryPage: React.FC = () => {
                     <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div></div>
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        {filteredItems.map((item, index) => {
+                        {filteredItems.map((item) => {
                             const isFolder = item.id === null;
+                            const itemKey = isFolder ? `folder-${item.name}` : `file-${item.id!}`;
                             const isSelected = selectedItems.includes(item.name);
                             return (
-                                <div key={item.name + index} className={`relative group aspect-square rounded-lg border-2 transition-all ${isSelected ? 'border-primary-blue shadow-lg' : 'border-slate-200'}`}>
+                                <div key={itemKey} className={`relative group aspect-square rounded-lg border-2 transition-all ${isSelected ? 'border-primary-blue shadow-lg' : 'border-slate-200'}`}>
                                     <div
                                         onClick={() => isFolder && setPath(`${currentPath}/${item.name}`)}
                                         className={`w-full h-full flex flex-col items-center justify-center p-2 text-center ${isFolder ? 'cursor-pointer bg-slate-50 hover:bg-slate-100' : ''}`}

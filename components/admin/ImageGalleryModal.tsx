@@ -33,13 +33,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (!isOpen) {
-            setSelectedItems([]);
-            setSearchTerm('');
-        }
-    }, [isOpen]);
     
     useEffect(() => {
         setSelectedItems([]);
@@ -124,7 +117,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                 {pathSegments.map((segment, index) => {
                     const pathToThisSegment = `public/${pathSegments.slice(0, index + 1).join('/')}`;
                     return (
-                        <React.Fragment key={segment}>
+                        <React.Fragment key={pathToThisSegment}>
                             <span className="mx-2 text-slate-400">/</span>
                             <button onClick={() => setPath(pathToThisSegment)} className="hover:underline truncate">{segment}</button>
                         </React.Fragment>
@@ -215,12 +208,13 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                             {filteredItems.map((item) => {
                                 const isFolder = item.id === null;
+                                const itemKey = isFolder ? `folder-${item.name}` : `file-${item.id!}`;
                                 const isSelected = selectedItems.includes(item.name);
                                 const isAlreadyOnProperty = !isFolder && item.publicUrl && currentImages.includes(item.publicUrl);
                                 const isDisabled = isAlreadyOnProperty && selectionMode === 'multiple';
 
                                 return (
-                                    <div key={item.id || item.name} className="relative group aspect-square">
+                                    <div key={itemKey} className="relative group aspect-square">
                                         <div onClick={() => handleItemClick(item)} className={`w-full h-full rounded-lg border-2 flex items-center justify-center p-2 text-center transition-all ${isSelected ? 'border-primary-blue' : 'border-slate-200'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary-blue/50'}`}>
                                             {isFolder ? (
                                                 <div className="flex flex-col items-center">
