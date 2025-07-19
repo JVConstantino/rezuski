@@ -1,5 +1,4 @@
 
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -21,6 +20,8 @@ interface ImageContextType {
 }
 
 const ImageContext = createContext<ImageContextType | undefined>(undefined);
+
+const PLACEHOLDER_FILE = '.emptyFolder';
 
 export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const BUCKET_NAME = 'property-images';
@@ -60,16 +61,18 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             console.error(`Error listing storage items for path "${path}":`, error);
             setGalleryItems([]);
         } else if (data) {
-            const itemsWithUrls = data.map(item => {
-                if (item.id !== null) {
-                    const fullPath = `${path}/${item.name}`;
-                    const { data: { publicUrl } } = supabase.storage
-                        .from(BUCKET_NAME)
-                        .getPublicUrl(fullPath);
-                    return { ...item, publicUrl };
-                }
-                return item;
-            });
+            const itemsWithUrls = data
+                .filter(item => item.name !== PLACEHOLDER_FILE) // Hide placeholder from UI
+                .map(item => {
+                    if (item.id !== null) {
+                        const fullPath = `${path}/${item.name}`;
+                        const { data: { publicUrl } } = supabase.storage
+                            .from(BUCKET_NAME)
+                            .getPublicUrl(fullPath);
+                        return { ...item, publicUrl };
+                    }
+                    return item;
+                });
 
             const sortedData = itemsWithUrls.sort((a, b) => {
                 const aIsFolder = a.id === null;
@@ -88,10 +91,39 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         fetchItemsForPath(currentPath);
     };
 
+    const ensureFolderExists = async (folderPath: string) => {
+        if (folderPath === 'public' || folderPath === '') return;
+
+        const { data: remainingItems, error: listError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .list(folderPath);
+
+        if (listError) {
+            console.error(`Error checking folder emptiness for ${folderPath}:`, listError);
+            return;
+        }
+
+        const hasFiles = remainingItems.some(item => item.id !== null && item.name !== PLACEHOLDER_FILE);
+
+        if (!hasFiles) {
+            await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(`${folderPath}/${PLACEHOLDER_FILE}`, new Blob(['']), { upsert: true });
+        }
+    };
+
+    const removePlaceholderIfNeeded = async (folderPath: string) => {
+         await supabase.storage
+            .from(BUCKET_NAME)
+            .remove([`${folderPath}/${PLACEHOLDER_FILE}`]);
+    };
+
     const uploadFiles = async (files: FileList, path: string) => {
         if (!files.length) return;
 
         setLoading(true);
+        await removePlaceholderIfNeeded(path);
+        
         const uploadPromises = Array.from(files).map(file => {
             const filePath = `${path}/${file.name}`;
             return supabase.storage.from(BUCKET_NAME).upload(filePath, file);
@@ -107,7 +139,7 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return;
         }
         const cleanFolderName = folderName.trim().replace(/[/\\?%*:|"<>]/g, '-');
-        const filePath = `${currentPath}/${cleanFolderName}/.emptyFolder`;
+        const filePath = `${currentPath}/${cleanFolderName}/${PLACEHOLDER_FILE}`;
         
         setLoading(true);
         await supabase.storage
@@ -118,18 +150,26 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     const deleteFile = async (filePath: string) => {
         setLoading(true);
-        await supabase.storage
+        const { error } = await supabase.storage
             .from(BUCKET_NAME)
             .remove([filePath]);
+
+        if (!error) {
+            const parentPath = filePath.substring(0, filePath.lastIndexOf('/'));
+            await ensureFolderExists(parentPath);
+        } else {
+            console.error(`Error deleting file ${filePath}:`, error);
+        }
+        
         refresh();
     };
     
     const deleteFolder = async (folderPath: string) => {
         setLoading(true);
-        const filesToDelete = await listAllFiles(folderPath);
+        let filesToDelete = await listAllFiles(folderPath);
 
         if (filesToDelete.length === 0) {
-            filesToDelete.push(`${folderPath}/.emptyFolder`);
+            filesToDelete.push(`${folderPath}/${PLACEHOLDER_FILE}`);
         }
         
         await supabase.storage
@@ -142,37 +182,35 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const moveItems = async (items: ItemToMove[], destinationPath: string) => {
         setLoading(true);
     
+        await removePlaceholderIfNeeded(destinationPath);
+
         for (const item of items) {
             const fromPath = `${currentPath}/${item.name}`;
             
-            // Skip if trying to move into itself or the same directory
-            if (fromPath === destinationPath || destinationPath.startsWith(fromPath + '/')) {
+            if (fromPath === destinationPath || (item.isFolder && destinationPath.startsWith(fromPath + '/'))) {
                 console.warn(`Skipping move of ${item.name}: cannot move into itself.`);
                 continue;
             }
     
             if (item.isFolder) {
-                const filesToMove = await listAllFiles(fromPath);
+                let filesToMove = await listAllFiles(fromPath);
                 if (filesToMove.length === 0) {
-                    filesToMove.push(`${fromPath}/.emptyFolder`);
+                    filesToMove.push(`${fromPath}/${PLACEHOLDER_FILE}`);
                 }
     
                 for (const oldFilePath of filesToMove) {
                     const relativePath = oldFilePath.substring(fromPath.length);
                     const newFilePath = `${destinationPath}/${item.name}${relativePath}`;
-                    const { error } = await supabase.storage.from(BUCKET_NAME).move(oldFilePath, newFilePath);
-                    if (error) {
-                        console.error(`Error moving file ${oldFilePath} to ${newFilePath}:`, error);
-                    }
+                    await supabase.storage.from(BUCKET_NAME).move(oldFilePath, newFilePath);
                 }
             } else { // It's a file
                 const newFilePath = `${destinationPath}/${item.name}`;
-                const { error } = await supabase.storage.from(BUCKET_NAME).move(fromPath, newFilePath);
-                if (error) {
-                    console.error(`Error moving file ${fromPath} to ${newFilePath}:`, error);
-                }
+                await supabase.storage.from(BUCKET_NAME).move(fromPath, newFilePath);
             }
         }
+        
+        await ensureFolderExists(currentPath);
+        
         refresh();
     };
 

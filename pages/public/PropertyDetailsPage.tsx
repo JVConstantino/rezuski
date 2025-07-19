@@ -1,6 +1,5 @@
 
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -9,6 +8,8 @@ import { useProperties } from '../../contexts/PropertyContext';
 import { Share2Icon, MapIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon, DollarSignIcon } from '../../components/Icons';
 import { Property, PriceHistory, PropertyPurpose } from '../../types';
 import BottomNavBar from '../../components/BottomNavBar';
+
+declare var mapboxgl: any;
 
 const Lightbox: React.FC<{
     images: string[];
@@ -281,6 +282,12 @@ const PropertyDetailsPage: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showCopiedNotification, setShowCopiedNotification] = useState(false);
 
+  // Mapbox state and refs
+  const mapContainer = useRef<HTMLDivElement | null>(null);
+  const map = useRef<any>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [isMapLoading, setIsMapLoading] = useState(true);
+
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index);
     setLightboxOpen(true);
@@ -297,6 +304,52 @@ const PropertyDetailsPage: React.FC = () => {
   const goToNext = () => {
     setCurrentImageIndex(prevIndex => (prevIndex === property!.images.length - 1 ? 0 : prevIndex + 1));
   };
+  
+  useEffect(() => {
+    if (map.current || !property || !mapContainer.current) return;
+
+    const fullAddress = `${property.address}, ${property.neighborhood}, ${property.city}, ${property.state}, ${property.zipCode}`;
+    const mapboxToken = 'pk.eyJ1Ijoiam9hbzAyMTIiLCJhIjoiY2t1MnByc2Z4MTNvazJ2cXJwaHlqOGdteiJ9.cW_NceC9Jo4smWPBMBkEgA';
+    mapboxgl.accessToken = mapboxToken;
+
+    const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`;
+    
+    fetch(geocodeUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.features && data.features.length > 0) {
+                const coordinates = data.features[0].center;
+                setMapError(null);
+                
+                map.current = new mapboxgl.Map({
+                    container: mapContainer.current!,
+                    style: 'mapbox://styles/mapbox/streets-v12',
+                    center: coordinates,
+                    zoom: 15
+                });
+                
+                map.current.addControl(new mapboxgl.NavigationControl());
+                new mapboxgl.Marker({ color: '#2A7ADA' }).setLngLat(coordinates).addTo(map.current);
+                
+                setIsMapLoading(false);
+            } else {
+                setMapError('Não foi possível encontrar as coordenadas para este endereço.');
+                setIsMapLoading(false);
+            }
+        })
+        .catch(err => {
+            console.error('Error fetching geocoding data:', err);
+            setMapError('Erro ao carregar o mapa. Verifique a conexão.');
+            setIsMapLoading(false);
+        });
+        
+    return () => {
+        if (map.current) {
+            map.current.remove();
+            map.current = null;
+        }
+    };
+}, [property]);
 
   const handleShare = async () => {
     if (!property) return;
@@ -390,10 +443,20 @@ const PropertyDetailsPage: React.FC = () => {
                 )}
                 <hr className="my-8"/>
                  <h2 className="text-2xl font-bold text-slate-900">Mapa</h2>
-                 <div className="mt-6 h-96 bg-slate-200 rounded-lg flex items-center justify-center text-slate-500">
-                    <MapIcon className="w-16 h-16"/>
-                    <p className="ml-4">Integração do Mapa aqui</p>
-                 </div>
+                 <div className="relative mt-6 h-96 w-full rounded-lg bg-slate-200">
+                    <div ref={mapContainer} className="w-full h-full rounded-lg" />
+                    {(isMapLoading || mapError) && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-200 rounded-lg text-center p-4">
+                            {isMapLoading && !mapError && <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>}
+                            {mapError && (
+                                <>
+                                <MapIcon className="w-12 h-12 text-slate-400 mb-2"/>
+                                <p className="text-slate-600 font-semibold">{mapError}</p>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             <div>
                 <PropertyActionsCard property={property}/>

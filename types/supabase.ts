@@ -30,22 +30,22 @@ export type Database = {
           state: string
           zipCode: string
           description: string
-          purpose: PropertyPurpose
+          purpose: "RENT" | "SALE" | "SEASONAL"
           rentPrice?: number
           salePrice?: number
-          propertyType: PropertyType
+          propertyType: "Casa" | "Apartamento" | "Condomínio" | "Comercial" | "Terreno" | "Sobrado"
           categoryId?: string
           bedrooms?: number
           bathrooms?: number
           areaM2?: number
           repairQuality?: string
-          status: PropertyStatus
+          status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json
+          amenities: any
           availableDate?: string
           listedByUserId?: string
-          priceHistory: Json
+          priceHistory: any
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -61,22 +61,22 @@ export type Database = {
           state: string
           zipCode: string
           description: string
-          purpose: PropertyPurpose
+          purpose: "RENT" | "SALE" | "SEASONAL"
           rentPrice?: number
           salePrice?: number
-          propertyType: PropertyType
+          propertyType: "Casa" | "Apartamento" | "Condomínio" | "Comercial" | "Terreno" | "Sobrado"
           categoryId?: string
           bedrooms?: number
           bathrooms?: number
           areaM2?: number
           repairQuality?: string
-          status: PropertyStatus
+          status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json
+          amenities: any
           availableDate?: string
           listedByUserId?: string
-          priceHistory: Json
+          priceHistory: any
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -92,22 +92,22 @@ export type Database = {
           state?: string
           zipCode?: string
           description?: string
-          purpose?: PropertyPurpose
+          purpose?: "RENT" | "SALE" | "SEASONAL"
           rentPrice?: number
           salePrice?: number
-          propertyType?: PropertyType
+          propertyType?: "Casa" | "Apartamento" | "Condomínio" | "Comercial" | "Terreno" | "Sobrado"
           categoryId?: string
           bedrooms?: number
           bathrooms?: number
           areaM2?: number
           repairQuality?: string
-          status?: PropertyStatus
+          status?: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images?: string[]
-          amenities?: Json
+          amenities?: any
           availableDate?: string
           listedByUserId?: string
-          priceHistory?: Json
+          priceHistory?: any
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -120,7 +120,7 @@ export type Database = {
           email: string
           name?: string
           avatarUrl?: string
-          role: UserRole
+          role: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
         }
         Insert: {
           id: string
@@ -128,7 +128,7 @@ export type Database = {
           email: string
           name?: string
           avatarUrl?: string
-          role: UserRole
+          role: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
         }
         Update: {
           id?: string
@@ -136,7 +136,7 @@ export type Database = {
           email?: string
           name?: string
           avatarUrl?: string
-          role?: UserRole
+          role?: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
         }
       }
       brokers: {
@@ -236,21 +236,21 @@ export type Database = {
           id: string
           created_at: string
           conversation_id: string
-          sender: MessageSender
+          sender: "ADMIN" | "CUSTOMER"
           content: string
         }
         Insert: {
           id?: string
           created_at?: string
           conversation_id: string
-          sender: MessageSender
+          sender: "ADMIN" | "CUSTOMER"
           content: string
         }
         Update: {
           id?: string
           created_at?: string
           conversation_id?: string
-          sender?: MessageSender
+          sender?: "ADMIN" | "CUSTOMER"
           content?: string
         }
       }

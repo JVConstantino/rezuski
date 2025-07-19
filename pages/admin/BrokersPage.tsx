@@ -1,23 +1,21 @@
 
-
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useBrokers } from '../../contexts/BrokerContext';
-import { PlusIcon, EditIcon, TrashIcon } from '../../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, MailIcon, PhoneIcon } from '../../components/Icons';
 
 const BrokersPage: React.FC = () => {
     const { brokers, deleteBroker } = useBrokers();
 
-    const handleDelete = (id: string) => {
-        if (window.confirm('Tem certeza que deseja remover este corretor?')) {
+    const handleDelete = (id: string, name: string) => {
+        if (window.confirm(`Tem certeza que deseja remover o corretor "${name}"?`)) {
             deleteBroker(id);
         }
     }
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-3xl font-bold text-slate-900">Gerenciar Corretores</h1>
                 <Link to="/admin/brokers/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
                     <PlusIcon className="w-5 h-5 mr-2" />
@@ -26,7 +24,43 @@ const BrokersPage: React.FC = () => {
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="overflow-x-auto">
+                 {/* Mobile View */}
+                <div className="md:hidden space-y-4">
+                    {brokers.map(broker => (
+                        <div key={broker.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                    <img src={broker.avatarUrl} alt={broker.name} className="w-16 h-16 rounded-full object-cover"/>
+                                    <div>
+                                        <p className="font-semibold text-slate-800 text-lg">{broker.name}</p>
+                                        <p className="text-sm text-primary-blue font-medium">{broker.title}</p>
+                                    </div>
+                                </div>
+                                <div className="flex space-x-1">
+                                    <Link to={`/admin/brokers/edit/${broker.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
+                                        <EditIcon className="w-5 h-5" />
+                                    </Link>
+                                    <button onClick={() => handleDelete(broker.id, broker.name)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Remover">
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100 text-sm text-slate-600 space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <MailIcon className="w-4 h-4 text-slate-400"/>
+                                    <a href={`mailto:${broker.email}`} className="hover:underline">{broker.email}</a>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <PhoneIcon className="w-4 h-4 text-slate-400"/>
+                                    <a href={`tel:${broker.phone}`} className="hover:underline">{broker.phone}</a>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-slate-200 bg-slate-50">
@@ -57,7 +91,7 @@ const BrokersPage: React.FC = () => {
                                             <Link to={`/admin/brokers/edit/${broker.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
                                                 <EditIcon className="w-5 h-5" />
                                             </Link>
-                                            <button onClick={() => handleDelete(broker.id)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Remover">
+                                            <button onClick={() => handleDelete(broker.id, broker.name)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Remover">
                                                 <TrashIcon className="w-5 h-5" />
                                             </button>
                                         </div>
@@ -67,6 +101,11 @@ const BrokersPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+                 {brokers.length === 0 && (
+                    <div className="text-center py-10 text-slate-500">
+                        <p>Nenhum corretor encontrado.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

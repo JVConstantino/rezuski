@@ -99,7 +99,7 @@ const ChatWidget: React.FC = () => {
 
         const { data, error } = await supabase
             .from('conversations')
-            .select('*')
+            .select('id, customer_name, customer_email, property_id, last_message_at, last_message_preview, admin_has_unread')
             .eq('customer_email', email)
             .single();
         
@@ -117,7 +117,7 @@ const ChatWidget: React.FC = () => {
             };
             const { data: newConvo, error: insertError } = await supabase
                 .from('conversations')
-                .insert([newConvoPayload] as any)
+                .insert([newConvoPayload])
                 .select()
                 .single();
             
@@ -148,7 +148,7 @@ const ChatWidget: React.FC = () => {
         
         const { error: msgError } = await supabase
             .from('messages')
-            .insert([messagePayload] as any);
+            .insert([messagePayload]);
         
         if (msgError) {
              console.error("Error sending message:", msgError);
@@ -159,7 +159,7 @@ const ChatWidget: React.FC = () => {
                 last_message_preview: messageContent,
                 admin_has_unread: true
             };
-            await supabase.from('conversations').update(conversationUpdate as any).eq('id', conversation.id);
+            await supabase.from('conversations').update(conversationUpdate).eq('id', conversation.id);
         }
     };
     

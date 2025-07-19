@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Conversation, Message, MessageSender } from '../../types';
-import { MessageSquareIcon, SearchIcon, UserCircleIcon } from '../../components/Icons';
+import { MessageSquareIcon, SearchIcon, UserCircleIcon, ChevronLeftIcon } from '../../components/Icons';
 import { Database } from '../../types/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -51,14 +51,21 @@ const ConversationList: React.FC<{
                         </div>
                     </div>
                 ))}
+                {conversations.length === 0 && (
+                     <div className="text-center py-10 text-slate-500">
+                        <MessageSquareIcon className="w-12 h-12 mx-auto" />
+                        <p className="mt-2">Nenhuma conversa encontrada.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 const ChatWindow: React.FC<{ 
-    conversation: Conversation | null; 
-}> = ({ conversation }) => {
+    conversation: Conversation | null;
+    onBack: () => void;
+}> = ({ conversation, onBack }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -124,7 +131,7 @@ const ChatWindow: React.FC<{
         
         const { error: msgError } = await supabase
             .from('messages')
-            .insert([messagePayload] as any);
+            .insert([messagePayload]);
 
         if (msgError) {
             console.error("Error sending message:", msgError);
@@ -135,13 +142,13 @@ const ChatWindow: React.FC<{
                 last_message_preview: messageContent,
                 admin_has_unread: true
             };
-            await supabase.from('conversations').update(conversationUpdate as any).eq('id', conversation.id);
+            await supabase.from('conversations').update(conversationUpdate).eq('id', conversation.id);
         }
     };
     
     if (!conversation) {
         return (
-            <div className="h-full flex flex-col items-center justify-center bg-slate-50 text-slate-500">
+            <div className="h-full flex-col items-center justify-center bg-slate-50 text-slate-500 hidden md:flex">
                 <MessageSquareIcon className="w-20 h-20" />
                 <p className="mt-4 text-lg">Selecione uma conversa para começar</p>
             </div>
@@ -150,9 +157,14 @@ const ChatWindow: React.FC<{
     
     return (
         <div className="flex flex-col h-full bg-slate-50">
-            <header className="p-4 bg-white border-b border-slate-200">
-                <h2 className="font-bold text-lg text-slate-800">{conversation.customer_name}</h2>
-                <p className="text-sm text-slate-500">{conversation.customer_email}</p>
+            <header className="p-4 bg-white border-b border-slate-200 flex items-center space-x-3">
+                 <button onClick={onBack} className="md:hidden p-1 text-slate-500 hover:text-primary-blue">
+                    <ChevronLeftIcon className="w-6 h-6" />
+                </button>
+                <div>
+                    <h2 className="font-bold text-lg text-slate-800">{conversation.customer_name}</h2>
+                    <p className="text-sm text-slate-500">{conversation.customer_email}</p>
+                </div>
             </header>
             <main className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map(msg => (
@@ -187,6 +199,7 @@ const ChatWindow: React.FC<{
 const MessagesPage: React.FC = () => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+    const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -223,29 +236,40 @@ const MessagesPage: React.FC = () => {
 
         return () => { supabase.removeChannel(channel); };
     }, []);
+    
+     useEffect(() => {
+        if(conversations.length > 0 && !selectedConversation && window.innerWidth >= 768) {
+            setSelectedConversation(conversations[0]);
+        }
+    }, [conversations, selectedConversation]);
 
     const handleSelectConversation = async (conversation: Conversation) => {
         setSelectedConversation(conversation);
+        setIsMobileChatOpen(true);
         if (conversation.admin_has_unread) {
             const { error } = await supabase
                 .from('conversations')
-                .update({ admin_has_unread: false } as any)
+                .update({ admin_has_unread: false })
                 .eq('id', conversation.id);
             if (error) console.error('Error marking conversation as read:', error);
         }
     };
+    
+    const handleBackFromChat = () => {
+        setIsMobileChatOpen(false);
+    }
 
   return (
     <div className="h-full flex bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-        <div className="w-1/3 border-r border-slate-200">
+        <div className={`w-full md:w-1/3 border-r border-slate-200 flex-col ${isMobileChatOpen ? 'hidden' : 'flex'} md:flex`}>
             <ConversationList 
                 conversations={conversations}
                 selectedConversationId={selectedConversation?.id || null}
                 onSelect={handleSelectConversation}
             />
         </div>
-        <div className="w-2/3">
-            <ChatWindow conversation={selectedConversation} />
+        <div className={`w-full md:w-2/3 flex-col ${isMobileChatOpen ? 'flex' : 'hidden'} md:flex`}>
+            <ChatWindow conversation={selectedConversation} onBack={handleBackFromChat} />
         </div>
     </div>
   );

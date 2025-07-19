@@ -40,14 +40,9 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, []);
 
     const addProperty = async (property: Omit<Property, 'id'>) => {
-        const insertPayload: Database['public']['Tables']['properties']['Insert'] = {
-            ...property,
-            amenities: property.amenities as any,
-            priceHistory: property.priceHistory as any,
-        };
         const { data, error } = await supabase
             .from('properties')
-            .insert([insertPayload])
+            .insert([property])
             .select();
         
         if (error) {
@@ -60,15 +55,10 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const updateProperty = async (updatedProperty: Property) => {
         const { id, ...updateData } = updatedProperty;
-        const payload: Database['public']['Tables']['properties']['Update'] = {
-            ...updateData,
-            amenities: updateData.amenities as any,
-            priceHistory: updateData.priceHistory as any,
-        };
-
+        
         const { data, error } = await supabase
             .from('properties')
-            .update(payload)
+            .update(updateData)
             .eq('id', id)
             .select();
 
