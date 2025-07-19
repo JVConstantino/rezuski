@@ -1,19 +1,8 @@
 
 
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  OWNER = 'OWNER',
-  TENANT = 'TENANT',
-  BUYER = 'BUYER',
-  SELLER = 'SELLER',
-}
+export type UserRole = 'ADMIN' | 'OWNER' | 'TENANT' | 'BUYER' | 'SELLER';
 
-export enum PropertyStatus {
-  AVAILABLE = 'AVAILABLE',
-  RENTED = 'RENTED',
-  SOLD = 'SOLD',
-  ARCHIVED = 'ARCHIVED',
-}
+export type PropertyStatus = 'AVAILABLE' | 'RENTED' | 'SOLD' | 'ARCHIVED';
 
 export enum ApplicationStatus {
   PENDING = 'Pending',
@@ -44,25 +33,13 @@ export enum PriceHistoryEvent {
   SOLD = 'Sold',
 }
 
-export enum PropertyPurpose {
-  RENT = 'RENT',
-  SALE = 'SALE',
-  SEASONAL = 'SEASONAL',
-}
+export type PropertyPurpose = 'RENT' | 'SALE' | 'SEASONAL';
 
-export enum PropertyType {
-    HOUSE = 'Casa',
-    APARTMENT = 'Apartamento',
-    CONDO = 'Condomínio',
-    COMMERCIAL = 'Comercial',
-    LAND = 'Terreno',
-    TOWNHOUSE = 'Sobrado'
-}
+export type PropertyType = 'Casa' | 'Apartamento' | 'Condomínio' | 'Comercial' | 'Terreno' | 'Sobrado';
+export const PropertyTypes: PropertyType[] = ['Casa', 'Apartamento', 'Condomínio', 'Comercial', 'Terreno', 'Sobrado'];
 
-export enum MessageSender {
-  ADMIN = 'ADMIN',
-  CUSTOMER = 'CUSTOMER',
-}
+
+export type MessageSender = 'ADMIN' | 'CUSTOMER';
 
 export interface User {
   id: string;

@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
+import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus, PropertyTypes } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
 import { useImages } from '../../contexts/ImageContext';
 import ImageGalleryModal from './ImageGalleryModal';
@@ -44,10 +44,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         state: '',
         zipCode: '',
         description: '',
-        purpose: PropertyPurpose.RENT,
+        purpose: 'RENT' as PropertyPurpose,
         rentPrice: '',
         salePrice: '',
-        propertyType: PropertyType.HOUSE,
+        propertyType: 'Casa' as PropertyType,
         categoryId: '',
         bedrooms: '',
         bathrooms: '',
@@ -203,22 +203,44 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             
             const prompt = `
-                Você é um especialista em marketing imobiliário e SEO.
-                Com base nos detalhes da propriedade a seguir, gere um título e uma descrição que sejam atraentes, profissionais e otimizados para SEO.
-                O tom deve ser convidativo, destacando as principais características. Foque em um português claro e vendedor para o mercado brasileiro.
+                Você é um especialista em marketing imobiliário e SEO que cria anúncios de imóveis para o mercado brasileiro.
+                Com base nos detalhes da propriedade a seguir, gere um título e uma descrição de anúncio completa, profissional e otimizada.
 
-                Detalhes da Propriedade:
+                Siga ESTRITAMENTE o formato do exemplo abaixo para a descrição. Use quebras de linha para separar os parágrafos e as seções. Use o caractere '▫️ ' (com um espaço depois) para os itens das listas.
+
+                ## Exemplo de Formato de Saída:
+                [Título Gerado]
+                
+                [Parágrafo Introdutório Gerado]
+
+                [Parágrafo com detalhes de área construída, terreno, etc.]
+
+                Entre os ambientes, destacam-se:
+
+                ▫️ [Item 1 da lista de ambientes]
+                ▫️ [Item 2 da lista de ambientes]
+
+                Detalhes de estrutura e acabamento:
+
+                ▫️ [Item 1 da lista de detalhes]
+                ▫️ [Item 2 da lista de detalhes]
+
+                [Parágrafo de Conclusão, ideal para quem o imóvel se destina]
+
+                ## Detalhes da Propriedade para Gerar o Anúncio:
                 - Tipo: ${formData.propertyType}
                 - Finalidade: ${formData.purpose === 'RENT' ? 'Aluguel' : 'Venda'}
                 - Localização: ${formData.address}, ${formData.neighborhood}, ${formData.city}, ${formData.state}
                 - Quartos: ${formData.bedrooms || 'Não informado'}
                 - Banheiros: ${formData.bathrooms || 'Não informado'}
-                - Área: ${formData.areaM2 ? formData.areaM2 + ' m²' : 'Não informada'}
+                - Área Construída: ${formData.areaM2 ? formData.areaM2 + ' m²' : 'Não informada'}
+                - Ano de Construção: ${formData.yearBuilt || 'Não informado'}
+                - Qualidade da Manutenção: ${formData.repairQuality}
                 - Comodidades: ${amenitiesString || 'Nenhuma listada'}
                 - Título Atual (para referência): "${formData.title}"
                 - Descrição Atual (para referência): "${formData.description}"
 
-                Por favor, melhore o título e a descrição atuais. A resposta deve ser concisa e focada nos pontos fortes do imóvel.
+                Gere o título e a descrição. O título deve ser cativante e informativo. A descrição deve ser bem estruturada, detalhada e usar o formato de tópicos especificado, mantendo um tom profissional e vendedor. A resposta deve ser em JSON.
             `;
 
             const responseSchema = {
@@ -230,7 +252,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                     },
                     description: {
                         type: Type.STRING,
-                        description: "A descrição otimizada, detalhada e engajante do imóvel. Deve ser bem estruturada, de fácil leitura e destacar os principais pontos de venda e comodidades.",
+                        description: "A descrição completa e otimizada do imóvel. Deve ser bem estruturada com parágrafos e listas (usando '▫️ ' para cada item), de fácil leitura, e destacar os principais pontos de venda e comodidades, seguindo estritamente o formato solicitado no prompt.",
                     },
                 },
                 required: ["title", "description"],
@@ -279,8 +301,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         const propertyData = {
             ...formData,
             categoryId: formData.categoryId || undefined,
-            rentPrice: formData.purpose !== PropertyPurpose.SALE ? (isNaN(parsedRentPrice) ? undefined : parsedRentPrice) : undefined,
-            salePrice: formData.purpose === PropertyPurpose.SALE ? (isNaN(parsedSalePrice) ? undefined : parsedSalePrice) : undefined,
+            rentPrice: formData.purpose !== 'SALE' ? (isNaN(parsedRentPrice) ? undefined : parsedRentPrice) : undefined,
+            salePrice: formData.purpose === 'SALE' ? (isNaN(parsedSalePrice) ? undefined : parsedSalePrice) : undefined,
             bedrooms: isNaN(parsedBedrooms) ? undefined : parsedBedrooms,
             bathrooms: isNaN(parsedBathrooms) ? undefined : parsedBathrooms,
             areaM2: isNaN(parsedAreaM2) ? undefined : parsedAreaM2,
@@ -293,7 +315,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
     const handleFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const mainActionStatus = (isEditing && initialData?.status) ? initialData.status : PropertyStatus.AVAILABLE;
+        const mainActionStatus = (isEditing && initialData?.status) ? initialData.status : 'AVAILABLE';
         triggerSubmit(mainActionStatus);
     };
 
@@ -351,20 +373,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                             <div>
                                 <label className="block text-sm font-medium text-slate-700">Finalidade</label>
                                 <select name="purpose" value={formData.purpose} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    <option value={PropertyPurpose.RENT}>Aluguel</option>
-                                    <option value={PropertyPurpose.SALE}>Venda</option>
-                                    <option value={PropertyPurpose.SEASONAL}>Temporada</option>
+                                    <option value={'RENT'}>Aluguel</option>
+                                    <option value={'SALE'}>Venda</option>
+                                    <option value={'SEASONAL'}>Temporada</option>
                                 </select>
                             </div>
 
-                            {formData.purpose !== PropertyPurpose.SALE && (
+                            {formData.purpose !== 'SALE' && (
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700">Preço do Aluguel (/mês ou /diária)</label>
                                     <input type="number" name="rentPrice" value={formData.rentPrice} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                                 </div>
                             )} 
                             
-                            {formData.purpose === PropertyPurpose.SALE && (
+                            {formData.purpose === 'SALE' && (
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700">Preço de Venda</label>
                                     <input type="number" name="salePrice" value={formData.salePrice} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
@@ -379,7 +401,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                         <h2 className="text-xl font-bold text-slate-800">Descrição e Otimização</h2>
                          <div className="md:col-span-2 mt-4">
                             <label className="block text-sm font-medium text-slate-700">Descrição</label>
-                            <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"></textarea>
+                            <textarea name="description" value={formData.description} onChange={handleInputChange} rows={10} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"></textarea>
                             <div className="mt-2 flex justify-end">
                                 <button
                                     type="button"
@@ -402,7 +424,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Tipo de Imóvel</label>
                                 <select name="propertyType" value={formData.propertyType} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    {Object.values(PropertyType).map((type: string) => <option key={type} value={type}>{type}</option>)}
+                                    {PropertyTypes.map((type) => <option key={type} value={type}>{type}</option>)}
                                 </select>
                             </div>
                             <div>

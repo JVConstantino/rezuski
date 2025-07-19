@@ -6,7 +6,7 @@ import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
 import { Share2Icon, MapIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon, DollarSignIcon } from '../../components/Icons';
-import { Property, PriceHistory, PropertyPurpose } from '../../types';
+import { Property, PriceHistory } from '../../types';
 import BottomNavBar from '../../components/BottomNavBar';
 
 declare var mapboxgl: any;
@@ -148,7 +148,7 @@ const PropertyInfoBadges: React.FC<{ property: Property }> = ({ property }) => (
      <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
       <DollarSignIcon className="w-6 h-6 text-primary-blue" />
       <div>
-        <div className="font-semibold text-slate-800">{property.purpose === PropertyPurpose.SALE ? 'Preço de Venda' : 'Aluguel Mensal'}</div>
+        <div className="font-semibold text-slate-800">{property.purpose === 'SALE' ? 'Preço de Venda' : 'Aluguel Mensal'}</div>
       </div>
     </div>
     <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
@@ -183,7 +183,7 @@ const PropertyActionsCard: React.FC<{ property: Property }> = ({ property }) => 
     const [name, setName] = useState('');
     const [date, setDate] = useState('');
 
-    const displayPrice = property.purpose === PropertyPurpose.SALE 
+    const displayPrice = property.purpose === 'SALE' 
         ? `R$ ${property.salePrice?.toLocaleString('pt-BR')}` 
         : `R$ ${property.rentPrice?.toLocaleString('pt-BR')}`;
     
@@ -216,7 +216,7 @@ Agradeço o retorno.`;
         <div className="p-6 border border-slate-200 rounded-lg shadow-lg sticky top-24">
             <p className="text-2xl font-bold text-slate-900">
                 {displayPrice}
-                {property.purpose !== PropertyPurpose.SALE && <span className="text-base font-normal text-slate-500">/{property.purpose === PropertyPurpose.RENT ? 'mês' : 'diária'}</span>}
+                {property.purpose !== 'SALE' && <span className="text-base font-normal text-slate-500">/{property.purpose === 'RENT' ? 'mês' : 'diária'}</span>}
             </p>
             
             <form onSubmit={handleScheduleViaWhatsApp} className="mt-6 space-y-4">
@@ -274,7 +274,7 @@ const PriceHistoryTable: React.FC<{ history: PriceHistory[] }> = ({ history }) =
 
 const PropertyDetailsPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
-  const { properties } = useProperties();
+  const { properties, incrementViewCount } = useProperties();
   const property = properties.find(p => p.id === propertyId);
   const similarProperties = properties.filter(p => p.id !== propertyId && p.city === property?.city).slice(0, 3);
   
@@ -282,11 +282,16 @@ const PropertyDetailsPage: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showCopiedNotification, setShowCopiedNotification] = useState(false);
 
-  // Mapbox state and refs
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const map = useRef<any>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
+
+  useEffect(() => {
+    if (propertyId) {
+        incrementViewCount(propertyId);
+    }
+  }, [propertyId, incrementViewCount]);
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index);
@@ -354,8 +359,6 @@ const PropertyDetailsPage: React.FC = () => {
   const handleShare = async () => {
     if (!property) return;
 
-    // Sanitize the URL by creating a new URL object and getting its href.
-    // This can help clean up any non-standard formatting that might cause issues.
     const urlToShare = new URL(window.location.href).href;
 
     const shareData = {
@@ -404,7 +407,7 @@ const PropertyDetailsPage: React.FC = () => {
                 <PropertyInfoBadges property={property}/>
                 <hr className="my-8"/>
                 <h2 className="text-2xl font-bold text-slate-900">Sobre este imóvel</h2>
-                <p className="mt-4 text-slate-600 leading-relaxed">{property.description}</p>
+                <p className="mt-4 text-slate-600 leading-relaxed whitespace-pre-wrap">{property.description}</p>
                 <hr className="my-8"/>
                 <h2 className="text-2xl font-bold text-slate-900">Características e Comodidades</h2>
                 <ul className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4">

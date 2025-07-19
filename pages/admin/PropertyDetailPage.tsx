@@ -3,7 +3,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
-import { PropertyStatus, PropertyPurpose } from '../../types';
+import { PropertyStatus } from '../../types';
 import { ChevronLeftIcon, EditIcon, ArchiveIcon, MapPinIcon, DollarSignIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon } from '../../components/Icons';
 
 const PropertyDetailPage: React.FC = () => {
@@ -22,8 +22,8 @@ const PropertyDetailPage: React.FC = () => {
         );
     }
     
-    const priceLabel = property.purpose === PropertyPurpose.RENT ? 'Aluguel' : 'Preço de Venda';
-    const priceValue = property.purpose === PropertyPurpose.RENT 
+    const priceLabel = property.purpose === 'RENT' ? 'Aluguel' : 'Preço de Venda';
+    const priceValue = property.purpose === 'RENT' 
         ? `R$ ${property.rentPrice?.toLocaleString('pt-BR')}/mês` 
         : `R$ ${property.salePrice?.toLocaleString('pt-BR')}`;
 
@@ -50,9 +50,9 @@ const PropertyDetailPage: React.FC = () => {
                         <EditIcon className="w-5 h-5 mr-2" />
                         Editar
                     </Link>
-                    <button onClick={() => toggleArchiveProperty(property.id)} className={`flex items-center text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors ${property.status === PropertyStatus.ARCHIVED ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-500 hover:bg-red-600'}`}>
+                    <button onClick={() => toggleArchiveProperty(property.id)} className={`flex items-center text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors ${property.status === 'ARCHIVED' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-red-500 hover:bg-red-600'}`}>
                         <ArchiveIcon className="w-5 h-5 mr-2" />
-                        {property.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}
+                        {property.status === 'ARCHIVED' ? 'Desarquivar' : 'Arquivar'}
                     </button>
                 </div>
             </div>
@@ -128,9 +128,9 @@ const PropertyDetailPage: React.FC = () => {
                         <h2 className="text-xl font-bold text-slate-800 mb-4">Status</h2>
                         <div className="flex items-center space-x-3">
                              <span className={`w-3 h-3 rounded-full ${
-                                property.status === PropertyStatus.AVAILABLE ? 'bg-green-500' :
-                                property.status === PropertyStatus.RENTED ? 'bg-yellow-500' :
-                                property.status === PropertyStatus.SOLD ? 'bg-blue-500' :
+                                property.status === 'AVAILABLE' ? 'bg-green-500' :
+                                property.status === 'RENTED' ? 'bg-yellow-500' :
+                                property.status === 'SOLD' ? 'bg-blue-500' :
                                 'bg-slate-500'
                             }`}></span>
                             <span className="text-lg font-semibold text-slate-700">{property.status}</span>

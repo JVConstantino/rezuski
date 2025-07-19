@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
-import { PropertyStatus, PropertyPurpose } from '../../types';
+import { PropertyStatus } from '../../types';
 import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon } from '../../components/Icons';
 
 const PropertiesPage: React.FC = () => {
@@ -21,24 +21,24 @@ const PropertiesPage: React.FC = () => {
   }
 
   const propertyStatusDisplay: Record<string, string> = {
-    [PropertyStatus.AVAILABLE]: 'Disponível',
-    [PropertyStatus.RENTED]: 'Alugado',
-    [PropertyStatus.SOLD]: 'Vendido',
-    [PropertyStatus.ARCHIVED]: 'Arquivado',
+    ['AVAILABLE']: 'Disponível',
+    ['RENTED']: 'Alugado',
+    ['SOLD']: 'Vendido',
+    ['ARCHIVED']: 'Arquivado',
   };
 
   const propertyStatusColor: Record<string, string> = {
-      [PropertyStatus.AVAILABLE]: 'bg-green-100 text-green-800',
-      [PropertyStatus.RENTED]: 'bg-yellow-100 text-yellow-800',
-      [PropertyStatus.SOLD]: 'bg-blue-100 text-blue-800',
-      [PropertyStatus.ARCHIVED]: 'bg-slate-100 text-slate-800',
+      ['AVAILABLE']: 'bg-green-100 text-green-800',
+      ['RENTED']: 'bg-yellow-100 text-yellow-800',
+      ['SOLD']: 'bg-blue-100 text-blue-800',
+      ['ARCHIVED']: 'bg-slate-100 text-slate-800',
   };
 
   const getPriceDisplay = (prop: typeof properties[0]) => {
-    if (prop.purpose === PropertyPurpose.SALE) {
+    if (prop.purpose === 'SALE') {
         return `R$ ${prop.salePrice?.toLocaleString('pt-BR')}`;
     }
-    const suffix = prop.purpose === PropertyPurpose.RENT ? '/mês' : '/diária';
+    const suffix = prop.purpose === 'RENT' ? '/mês' : '/diária';
     return `R$ ${prop.rentPrice?.toLocaleString('pt-BR')}${suffix}`;
   }
 
@@ -100,7 +100,7 @@ const PropertiesPage: React.FC = () => {
                     <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
                         <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar"><EyeIcon className="w-5 h-5"/></Link>
                         <Link to={`/admin/properties/edit/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar"><EditIcon className="w-5 h-5"/></Link>
-                        <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-yellow-600 rounded-md hover:bg-slate-100" title={prop.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}><ArchiveIcon className="w-5 h-5"/></button>
+                        <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-yellow-600 rounded-md hover:bg-slate-100" title={prop.status === 'ARCHIVED' ? 'Desarquivar' : 'Arquivar'}><ArchiveIcon className="w-5 h-5"/></button>
                         <button onClick={() => handleDelete(prop.id, prop.title)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Excluir"><TrashIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ const PropertiesPage: React.FC = () => {
                       <Link to={`/admin/properties/edit/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
                         <EditIcon className="w-5 h-5"/>
                       </Link>
-                      <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-yellow-600 rounded-md hover:bg-slate-100" title={prop.status === PropertyStatus.ARCHIVED ? 'Desarquivar' : 'Arquivar'}>
+                      <button onClick={() => toggleArchiveProperty(prop.id)} className="p-2 text-slate-500 hover:text-yellow-600 rounded-md hover:bg-slate-100" title={prop.status === 'ARCHIVED' ? 'Desarquivar' : 'Arquivar'}>
                         <ArchiveIcon className="w-5 h-5"/>
                       </button>
                       <button onClick={() => handleDelete(prop.id, prop.title)} className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" title="Excluir">

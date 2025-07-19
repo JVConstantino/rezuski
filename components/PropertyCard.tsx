@@ -14,14 +14,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         let suffix = '';
 
         switch(p.purpose) {
-            case PropertyPurpose.SALE:
+            case 'SALE':
                 price = p.salePrice;
                 break;
-            case PropertyPurpose.RENT:
+            case 'RENT':
                 price = p.rentPrice;
                 suffix = '/mês';
                 break;
-            case PropertyPurpose.SEASONAL:
+            case 'SEASONAL':
                 price = p.rentPrice;
                 suffix = '/diária';
                 break;

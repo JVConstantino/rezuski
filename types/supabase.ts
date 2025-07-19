@@ -1,12 +1,4 @@
 
-import {
-  PropertyPurpose,
-  PropertyType,
-  PropertyStatus,
-  UserRole,
-  MessageSender,
-} from "../types"
-
 export type Json =
   | string
   | number
@@ -42,10 +34,10 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: any
+          amenities: Json[]
           availableDate?: string
           listedByUserId?: string
-          priceHistory: any
+          priceHistory: Json[]
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -73,10 +65,10 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: any
+          amenities: Json[]
           availableDate?: string
           listedByUserId?: string
-          priceHistory: any
+          priceHistory: Json[]
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -104,10 +96,10 @@ export type Database = {
           status?: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images?: string[]
-          amenities?: any
+          amenities?: Json[]
           availableDate?: string
           listedByUserId?: string
-          priceHistory?: any
+          priceHistory?: Json[]
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number

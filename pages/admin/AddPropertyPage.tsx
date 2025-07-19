@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import PropertyForm from '../../components/admin/PropertyForm';
-import { Property, PropertyStatus, PriceHistoryEvent, PropertyPurpose, Amenity } from '../../types';
+import { Property, PropertyStatus, PriceHistoryEvent, Amenity } from '../../types';
 import { ChevronLeftIcon } from '../../components/Icons';
 
 const AddPropertyPage: React.FC = () => {
@@ -23,7 +23,7 @@ const AddPropertyPage: React.FC = () => {
                 {
                     id: `ph-new-${data.code}-${Date.now()}`,
                     date: new Date().toISOString(),
-                    price: data.purpose === PropertyPurpose.SALE ? data.salePrice || 0 : data.rentPrice || 0,
+                    price: data.purpose === 'SALE' ? data.salePrice || 0 : data.rentPrice || 0,
                     event: PriceHistoryEvent.LISTED,
                     source: 'Admin'
                 }

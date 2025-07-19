@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMatch } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { Conversation, Message, MessageSender } from '../../types';
+import { Conversation, Message } from '../../types';
 import { MessageSquareIcon, XIcon, UserCircleIcon, ChevronUpIcon } from '../Icons';
 import { Database } from '../../types/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -47,7 +47,7 @@ const ChatWidget: React.FC = () => {
                     schema: 'public',
                     table: 'messages',
                     filter: `conversation_id=eq.${conversation.id}`
-                }, (payload: RealtimePostgresChangesPayload<Message>) => {
+                }, (payload: RealtimePostgresChangesPayload<Database['public']['Tables']['messages']['Row']>) => {
                     setMessages(prev => {
                         if (prev.find(m => m.id === (payload.new as Message).id)) {
                             return prev;
@@ -117,7 +117,7 @@ const ChatWidget: React.FC = () => {
             };
             const { data: newConvo, error: insertError } = await supabase
                 .from('conversations')
-                .insert([newConvoPayload])
+                .insert(newConvoPayload)
                 .select()
                 .single();
             
@@ -142,13 +142,13 @@ const ChatWidget: React.FC = () => {
 
         const messagePayload: Database['public']['Tables']['messages']['Insert'] = {
             conversation_id: conversation.id,
-            sender: MessageSender.CUSTOMER,
+            sender: 'CUSTOMER',
             content: messageContent
         };
         
         const { error: msgError } = await supabase
             .from('messages')
-            .insert([messagePayload]);
+            .insert(messagePayload);
         
         if (msgError) {
              console.error("Error sending message:", msgError);
@@ -190,9 +190,9 @@ const ChatWidget: React.FC = () => {
                     </header>
                     <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-100">
                         {messages.map(msg => (
-                             <div key={msg.id} className={`flex ${msg.sender === MessageSender.CUSTOMER ? 'justify-end' : 'justify-start'}`}>
-                                {msg.sender === MessageSender.ADMIN && <UserCircleIcon className="w-8 h-8 text-slate-400 mr-2 flex-shrink-0"/>}
-                                <div className={`max-w-xs p-3 rounded-lg ${msg.sender === MessageSender.CUSTOMER ? 'bg-primary-green text-white' : 'bg-white'}`}>
+                             <div key={msg.id} className={`flex ${msg.sender === 'CUSTOMER' ? 'justify-end' : 'justify-start'}`}>
+                                {msg.sender === 'ADMIN' && <UserCircleIcon className="w-8 h-8 text-slate-400 mr-2 flex-shrink-0"/>}
+                                <div className={`max-w-xs p-3 rounded-lg ${msg.sender === 'CUSTOMER' ? 'bg-primary-green text-white' : 'bg-white'}`}>
                                     <p className="text-sm">{msg.content}</p>
                                     <p className="text-xs mt-1 text-right opacity-70">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                 </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useProperties } from '../../contexts/PropertyContext';
@@ -51,7 +52,7 @@ const PropertyStatusCard = () => {
 
     const statusCounts = properties.reduce((acc, property) => {
         const status = property.status;
-        if(status === PropertyStatus.ARCHIVED) return acc;
+        if(status === 'ARCHIVED') return acc;
         acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {} as Record<PropertyStatus, number>);

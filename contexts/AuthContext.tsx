@@ -3,7 +3,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import { supabase } from '../lib/supabaseClient';
-import type { Session, User as SupabaseUser, AuthChangeEvent } from '@supabase/supabase-js';
+import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -81,15 +81,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             throw new Error('A senha é obrigatória.');
         }
 
-        const { error } = await supabase.auth.signInWithPassword({
+        // 1. Sign in to get the session
+        const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
 
-        if (error) {
-            throw error;
+        if (signInError) {
+            throw signInError;
         }
-        
+
+        if (!sessionData.session?.user) {
+            throw new Error('Login falhou, sessão não encontrada.');
+        }
+
+        // 2. Fetch the user's profile to verify role
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, name, email, avatarUrl, role')
+            .eq('id', sessionData.session.user.id)
+            .single();
+
+        if (profileError) {
+            await supabase.auth.signOut(); // Log out if profile is missing
+            console.error('Error fetching profile after login:', profileError.message);
+            throw new Error('Falha ao carregar os dados do perfil.');
+        }
+
+        // 3. Check if user is an admin
+        if (profile.role !== 'ADMIN') {
+            await supabase.auth.signOut(); // Log out non-admin users
+            throw new Error('Acesso negado. Apenas administradores podem entrar.');
+        }
+
+        // 4. Construct and set the user object in state
+        const appUser: User = {
+            id: profile.id,
+            email: sessionData.session.user.email!,
+            name: profile.name || sessionData.session.user.email!,
+            avatarUrl: profile.avatarUrl || `https://avatar.vercel.sh/${sessionData.session.user.email!}.svg`,
+            role: profile.role as UserRole,
+        };
+        setUser(appUser);
+
+        // 5. Close modal and navigate to the dashboard
         closeLoginModal();
         navigate('/admin/dashboard', { replace: true });
     };
@@ -118,7 +153,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const openLoginModal = () => setLoginModalOpen(true);
     const closeLoginModal = () => setLoginModalOpen(false);
     
-    const isAuthenticated = !!user && user.role === UserRole.ADMIN;
+    const isAuthenticated = !!user && user.role === 'ADMIN';
 
     const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal, sendPasswordResetEmail };
 

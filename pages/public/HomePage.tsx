@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -18,7 +15,7 @@ import BottomNavBar from '../../components/BottomNavBar';
 
 const HeroSection = () => {
     const navigate = useNavigate();
-    const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>(PropertyPurpose.RENT);
+    const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>('RENT');
     const [location, setLocation] = useState('');
     const [priceRange, setPriceRange] = useState('any');
     const [code, setCode] = useState('');
@@ -41,7 +38,7 @@ const HeroSection = () => {
         setPriceRange('any');
     }
     
-    const currentPriceRanges = searchPurpose === PropertyPurpose.SALE ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
+    const currentPriceRanges = searchPurpose === 'SALE' ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
 
   return (
     <div className="relative bg-emerald-800 overflow-hidden">
@@ -69,20 +66,20 @@ const HeroSection = () => {
             <div className="mt-12 max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
                 <div className="flex border-b border-slate-200">
                     <button
-                        onClick={() => handlePurposeChange(PropertyPurpose.RENT)}
-                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tl-lg ${searchPurpose === PropertyPurpose.RENT ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                        onClick={() => handlePurposeChange('RENT')}
+                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tl-lg ${searchPurpose === 'RENT' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                         ALUGAR
                     </button>
                     <button
-                        onClick={() => handlePurposeChange(PropertyPurpose.SALE)}
-                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 border-x border-slate-200 ${searchPurpose === PropertyPurpose.SALE ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                        onClick={() => handlePurposeChange('SALE')}
+                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 border-x border-slate-200 ${searchPurpose === 'SALE' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                         COMPRAR
                     </button>
                     <button
-                        onClick={() => handlePurposeChange(PropertyPurpose.SEASONAL)}
-                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tr-lg ${searchPurpose === PropertyPurpose.SEASONAL ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                        onClick={() => handlePurposeChange('SEASONAL')}
+                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tr-lg ${searchPurpose === 'SEASONAL' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                         TEMPORADA
                     </button>
@@ -169,12 +166,46 @@ const Section: React.FC<{
 
 
 const PopularProperties: React.FC = () => {
-    const { properties } = useProperties();
-    const popular = properties.filter(p => p.isPopular).slice(0, 3);
+    const { properties, loading } = useProperties();
+    
+    // Sort by viewCount descending and take the top properties
+    const popular = [...properties]
+        .filter(p => p.viewCount && p.viewCount > 0 && p.status === 'AVAILABLE')
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+        .slice(0, 3);
+
+    if (loading) {
+        return (
+             <Section title="Imóveis mais buscados" isGray={true}>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                     {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden animate-pulse">
+                            <div className="w-full h-52 bg-slate-200"></div>
+                            <div className="p-5 space-y-4">
+                                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                <div className="h-6 bg-slate-200 rounded w-1/2"></div>
+                                <div className="h-4 bg-slate-200 rounded w-full"></div>
+                                <div className="pt-4 flex justify-between">
+                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                </div>
+                                <div className="h-10 bg-slate-200 rounded-lg mt-4"></div>
+                            </div>
+                        </div>
+                     ))}
+                 </div>
+            </Section>
+        );
+    }
+    
+    if (popular.length === 0) {
+        return null; // Don't render the section if there are no popular properties
+    }
 
     return (
-        <Section title="Imóveis mais buscados" isGray={true}>
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+        <Section title="Imóveis mais buscados" subtitle="Os imóveis que estão recebendo mais atenção em nossa plataforma." isGray={true}>
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {popular.map((property, index) => (
                     <AnimateOnScroll key={property.id} delay={100 * (index + 1)}>
                         <PropertyCard property={property} />
@@ -234,9 +265,12 @@ const ServicesSection: React.FC = () => {
 const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; isGray?: boolean }> = ({ title, purpose, isGray }) => {
     const { properties } = useProperties();
     const filteredProperties = properties.filter(p => p.purpose === purpose && p.status === 'AVAILABLE').slice(0, 6);
+    
+    if(filteredProperties.length === 0) return null;
+
     return (
         <Section title={title} isGray={isGray}>
-            <div className="grid gap-8 grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredProperties.map((property, index) => (
                     <AnimateOnScroll key={property.id} delay={100 * (index + 1)}>
                        <PropertyCard property={property} />
@@ -354,8 +388,8 @@ const HomePage: React.FC = () => {
         <ServicesSection />
         <PopularProperties />
         <Categories />
-        <PropertiesForPurpose title="Imóveis à Venda" purpose={PropertyPurpose.SALE} isGray={true} />
-        <PropertiesForPurpose title="Imóveis para Alugar" purpose={PropertyPurpose.RENT} isGray={false} />
+        <PropertiesForPurpose title="Imóveis à Venda" purpose={'SALE'} isGray={true} />
+        <PropertiesForPurpose title="Imóveis para Alugar" purpose={'RENT'} isGray={false} />
         <MeetTheBrokers />
         <Testimonials />
         <ContactSection />

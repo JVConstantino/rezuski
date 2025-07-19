@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Property, PropertyStatus, Amenity, PriceHistory } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
@@ -10,6 +10,7 @@ interface PropertyContextType {
     updateProperty: (updatedProperty: Property) => Promise<void>;
     toggleArchiveProperty: (propertyId: string) => Promise<void>;
     deleteProperty: (propertyId: string) => Promise<void>;
+    incrementViewCount: (propertyId: string) => Promise<void>;
     loading: boolean;
 }
 
@@ -37,6 +38,22 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     useEffect(() => {
         fetchProperties();
+    }, []);
+
+    const incrementViewCount = useCallback(async (propertyId: string) => {
+        const { data, error } = await supabase.rpc('increment_view_count', {
+            prop_id: propertyId
+        });
+
+        if (error) {
+            console.error('Error incrementing view count:', error.message);
+        } else {
+            setProperties(prev =>
+                prev.map(p =>
+                    p.id === propertyId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p
+                )
+            );
+        }
     }, []);
 
     const addProperty = async (property: Omit<Property, 'id'>) => {
@@ -74,7 +91,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         const propertyToToggle = properties.find(p => p.id === propertyId);
         if (!propertyToToggle) return;
 
-        const newStatus = propertyToToggle.status === PropertyStatus.ARCHIVED ? PropertyStatus.AVAILABLE : PropertyStatus.ARCHIVED;
+        const newStatus = propertyToToggle.status === 'ARCHIVED' ? 'AVAILABLE' : 'ARCHIVED';
         
         const { data, error } = await supabase
             .from('properties')
@@ -99,9 +116,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             const bucketName = 'property-images';
             const filePaths = propertyToDelete.images.map(url => {
                 try {
-                    // Public URL format: https://<project_ref>.supabase.co/storage/v1/object/public/<bucket_name>/<file_path>
                     const urlObject = new URL(url);
-                    // We need to extract the <file_path> part.
                     const pathParts = urlObject.pathname.split(`/${bucketName}/`);
                     if (pathParts.length > 1) {
                         return pathParts[1];
@@ -142,7 +157,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 
     return (
-        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading }}>
+        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount }}>
             {children}
         </PropertyContext.Provider>
     );

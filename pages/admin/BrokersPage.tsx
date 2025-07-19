@@ -6,6 +6,7 @@ import { PlusIcon, EditIcon, TrashIcon, MailIcon, PhoneIcon } from '../../compon
 
 const BrokersPage: React.FC = () => {
     const { brokers, deleteBroker } = useBrokers();
+    const placeholderAvatar = 'https://via.placeholder.com/150';
 
     const handleDelete = (id: string, name: string) => {
         if (window.confirm(`Tem certeza que deseja remover o corretor "${name}"?`)) {
@@ -30,7 +31,7 @@ const BrokersPage: React.FC = () => {
                         <div key={broker.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
-                                    <img src={broker.avatarUrl} alt={broker.name} className="w-16 h-16 rounded-full object-cover"/>
+                                    <img src={broker.avatarUrl ? broker.avatarUrl : placeholderAvatar} alt={broker.name} className="w-16 h-16 rounded-full object-cover"/>
                                     <div>
                                         <p className="font-semibold text-slate-800 text-lg">{broker.name}</p>
                                         <p className="text-sm text-primary-blue font-medium">{broker.title}</p>
@@ -75,7 +76,7 @@ const BrokersPage: React.FC = () => {
                                 <tr key={broker.id} className="border-b border-slate-200 hover:bg-slate-50">
                                     <td className="p-4">
                                         <div className="flex items-center space-x-3">
-                                            <img src={broker.avatarUrl} alt={broker.name} className="w-12 h-12 rounded-full object-cover" />
+                                            <img src={broker.avatarUrl ? broker.avatarUrl : placeholderAvatar} alt={broker.name} className="w-12 h-12 rounded-full object-cover" />
                                             <div>
                                                 <p className="font-semibold text-slate-800">{broker.name}</p>
                                             </div>

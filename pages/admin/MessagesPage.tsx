@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Conversation, Message, MessageSender } from '../../types';
+import { Conversation, Message } from '../../types';
 import { MessageSquareIcon, SearchIcon, UserCircleIcon, ChevronLeftIcon } from '../../components/Icons';
 import { Database } from '../../types/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -101,7 +101,7 @@ const ChatWindow: React.FC<{
                 schema: 'public',
                 table: 'messages',
                 filter: `conversation_id=eq.${conversation.id}`
-            }, (payload: RealtimePostgresChangesPayload<Message>) => {
+            }, (payload: RealtimePostgresChangesPayload<Database['public']['Tables']['messages']['Row']>) => {
                 setMessages(prev => {
                     if (prev.find(m => m.id === (payload.new as Message).id)) {
                         return prev;
@@ -125,13 +125,13 @@ const ChatWindow: React.FC<{
         
         const messagePayload: Database['public']['Tables']['messages']['Insert'] = {
             conversation_id: conversation.id,
-            sender: MessageSender.ADMIN,
+            sender: 'ADMIN',
             content: messageContent
         };
         
         const { error: msgError } = await supabase
             .from('messages')
-            .insert([messagePayload]);
+            .insert(messagePayload);
 
         if (msgError) {
             console.error("Error sending message:", msgError);
@@ -168,8 +168,8 @@ const ChatWindow: React.FC<{
             </header>
             <main className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map(msg => (
-                    <div key={msg.id} className={`flex ${msg.sender === MessageSender.ADMIN ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs lg:max-w-md p-3 rounded-lg ${msg.sender === MessageSender.ADMIN ? 'bg-primary-blue text-white' : 'bg-white'}`}>
+                    <div key={msg.id} className={`flex ${msg.sender === 'ADMIN' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-xs lg:max-w-md p-3 rounded-lg ${msg.sender === 'ADMIN' ? 'bg-primary-blue text-white' : 'bg-white'}`}>
                             <p className="text-sm">{msg.content}</p>
                             <p className="text-xs mt-1 text-right opacity-70">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>

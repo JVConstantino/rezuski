@@ -1,7 +1,4 @@
 
-
-
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Property, PropertyPurpose } from '../types';
@@ -17,14 +14,14 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property }) => {
     let suffix: React.ReactNode = null;
 
     switch(p.purpose) {
-        case PropertyPurpose.SALE:
+        case 'SALE':
             price = p.salePrice;
             break;
-        case PropertyPurpose.RENT:
+        case 'RENT':
             price = p.rentPrice;
             suffix = <span className="text-sm font-normal text-slate-500">/mês</span>;
             break;
-        case PropertyPurpose.SEASONAL:
+        case 'SEASONAL':
             price = p.rentPrice;
             suffix = <span className="text-sm font-normal text-slate-500">/diária</span>;
             break;

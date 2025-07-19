@@ -1,6 +1,6 @@
 
 
-import { Activity, UserRole, PropertyStatus, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, BackgroundCheckStatus, PropertyPurpose, Broker, Testimonial, Category, Tenant, PropertyType, ResourceDocument, User, Property, Application } from './types';
+import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, BackgroundCheckStatus, Broker, Testimonial, Category, Tenant, ResourceDocument, User, Property, Application } from './types';
 
 export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
 

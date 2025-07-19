@@ -2,7 +2,6 @@
 
 
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -30,7 +29,7 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
         onFilterChange('amenities', newAmenities);
     };
 
-    const currentPriceRanges = (filters.purpose === PropertyPurpose.SALE) ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
+    const currentPriceRanges = (filters.purpose === 'SALE') ? SALE_PRICE_RANGES : RENT_PRICE_RANGES;
 
     return (
         <form onSubmit={handleFormSubmit} className="bg-white p-6 rounded-lg shadow-sm">
@@ -41,9 +40,9 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Finalidade</label>
                     <div className="grid grid-cols-3 rounded-md shadow-sm">
-                        <button type="button" onClick={() => onFilterChange('purpose', PropertyPurpose.RENT)} className={`px-4 py-2 text-sm font-medium border border-slate-300 rounded-l-md w-full transition-colors ${filters.purpose === PropertyPurpose.RENT ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>Alugar</button>
-                        <button type="button" onClick={() => onFilterChange('purpose', PropertyPurpose.SALE)} className={`px-4 py-2 text-sm font-medium border-t border-b border-slate-300 w-full transition-colors ${filters.purpose === PropertyPurpose.SALE ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>Comprar</button>
-                        <button type="button" onClick={() => onFilterChange('purpose', PropertyPurpose.SEASONAL)} className={`px-4 py-2 text-sm font-medium border border-slate-300 rounded-r-md w-full transition-colors ${filters.purpose === PropertyPurpose.SEASONAL ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>Temporada</button>
+                        <button type="button" onClick={() => onFilterChange('purpose', 'RENT')} className={`px-4 py-2 text-sm font-medium border border-slate-300 rounded-l-md w-full transition-colors ${filters.purpose === 'RENT' ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>Alugar</button>
+                        <button type="button" onClick={() => onFilterChange('purpose', 'SALE')} className={`px-4 py-2 text-sm font-medium border-t border-b border-slate-300 w-full transition-colors ${filters.purpose === 'SALE' ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>Comprar</button>
+                        <button type="button" onClick={() => onFilterChange('purpose', 'SEASONAL')} className={`px-4 py-2 text-sm font-medium border border-slate-300 rounded-r-md w-full transition-colors ${filters.purpose === 'SEASONAL' ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>Temporada</button>
                     </div>
                 </div>
                 <div>
@@ -138,7 +137,7 @@ const SearchResultsPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     
     const [filters, setFilters] = useState({
-        purpose: searchParams.get('purpose') || PropertyPurpose.RENT,
+        purpose: (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
         location: searchParams.get('location') || '',
         priceRange: searchParams.get('priceRange') || 'any',
         code: searchParams.get('code') || '',
@@ -151,7 +150,7 @@ const SearchResultsPage: React.FC = () => {
     
     useEffect(() => {
         const urlFilters = {
-            purpose: searchParams.get('purpose') || PropertyPurpose.RENT,
+            purpose: (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
             location: searchParams.get('location') || '',
             priceRange: searchParams.get('priceRange') || 'any',
             code: searchParams.get('code') || '',
@@ -193,7 +192,7 @@ const SearchResultsPage: React.FC = () => {
     };
     
     const filteredProperties = useMemo(() => {
-        let results = properties.filter(p => p.status === PropertyStatus.AVAILABLE);
+        let results = properties.filter(p => p.status === 'AVAILABLE');
         
         const purpose = searchParams.get('purpose');
         const location = searchParams.get('location')?.toLowerCase();
@@ -220,7 +219,7 @@ const SearchResultsPage: React.FC = () => {
             const maxPrice = maxStr.includes('+') ? Infinity : parseInt(maxStr);
 
             results = results.filter(p => {
-                const pPrice = p.purpose === PropertyPurpose.SALE ? p.salePrice : p.rentPrice;
+                const pPrice = p.purpose === 'SALE' ? p.salePrice : p.rentPrice;
                 if (pPrice === undefined) return false;
                 return pPrice >= minPrice && pPrice <= maxPrice;
             });
