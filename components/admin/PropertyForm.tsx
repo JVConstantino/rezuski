@@ -8,10 +8,11 @@ import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import { GoogleGenAI, Type } from "@google/genai";
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PropertyFormProps {
     initialData?: Property;
-    onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[] }, status: PropertyStatus) => void;
+    onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[]; translations: Property['translations'] }, status: PropertyStatus) => void;
     isEditing: boolean;
 }
 
@@ -31,9 +32,12 @@ const AVAILABLE_AMENITIES = [
 const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing }) => {
     const { categories } = useCategories();
     const { refresh: refreshGallery } = useImages();
+    const { supportedLanguages } = useLanguage();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isOptimizing, setIsOptimizing] = useState(false);
+    const [isTranslating, setIsTranslating] = useState<string | null>(null);
+    const [activeLangTab, setActiveLangTab] = useState('pt-BR');
 
     const [formData, setFormData] = useState({
         title: '',
@@ -61,8 +65,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     
     const [amenities, setAmenities] = useState<Amenity[]>([]);
     const [newAmenity, setNewAmenity] = useState({ name: AVAILABLE_AMENITIES[0], quantity: 1 });
-
     const [images, setImages] = useState<ImageState[]>([]);
+    const [translations, setTranslations] = useState<Property['translations']>({});
 
     useEffect(() => {
         if (initialData) {
@@ -95,6 +99,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 isPrimary: index === 0,
             }));
             setImages(initialImages);
+            setTranslations(initialData.translations || {});
         }
     }, [initialData]);
 
@@ -107,6 +112,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
 
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleTranslationChange = (locale: string, field: 'title' | 'description', value: string) => {
+        setTranslations(prev => ({
+            ...prev,
+            [locale]: {
+                ...prev?.[locale],
+                [field]: value,
+            }
+        }));
     };
     
     const addAmenity = () => {
@@ -288,6 +303,53 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
     };
 
+    const handleAutoTranslate = async (targetLocale: string, targetLanguageName: string) => {
+        if (!formData.title || !formData.description) {
+            alert('Por favor, preencha o título e a descrição em português primeiro.');
+            return;
+        }
+        setIsTranslating(targetLocale);
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const prompt = `Translate the following real estate property listing from Brazilian Portuguese to ${targetLanguageName}. Provide only the translated JSON object.
+            Original (pt-BR):
+            {
+              "title": "${formData.title}",
+              "description": "${formData.description.replace(/"/g, '\\"')}"
+            }
+            `;
+            
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING, description: `The translated title in ${targetLanguageName}.` },
+                    description: { type: Type.STRING, description: `The translated description in ${targetLanguageName}.` },
+                },
+                required: ["title", "description"],
+            };
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema,
+                },
+            });
+            
+            const result = JSON.parse(response.text.trim());
+            
+            handleTranslationChange(targetLocale, 'title', result.title);
+            handleTranslationChange(targetLocale, 'description', result.description);
+
+        } catch (e) {
+            console.error(e);
+            alert(`Failed to translate to ${targetLanguageName}.`);
+        } finally {
+            setIsTranslating(null);
+        }
+    };
+
     const triggerSubmit = (status: PropertyStatus) => {
         const parsedRentPrice = parseFloat(formData.rentPrice);
         const parsedSalePrice = parseFloat(formData.salePrice);
@@ -309,6 +371,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             yearBuilt: isNaN(parsedYearBuilt) ? undefined : parsedYearBuilt,
             images: primaryImageFirst.map(img => img.preview),
             amenities: amenities,
+            translations: translations,
         };
         onSubmit(propertyData, status);
     };
@@ -397,22 +460,69 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
                     <hr/>
 
-                     <div>
-                        <h2 className="text-xl font-bold text-slate-800">Descrição e Otimização</h2>
-                         <div className="md:col-span-2 mt-4">
-                            <label className="block text-sm font-medium text-slate-700">Descrição</label>
-                            <textarea name="description" value={formData.description} onChange={handleInputChange} rows={10} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"></textarea>
-                            <div className="mt-2 flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={handleOptimizeWithAI}
-                                    disabled={isOptimizing}
-                                    className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-secondary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
-                                >
-                                    <SparklesIcon className={`w-5 h-5 mr-2 ${isOptimizing ? 'animate-spin' : ''}`} />
-                                    {isOptimizing ? 'Otimizando...' : 'Otimizar com IA'}
-                                </button>
-                            </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Descrição e Traduções</h2>
+                        <div className="border-b border-slate-200">
+                            <nav className="-mb-px flex space-x-6">
+                                {supportedLanguages.map(lang => (
+                                    <button
+                                        key={lang.code}
+                                        type="button"
+                                        onClick={() => setActiveLangTab(lang.code)}
+                                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                            activeLangTab === lang.code
+                                            ? 'border-primary-blue text-primary-blue'
+                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        {lang.flag} {lang.name}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                        <div className="mt-6">
+                            {activeLangTab === 'pt-BR' ? (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700">Descrição (Português)</label>
+                                    <textarea name="description" value={formData.description} onChange={handleInputChange} rows={10} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"></textarea>
+                                    <div className="mt-2 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleOptimizeWithAI}
+                                            disabled={isOptimizing}
+                                            className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-secondary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                                        >
+                                            <SparklesIcon className={`w-5 h-5 mr-2 ${isOptimizing ? 'animate-spin' : ''}`} />
+                                            {isOptimizing ? 'Otimizando...' : 'Otimizar com IA'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-lg font-semibold text-slate-700">Tradução para {supportedLanguages.find(l=>l.code === activeLangTab)?.name}</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAutoTranslate(activeLangTab, supportedLanguages.find(l=>l.code === activeLangTab)?.name || '')}
+                                            disabled={isTranslating === activeLangTab}
+                                            className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-secondary-blue/90 text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                                        >
+                                            <SparklesIcon className={`w-4 h-4 mr-2 ${isTranslating === activeLangTab ? 'animate-spin' : ''}`} />
+                                            {isTranslating === activeLangTab ? 'Traduzindo...' : 'Traduzir com IA'}
+                                        </button>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700">Título</label>
+                                            <input type="text" value={translations?.[activeLangTab]?.title || ''} onChange={e => handleTranslationChange(activeLangTab, 'title', e.target.value)} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700">Descrição</label>
+                                            <textarea rows={10} value={translations?.[activeLangTab]?.description || ''} onChange={e => handleTranslationChange(activeLangTab, 'description', e.target.value)} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

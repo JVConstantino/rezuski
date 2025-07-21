@@ -8,6 +8,8 @@ import { useProperties } from '../../contexts/PropertyContext';
 import { Share2Icon, MapIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon, DollarSignIcon } from '../../components/Icons';
 import { Property, PriceHistory } from '../../types';
 import BottomNavBar from '../../components/BottomNavBar';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { localizeProperty } from '../../lib/localize';
 
 declare var mapboxgl: any;
 
@@ -275,8 +277,14 @@ const PriceHistoryTable: React.FC<{ history: PriceHistory[] }> = ({ history }) =
 const PropertyDetailsPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
   const { properties, incrementViewCount } = useProperties();
-  const property = properties.find(p => p.id === propertyId);
-  const similarProperties = properties.filter(p => p.id !== propertyId && p.city === property?.city).slice(0, 3);
+  const { locale } = useLanguage();
+  
+  const originalProperty = properties.find(p => p.id === propertyId);
+  const property = originalProperty ? localizeProperty(originalProperty, locale) : undefined;
+  
+  const similarProperties = properties
+    .filter(p => p.id !== propertyId && p.city === property?.city)
+    .slice(0, 3);
   
   const [isLightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

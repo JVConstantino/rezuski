@@ -41,6 +41,7 @@ export type Database = {
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
+          translations?: Json | null
         }
         Insert: {
           id?: string
@@ -72,6 +73,7 @@ export type Database = {
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
+          translations?: Json | null
         }
         Update: {
           id?: string
@@ -103,6 +105,7 @@ export type Database = {
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
+          translations?: Json | null
         }
       }
       profiles: {

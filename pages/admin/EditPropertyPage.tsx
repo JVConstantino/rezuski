@@ -1,7 +1,6 @@
 
 
 
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
@@ -16,7 +15,7 @@ const EditPropertyPage: React.FC = () => {
 
     const propertyToEdit = properties.find(p => p.id === propertyId);
 
-    const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[] }, status: PropertyStatus) => {
+    const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[], translations: Property['translations'] }, status: PropertyStatus) => {
         if (propertyToEdit) {
             const updatedProperty = { ...propertyToEdit, ...data, status };
             await updateProperty(updatedProperty);

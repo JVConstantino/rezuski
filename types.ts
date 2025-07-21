@@ -98,6 +98,12 @@ export interface Property {
   isPopular?: boolean;
   tourUrl?: string;
   viewCount?: number;
+  translations?: {
+    [locale: string]: {
+        title?: string;
+        description?: string;
+    }
+  }
 }
 
 export interface BackgroundCheck {

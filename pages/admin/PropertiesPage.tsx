@@ -2,11 +2,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { PropertyStatus } from '../../types';
 import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon } from '../../components/Icons';
 
 const PropertiesPage: React.FC = () => {
   const { properties, toggleArchiveProperty, deleteProperty } = useProperties();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredProperties = properties.filter(prop => 
@@ -95,7 +97,7 @@ const PropertiesPage: React.FC = () => {
                     </div>
                      <div>
                         <p className="font-medium text-slate-800">{getPriceDisplay(prop)}</p>
-                        <p className="text-sm text-slate-500 capitalize">{prop.purpose.toLowerCase()} - {prop.propertyType}</p>
+                        <p className="text-sm text-slate-500 capitalize">{prop.purpose.toLowerCase()} - {t(`propertyType.${prop.propertyType}`)}</p>
                     </div>
                     <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
                         <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar"><EyeIcon className="w-5 h-5"/></Link>
@@ -145,7 +147,7 @@ const PropertiesPage: React.FC = () => {
                   <td className="p-4 font-medium text-slate-800">
                     {getPriceDisplay(prop)}
                   </td>
-                  <td className="p-4 text-slate-600">{prop.propertyType}</td>
+                  <td className="p-4 text-slate-600">{t(`propertyType.${prop.propertyType}`)}</td>
                   <td className="p-4">
                     <div className="flex justify-center space-x-2">
                       <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar">

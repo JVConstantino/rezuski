@@ -1,14 +1,19 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Property, PropertyPurpose } from '../types';
+import { Property } from '../types';
 import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon } from './Icons';
+import { useLanguage } from '../contexts/LanguageContext';
+import { localizeProperty } from '../lib/localize';
 
 interface PropertyCardProps {
   property: Property;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty }) => {
+    const { locale } = useLanguage();
+    const property = localizeProperty(originalProperty, locale);
+
     const getPriceDisplay = (p: Property) => {
         let price: number | undefined;
         let suffix = '';

@@ -33,7 +33,13 @@ export const translations = {
         'footer.nav': 'NAVEGAÇÃO',
         'footer.contact': 'CONTATO',
         'footer.about': 'Uma nova forma de encontrar o seu lar. Facilitamos para inquilinos e proprietários.',
-        'footer.connection_test': 'Testar Conexão'
+        'footer.connection_test': 'Testar Conexão',
+        'propertyType.Casa': 'Casa',
+        'propertyType.Apartamento': 'Apartamento',
+        'propertyType.Condomínio': 'Condomínio',
+        'propertyType.Comercial': 'Comercial',
+        'propertyType.Terreno': 'Terreno',
+        'propertyType.Sobrado': 'Sobrado',
     },
     'en-US': {
         'nav.home': 'Home',
@@ -68,7 +74,13 @@ export const translations = {
         'footer.nav': 'NAVIGATION',
         'footer.contact': 'CONTACT',
         'footer.about': 'A new way to find your home. We make it easy for tenants and owners.',
-        'footer.connection_test': 'Test Connection'
+        'footer.connection_test': 'Test Connection',
+        'propertyType.Casa': 'House',
+        'propertyType.Apartamento': 'Apartment',
+        'propertyType.Condomínio': 'Condo',
+        'propertyType.Comercial': 'Commercial',
+        'propertyType.Terreno': 'Land',
+        'propertyType.Sobrado': 'Townhouse',
     },
     'es-ES': {
         'nav.home': 'Inicio',
@@ -103,7 +115,13 @@ export const translations = {
         'footer.nav': 'NAVEGACIÓN',
         'footer.contact': 'CONTACTO',
         'footer.about': 'Una nueva forma de encontrar tu hogar. Lo hacemos fácil para inquilinos y propietarios.',
-        'footer.connection_test': 'Probar Conexión'
+        'footer.connection_test': 'Probar Conexión',
+        'propertyType.Casa': 'Casa',
+        'propertyType.Apartamento': 'Apartamento',
+        'propertyType.Condomínio': 'Condominio',
+        'propertyType.Comercial': 'Comercial',
+        'propertyType.Terreno': 'Terreno',
+        'propertyType.Sobrado': 'Casa Adosada',
     },
     'fr-FR': {
         'nav.home': 'Accueil',
@@ -138,7 +156,13 @@ export const translations = {
         'footer.nav': 'NAVIGATION',
         'footer.contact': 'CONTACT',
         'footer.about': 'Une nouvelle façon de trouver votre chez-vous. Nous facilitons la tâche aux locataires et propriétaires.',
-        'footer.connection_test': 'Tester la Connexion'
+        'footer.connection_test': 'Tester la Connexion',
+        'propertyType.Casa': 'Maison',
+        'propertyType.Apartamento': 'Appartement',
+        'propertyType.Condomínio': 'Copropriété',
+        'propertyType.Comercial': 'Commercial',
+        'propertyType.Terreno': 'Terrain',
+        'propertyType.Sobrado': 'Maison de ville',
     },
     'it-IT': {
         'nav.home': 'Home',
@@ -173,6 +197,12 @@ export const translations = {
         'footer.nav': 'NAVIGAZIONE',
         'footer.contact': 'CONTATTO',
         'footer.about': 'Un nuovo modo di trovare la tua casa. Rendiamo le cose facili per inquilini e proprietari.',
-        'footer.connection_test': 'Test Connessione'
+        'footer.connection_test': 'Test Connessione',
+        'propertyType.Casa': 'Casa',
+        'propertyType.Apartamento': 'Appartamento',
+        'propertyType.Condomínio': 'Condominio',
+        'propertyType.Comercial': 'Commerciale',
+        'propertyType.Terreno': 'Terreno',
+        'propertyType.Sobrado': 'Villetta a schiera',
     }
 };

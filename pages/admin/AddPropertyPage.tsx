@@ -1,7 +1,6 @@
 
 
 
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
@@ -13,7 +12,7 @@ const AddPropertyPage: React.FC = () => {
     const { addProperty } = useProperties();
     const navigate = useNavigate();
 
-    const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities' | 'listedByUserId'|'viewCount'> & { amenities: Amenity[] }, status: PropertyStatus) => {
+    const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities' | 'listedByUserId'|'viewCount'> & { amenities: Amenity[], translations: Property['translations'] }, status: PropertyStatus) => {
         const newProperty: Omit<Property, 'id'> = {
             ...data,
             status: status,
