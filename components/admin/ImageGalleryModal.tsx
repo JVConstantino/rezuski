@@ -24,8 +24,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     selectionMode = 'multiple',
     currentImages = []
 }) => {
-    if (!isOpen) return null;
-
     const { galleryItems, currentPath, setPath, loading, createFolder, uploadFiles, deleteFile, deleteFolder, moveItems } = useImages();
     
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -33,6 +31,13 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSelectedItems([]);
+            setSearchTerm('');
+        }
+    }, [isOpen]);
     
     useEffect(() => {
         setSelectedItems([]);
@@ -126,6 +131,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
             </div>
         );
     };
+
+    if (!isOpen) return null;
 
     const filteredItems = galleryItems.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
 

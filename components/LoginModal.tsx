@@ -9,16 +9,16 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-    if (!isOpen) {
-        return null;
-    }
-    
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const { login, sendPasswordResetEmail } = useAuth();
+
+    if (!isOpen) {
+        return null;
+    }
     
     const handleClose = () => {
         setError('');
