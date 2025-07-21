@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -7,6 +8,7 @@ import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useCategories } from '../../contexts/CategoryContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
 import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, QuoteIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon } from '../../components/Icons';
 import { PropertyPurpose } from '../../types';
@@ -15,6 +17,7 @@ import BottomNavBar from '../../components/BottomNavBar';
 
 const HeroSection = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>('RENT');
     const [location, setLocation] = useState('');
     const [priceRange, setPriceRange] = useState('any');
@@ -52,12 +55,12 @@ const HeroSection = () => {
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">
-                Dê o próximo passo!
+                {t('hero.title')}
                 </h1>
             </AnimateOnScroll>
             <AnimateOnScroll delay={200}>
                 <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-50">
-                Aqui você está conectado com os melhores imóveis da Região!
+                {t('hero.subtitle')}
                 </p>
             </AnimateOnScroll>
         </div>
@@ -69,46 +72,46 @@ const HeroSection = () => {
                         onClick={() => handlePurposeChange('RENT')}
                         className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tl-lg ${searchPurpose === 'RENT' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
-                        ALUGAR
+                        {t('search.rent')}
                     </button>
                     <button
                         onClick={() => handlePurposeChange('SALE')}
                         className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 border-x border-slate-200 ${searchPurpose === 'SALE' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
-                        COMPRAR
+                        {t('search.buy')}
                     </button>
                     <button
                         onClick={() => handlePurposeChange('SEASONAL')}
                         className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tr-lg ${searchPurpose === 'SEASONAL' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
-                        TEMPORADA
+                        {t('search.seasonal')}
                     </button>
                 </div>
                 <div className="p-6">
                     <form onSubmit={handleSearch}>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Nome ou Localização</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.location')}</label>
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <MapPinIcon className="w-5 h-5 text-slate-400" />
                                     </span>
-                                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="Digite um nome, bairro ou cidade..." className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder={t('search.location.placeholder')} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                                 </div>
                             </div>
                            
                              <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Código</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.code')}</label>
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <HashIcon className="w-5 h-5 text-slate-400" />
                                     </span>
-                                    <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="Código do imóvel" className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                                    <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder={t('search.code.placeholder')} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                                 </div>
                             </div>
 
                             <div className="md:col-span-4">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Faixa de Preço</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.price')}</label>
                                  <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <DollarSignIcon className="w-5 h-5 text-slate-400" />
@@ -132,7 +135,7 @@ const HeroSection = () => {
                             <div className="md:col-span-4 mt-4">
                                 <button type="submit" className="w-full flex items-center justify-center bg-primary-green text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
                                     <SearchIcon className="w-5 h-5 mr-2" />
-                                    Buscar
+                                    {t('search.button')}
                                 </button>
                             </div>
                         </div>
@@ -167,6 +170,7 @@ const Section: React.FC<{
 
 const PopularProperties: React.FC = () => {
     const { properties, loading } = useProperties();
+    const { t } = useLanguage();
     
     // Sort by viewCount descending and take the top properties
     const popular = [...properties]
@@ -176,7 +180,7 @@ const PopularProperties: React.FC = () => {
 
     if (loading) {
         return (
-             <Section title="Imóveis mais buscados" isGray={true}>
+             <Section title={t('section.popular')} isGray={true}>
                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                      {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden animate-pulse">
@@ -204,7 +208,7 @@ const PopularProperties: React.FC = () => {
     }
 
     return (
-        <Section title="Imóveis mais buscados" subtitle="Os imóveis que estão recebendo mais atenção em nossa plataforma." isGray={true}>
+        <Section title={t('section.popular')} subtitle={t('section.popular.subtitle')} isGray={true}>
              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {popular.map((property, index) => (
                     <AnimateOnScroll key={property.id} delay={100 * (index + 1)}>
@@ -218,8 +222,9 @@ const PopularProperties: React.FC = () => {
 
 const Categories: React.FC = () => {
     const { categories } = useCategories();
+    const { t } = useLanguage();
     return (
-        <Section title="Explore por Categoria" isGray={false}>
+        <Section title={t('section.categories')} isGray={false}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8">
                 {categories.map((cat, index) => (
                     <AnimateOnScroll key={cat.id} delay={100 * (index + 1)}>
@@ -235,6 +240,7 @@ const Categories: React.FC = () => {
 };
 
 const ServicesSection: React.FC = () => {
+    const { t } = useLanguage();
     const services = [
         { name: 'Venda', Icon: HandshakeIcon },
         { name: 'Locação', Icon: HouseUserIcon },
@@ -245,7 +251,7 @@ const ServicesSection: React.FC = () => {
     ];
 
     return (
-        <Section title="Nossos serviços" isGray={false}>
+        <Section title={t('section.services')} isGray={false}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-8 justify-items-center">
                 {services.map(({ name, Icon }, index) => (
                      <AnimateOnScroll key={name} delay={100 * index} className="w-full">
@@ -290,8 +296,9 @@ const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; 
 
 const MeetTheBrokers: React.FC = () => {
     const { brokers } = useBrokers();
+    const { t } = useLanguage();
     return (
-    <Section title="Conheça Nossos Corretores" subtitle="Nossa equipe de especialistas está pronta para te ajudar a encontrar o imóvel ideal." isGray={true}>
+    <Section title={t('section.brokers')} subtitle={t('section.brokers.subtitle')} isGray={true}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {brokers.map((broker, index) => (
                 <AnimateOnScroll key={broker.id} delay={100 * (index + 1)}>
@@ -311,8 +318,10 @@ const MeetTheBrokers: React.FC = () => {
     )
 };
 
-const Testimonials: React.FC = () => (
-    <Section title="O que nossos clientes dizem" isGray={false}>
+const Testimonials: React.FC = () => {
+    const { t } = useLanguage();
+    return (
+    <Section title={t('section.testimonials')} isGray={false}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {TESTIMONIALS.map((testimonial, index) => (
                 <AnimateOnScroll key={testimonial.id} delay={100 * (index + 1)}>
@@ -331,7 +340,7 @@ const Testimonials: React.FC = () => (
             ))}
         </div>
     </Section>
-);
+)};
 
 const ContactSection: React.FC = () => (
     <div className="bg-primary-blue text-white">
@@ -380,6 +389,7 @@ const ContactSection: React.FC = () => (
 );
 
 const HomePage: React.FC = () => {
+  const { t } = useLanguage();
   return (
     <div className="bg-white pb-16 md:pb-0">
       <Header />
@@ -388,8 +398,8 @@ const HomePage: React.FC = () => {
         <ServicesSection />
         <PopularProperties />
         <Categories />
-        <PropertiesForPurpose title="Imóveis à Venda" purpose={'SALE'} isGray={true} />
-        <PropertiesForPurpose title="Imóveis para Alugar" purpose={'RENT'} isGray={false} />
+        <PropertiesForPurpose title={t('section.for_sale')} purpose={'SALE'} isGray={true} />
+        <PropertiesForPurpose title={t('section.for_rent')} purpose={'RENT'} isGray={false} />
         <MeetTheBrokers />
         <Testimonials />
         <ContactSection />

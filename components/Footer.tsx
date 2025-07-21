@@ -1,18 +1,21 @@
 
 
 
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { LOGO_URL } from '../constants';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Footer: React.FC = () => {
+  const { t } = useLanguage();
   const navLinks = [
-    { name: 'Início', path: '/' },
-    { name: 'Comprar', path: '/search?purpose=SALE' },
-    { name: 'Alugar', path: '/search?purpose=RENT' },
-    { name: 'Temporada', path: '/search?purpose=SEASONAL' },
-    { name: 'Recursos', path: '/resources' },
-    { name: 'Sobre', path: '/about' },
+    { name: t('nav.home'), path: '/' },
+    { name: t('nav.buy'), path: '/search?purpose=SALE' },
+    { name: t('nav.rent'), path: '/search?purpose=RENT' },
+    { name: t('nav.seasonal'), path: '/search?purpose=SEASONAL' },
+    { name: t('nav.resources'), path: '/resources' },
+    { name: t('nav.about'), path: '/about' },
   ];
 
   const contactInfo = {
@@ -30,12 +33,12 @@ const Footer: React.FC = () => {
             <Link to="/">
                 <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain mb-4 filter brightness-0 invert" />
             </Link>
-            <p className="text-slate-400 max-w-xs">Uma nova forma de encontrar o seu lar. Facilitamos para inquilinos e proprietários.</p>
+            <p className="text-slate-400 max-w-xs">{t('footer.about')}</p>
           </div>
           
           {/* Navigation */}
           <div>
-            <h4 className="font-bold text-slate-200 mb-4 tracking-wider">NAVEGAÇÃO</h4>
+            <h4 className="font-bold text-slate-200 mb-4 tracking-wider">{t('footer.nav')}</h4>
             <ul className="space-y-3">
               {navLinks.map(link => (
                 <li key={link.name}>
@@ -43,14 +46,14 @@ const Footer: React.FC = () => {
                 </li>
               ))}
                <li>
-                  <Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">Testar Conexão</Link>
+                  <Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">{t('footer.connection_test')}</Link>
                 </li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-             <h4 className="font-bold text-slate-200 mb-4 tracking-wider">CONTATO</h4>
+             <h4 className="font-bold text-slate-200 mb-4 tracking-wider">{t('footer.contact')}</h4>
              <ul className="space-y-4 text-slate-400">
                 <li className="flex items-start">
                     <p className="leading-relaxed">{contactInfo.address1}</p>

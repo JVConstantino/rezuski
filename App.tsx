@@ -1,5 +1,6 @@
 
 
+
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
@@ -9,6 +10,7 @@ import { BrokerProvider } from './contexts/BrokerContext';
 import { CategoryProvider } from './contexts/CategoryContext';
 import { ResourceProvider } from './contexts/ResourceContext';
 import { ImageProvider } from './contexts/ImageContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginModalController from './components/LoginModalController';
 import ChatWidget from './components/public/ChatWidget';
@@ -49,57 +51,59 @@ const AppContent: React.FC = () => {
     }, [location.pathname]);
     
     return (
-        <AuthProvider>
-            <ResourceProvider>
-                <CategoryProvider>
-                    <BrokerProvider>
-                        <PropertyProvider>
-                            <ImageProvider>
-                                <LoginModalController />
-                                <Routes>
-                                    {/* Public Routes */}
-                                    <Route path="/" element={<HomePage />} />
-                                    <Route path="/search" element={<SearchResultsPage />} />
-                                    <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
-                                    <Route path="/resources" element={<ResourcesPage />} />
-                                    <Route path="/about" element={<AboutPage />} />
-                                    <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
+        <LanguageProvider>
+            <AuthProvider>
+                <ResourceProvider>
+                    <CategoryProvider>
+                        <BrokerProvider>
+                            <PropertyProvider>
+                                <ImageProvider>
+                                    <LoginModalController />
+                                    <Routes>
+                                        {/* Public Routes */}
+                                        <Route path="/" element={<HomePage />} />
+                                        <Route path="/search" element={<SearchResultsPage />} />
+                                        <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
+                                        <Route path="/resources" element={<ResourcesPage />} />
+                                        <Route path="/about" element={<AboutPage />} />
+                                        <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
 
-                                    {/* Admin Routes */}
-                                    <Route element={<ProtectedRoute />}>
-                                        <Route path="/admin" element={<AdminLayout />}>
-                                        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                                        <Route path="dashboard" element={<DashboardPage />} />
-                                        <Route path="properties" element={<PropertiesPage />} />
-                                        <Route path="properties/new" element={<AddPropertyPage />} />
-                                        <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
-                                        <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                        <Route path="brokers" element={<BrokersPage />} />
-                                        <Route path="brokers/new" element={<AddBrokerPage />} />
-                                        <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
-                                        <Route path="categories" element={<CategoriesPage />} />
-                                        <Route path="categories/new" element={<AddCategoryPage />} />
-                                        <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
-                                        <Route path="resources" element={<AdminResourcesPage />} />
-                                        <Route path="resources/new" element={<AddResourcePage />} />
-                                        <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
-                                        <Route path="gallery" element={<GalleryPage />} />
-                                        <Route path="messages" element={<MessagesPage />} />
-                                        <Route path="reports" element={<ReportsPage />} />
-                                        <Route path="settings" element={<SettingsPage />} />
+                                        {/* Admin Routes */}
+                                        <Route element={<ProtectedRoute />}>
+                                            <Route path="/admin" element={<AdminLayout />}>
+                                            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                                            <Route path="dashboard" element={<DashboardPage />} />
+                                            <Route path="properties" element={<PropertiesPage />} />
+                                            <Route path="properties/new" element={<AddPropertyPage />} />
+                                            <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
+                                            <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
+                                            <Route path="brokers" element={<BrokersPage />} />
+                                            <Route path="brokers/new" element={<AddBrokerPage />} />
+                                            <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
+                                            <Route path="categories" element={<CategoriesPage />} />
+                                            <Route path="categories/new" element={<AddCategoryPage />} />
+                                            <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
+                                            <Route path="resources" element={<AdminResourcesPage />} />
+                                            <Route path="resources/new" element={<AddResourcePage />} />
+                                            <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
+                                            <Route path="gallery" element={<GalleryPage />} />
+                                            <Route path="messages" element={<MessagesPage />} />
+                                            <Route path="reports" element={<ReportsPage />} />
+                                            <Route path="settings" element={<SettingsPage />} />
+                                            </Route>
                                         </Route>
-                                    </Route>
 
-                                    {/* Fallback Route */}
-                                    <Route path="*" element={<Navigate to="/" replace />} />
-                                </Routes>
-                                {!isAdminPage && <ChatWidget />}
-                            </ImageProvider>
-                        </PropertyProvider>
-                    </BrokerProvider>
-                </CategoryProvider>
-            </ResourceProvider>
-        </AuthProvider>
+                                        {/* Fallback Route */}
+                                        <Route path="*" element={<Navigate to="/" replace />} />
+                                    </Routes>
+                                    {!isAdminPage && <ChatWidget />}
+                                </ImageProvider>
+                            </PropertyProvider>
+                        </BrokerProvider>
+                    </CategoryProvider>
+                </ResourceProvider>
+            </AuthProvider>
+        </LanguageProvider>
     );
 };
 
