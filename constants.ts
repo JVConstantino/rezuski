@@ -4,12 +4,9 @@ import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, Ba
 
 export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
 
-// IMPORTANT: Replace with your actual OpenAI API Key.
-// This is required for the AI features (translation and content optimization) to work.
-// You can get a key from https://platform.openai.com/account/api-keys
-// In a real production environment, this key should not be hardcoded but managed
-// through a secure process like environment variables injected during a build step.
-export const apiKey = process.env.OPENROUTER_API_KEY;
+// OpenRouter API configuration
+// This key is used for AI features (translation and content optimization)
+export const apiKey = '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';
 export const openRouterApiEndpoint = 'https://openrouter.ai/api/v1';
 
 
