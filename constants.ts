@@ -9,7 +9,7 @@ export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/obj
 // You can get a key from https://platform.openai.com/account/api-keys
 // In a real production environment, this key should not be hardcoded but managed
 // through a secure process like environment variables injected during a build step.
-export const OPENAI_API_KEY = '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';
+export const OPENAI_API_KEY = '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';
 
 
 // Mock data has been migrated to Supabase. These constants are kept for reference or for parts of the app not yet migrated.
