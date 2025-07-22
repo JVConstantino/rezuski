@@ -4,6 +4,13 @@ import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, Ba
 
 export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
 
+// IMPORTANT: Replace with your actual Google Gemini API Key.
+// This is required for the AI features (translation and content optimization) to work.
+// In a real production environment, this key should not be hardcoded but managed
+// through a secure process like environment variables injected during a build step.
+export const GEMINI_API_KEY = 'AIzaSyB1piDU8IydDH1V5pTi69vg2wbBeBh53mo';
+
+
 // Mock data has been migrated to Supabase. These constants are kept for reference or for parts of the app not yet migrated.
 // In a full migration, these would be removed entirely.
 export const USERS: User[] = [];
