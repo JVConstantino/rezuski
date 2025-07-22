@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -130,60 +131,67 @@ const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (
 };
 
 
-const PropertyHeader: React.FC<{ property: Property; onShare: () => void }> = ({ property, onShare }) => (
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-    <div>
-      <h1 className="text-4xl font-bold text-slate-900">{property.title}</h1>
-      <p className="text-slate-600 mt-2">{property.address}</p>
-    </div>
-    <div className="flex space-x-2 mt-4 sm:mt-0">
-      <button onClick={onShare} className="flex items-center space-x-2 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors">
-        <Share2Icon className="w-5 h-5 text-slate-600" />
-        <span>Compartilhar</span>
-      </button>
-    </div>
-  </div>
-);
+const PropertyHeader: React.FC<{ property: Property; onShare: () => void }> = ({ property, onShare }) => {
+    const { t } = useLanguage();
+    return (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div>
+            <h1 className="text-4xl font-bold text-slate-900">{property.title}</h1>
+            <p className="text-slate-600 mt-2">{property.address}</p>
+            </div>
+            <div className="flex space-x-2 mt-4 sm:mt-0">
+            <button onClick={onShare} className="flex items-center space-x-2 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors">
+                <Share2Icon className="w-5 h-5 text-slate-600" />
+                <span>{t('details.share')}</span>
+            </button>
+            </div>
+        </div>
+    );
+};
 
-const PropertyInfoBadges: React.FC<{ property: Property }> = ({ property }) => (
-  <div className="flex flex-wrap gap-4 mt-6">
-     <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
-      <DollarSignIcon className="w-6 h-6 text-primary-blue" />
-      <div>
-        <div className="font-semibold text-slate-800">{property.purpose === 'SALE' ? 'Preço de Venda' : 'Aluguel Mensal'}</div>
-      </div>
+const PropertyInfoBadges: React.FC<{ property: Property }> = ({ property }) => {
+    const { t } = useLanguage();
+    return (
+    <div className="flex flex-wrap gap-4 mt-6">
+        <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
+        <DollarSignIcon className="w-6 h-6 text-primary-blue" />
+        <div>
+            <div className="font-semibold text-slate-800">{property.purpose === 'SALE' ? t('details.sale_price') : t('details.rent_price')}</div>
+        </div>
+        </div>
+        <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
+        <BedIcon className="w-6 h-6 text-primary-blue" />
+        <div>
+            <div className="font-semibold text-slate-800">{property.bedrooms} {t('details.bedrooms')}</div>
+        </div>
+        </div>
+        <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
+        <BathIcon className="w-6 h-6 text-primary-blue" />
+        <div>
+            <div className="font-semibold text-slate-800">{property.bathrooms} {t('details.bathrooms')}</div>
+        </div>
+        </div>
+        <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
+        <MaximizeIcon className="w-6 h-6 text-primary-blue" />
+        <div>
+            <div className="font-semibold text-slate-800">{property.areaM2} {t('details.area')}</div>
+        </div>
+        </div>
+        <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
+        <CheckCircleIcon className="w-6 h-6 text-primary-green" />
+        <div>
+            <div className="font-semibold text-slate-800">{property.repairQuality}</div>
+            <div className="text-sm text-slate-500">{t('details.quality')}</div>
+        </div>
+        </div>
     </div>
-    <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
-      <BedIcon className="w-6 h-6 text-primary-blue" />
-      <div>
-        <div className="font-semibold text-slate-800">{property.bedrooms} Quartos</div>
-      </div>
-    </div>
-     <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
-      <BathIcon className="w-6 h-6 text-primary-blue" />
-      <div>
-        <div className="font-semibold text-slate-800">{property.bathrooms} Banheiros</div>
-      </div>
-    </div>
-     <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
-      <MaximizeIcon className="w-6 h-6 text-primary-blue" />
-      <div>
-        <div className="font-semibold text-slate-800">{property.areaM2} m²</div>
-      </div>
-    </div>
-     <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
-      <CheckCircleIcon className="w-6 h-6 text-primary-green" />
-      <div>
-        <div className="font-semibold text-slate-800">{property.repairQuality}</div>
-        <div className="text-sm text-slate-500">Qualidade</div>
-      </div>
-    </div>
-  </div>
-);
+    );
+};
 
 const PropertyActionsCard: React.FC<{ property: Property }> = ({ property }) => {
     const [name, setName] = useState('');
     const [date, setDate] = useState('');
+    const { t } = useLanguage();
 
     const displayPrice = property.purpose === 'SALE' 
         ? `R$ ${property.salePrice?.toLocaleString('pt-BR')}` 
@@ -222,15 +230,15 @@ Agradeço o retorno.`;
             </p>
             
             <form onSubmit={handleScheduleViaWhatsApp} className="mt-6 space-y-4">
-                <h4 className="font-semibold text-slate-800">Agende sua visita</h4>
+                <h4 className="font-semibold text-slate-800">{t('details.schedule_visit')}</h4>
                 
                 <div>
-                    <label htmlFor="visitor-name" className="sr-only">Nome</label>
-                    <input type="text" id="visitor-name" placeholder="Seu nome completo" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                    <label htmlFor="visitor-name" className="sr-only">{t('details.your_name')}</label>
+                    <input type="text" id="visitor-name" placeholder={t('details.your_name')} value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                 </div>
 
                 <div>
-                    <label htmlFor="visitor-date" className="sr-only">Data da visita</label>
+                    <label htmlFor="visitor-date" className="sr-only">{t('details.visit_date')}</label>
                      <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <CalendarIcon className="w-5 h-5 text-slate-400" />
@@ -241,7 +249,7 @@ Agradeço o retorno.`;
 
                 <button type="submit" className="w-full mt-2 bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943s-.182-.15-.38-.25"/></svg>
-                    <span>Agendar via WhatsApp</span>
+                    <span>{t('details.schedule_whatsapp')}</span>
                 </button>
             </form>
         </div>
@@ -277,7 +285,7 @@ const PriceHistoryTable: React.FC<{ history: PriceHistory[] }> = ({ history }) =
 const PropertyDetailsPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
   const { properties, incrementViewCount } = useProperties();
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   
   const originalProperty = properties.find(p => p.id === propertyId);
   const property = originalProperty ? localizeProperty(originalProperty, locale) : undefined;
@@ -396,7 +404,7 @@ const PropertyDetailsPage: React.FC = () => {
   if (!property) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <p className="text-2xl text-slate-600">Imóvel não encontrado</p>
+        <p className="text-2xl text-slate-600">{t('property.not_found')}</p>
       </div>
     );
   }
@@ -414,10 +422,10 @@ const PropertyDetailsPage: React.FC = () => {
             <div className="lg:col-span-2">
                 <PropertyInfoBadges property={property}/>
                 <hr className="my-8"/>
-                <h2 className="text-2xl font-bold text-slate-900">Sobre este imóvel</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('details.about_property')}</h2>
                 <p className="mt-4 text-slate-600 leading-relaxed whitespace-pre-wrap">{property.description}</p>
                 <hr className="my-8"/>
-                <h2 className="text-2xl font-bold text-slate-900">Características e Comodidades</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{t('details.features_amenities')}</h2>
                 <ul className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4">
                     {property.amenities.map((amenity, index) => (
                         <li key={index} className="flex items-center text-slate-700">
@@ -429,7 +437,7 @@ const PropertyDetailsPage: React.FC = () => {
                 {property.tourUrl && (
                     <>
                         <hr className="my-8"/>
-                        <h2 className="text-2xl font-bold text-slate-900">Tour Virtual 3D</h2>
+                        <h2 className="text-2xl font-bold text-slate-900">{t('details.virtual_tour')}</h2>
                         <div className="mt-6 aspect-[16/9] w-full bg-slate-200 rounded-lg overflow-hidden shadow-lg">
                            <iframe 
                                 src={property.tourUrl} 
@@ -446,14 +454,14 @@ const PropertyDetailsPage: React.FC = () => {
                 {property.priceHistory && property.priceHistory.length > 0 && (
                     <>
                         <hr className="my-8"/>
-                        <h2 className="text-2xl font-bold text-slate-900">Histórico de Preço</h2>
+                        <h2 className="text-2xl font-bold text-slate-900">{t('details.price_history')}</h2>
                         <div className="mt-6">
                             <PriceHistoryTable history={property.priceHistory} />
                         </div>
                     </>
                 )}
                 <hr className="my-8"/>
-                 <h2 className="text-2xl font-bold text-slate-900">Mapa</h2>
+                 <h2 className="text-2xl font-bold text-slate-900">{t('details.map')}</h2>
                  <div className="relative mt-6 h-96 w-full rounded-lg bg-slate-200">
                     <div ref={mapContainer} className="w-full h-full rounded-lg" />
                     {(isMapLoading || mapError) && (
@@ -475,7 +483,7 @@ const PropertyDetailsPage: React.FC = () => {
         </div>
 
         <div className="mt-24">
-            <h2 className="text-3xl font-extrabold text-slate-900">Imóveis Similares</h2>
+            <h2 className="text-3xl font-extrabold text-slate-900">{t('details.similar_properties')}</h2>
             <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {similarProperties.map(p => (
                     <PropertyCard key={p.id} property={p} />
@@ -498,7 +506,7 @@ const PropertyDetailsPage: React.FC = () => {
 
       {showCopiedNotification && (
           <div className="fixed bottom-24 md:bottom-10 right-10 bg-slate-900 text-white px-5 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300">
-              Link copiado para a área de transferência!
+              {t('details.link_copied')}
           </div>
       )}
     </div>

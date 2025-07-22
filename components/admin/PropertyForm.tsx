@@ -252,8 +252,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 - Ano de Construção: ${formData.yearBuilt || 'Não informado'}
                 - Qualidade da Manutenção: ${formData.repairQuality}
                 - Comodidades: ${amenitiesString || 'Nenhuma listada'}
-                - Título Atual (para referência): "${formData.title}"
-                - Descrição Atual (para referência): "${formData.description}"
+                - Título Atual (para referência): ${JSON.stringify(formData.title)}
+                - Descrição Atual (para referência): ${JSON.stringify(formData.description)}
 
                 Gere o título e a descrição. O título deve ser cativante e informativo. A descrição deve ser bem estruturada, detalhada e usar o formato de tópicos especificado, mantendo um tom profissional e vendedor. A resposta deve ser em JSON.
             `;
@@ -311,12 +311,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         setIsTranslating(targetLocale);
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            
+            const originalListing = JSON.stringify({
+                title: formData.title,
+                description: formData.description,
+            }, null, 2);
+
             const prompt = `Translate the following real estate property listing from Brazilian Portuguese to ${targetLanguageName}. Provide only the translated JSON object.
             Original (pt-BR):
-            {
-              "title": "${formData.title}",
-              "description": "${formData.description.replace(/"/g, '\\"')}"
-            }
+            ${originalListing}
             `;
             
             const responseSchema = {
@@ -343,8 +346,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             handleTranslationChange(targetLocale, 'description', result.description);
 
         } catch (e) {
-            console.error(e);
-            alert(`Failed to translate to ${targetLanguageName}.`);
+            console.error("Translation Error:", e);
+            alert(`Failed to translate to ${targetLanguageName}. Check the console for more details.`);
         } finally {
             setIsTranslating(null);
         }

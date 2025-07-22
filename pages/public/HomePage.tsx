@@ -242,12 +242,12 @@ const Categories: React.FC = () => {
 const ServicesSection: React.FC = () => {
     const { t } = useLanguage();
     const services = [
-        { name: 'Venda', Icon: HandshakeIcon },
-        { name: 'Locação', Icon: HouseUserIcon },
-        { name: 'Avaliação', Icon: EyeIcon },
-        { name: 'Legalização', Icon: LegalizationIcon },
-        { name: 'Vistoria Imobiliária', Icon: SearchIcon },
-        { name: 'Ver parceiros', Icon: UserPlusIcon },
+        { name: t('services.sale'), Icon: HandshakeIcon },
+        { name: t('services.rent'), Icon: HouseUserIcon },
+        { name: t('services.evaluation'), Icon: EyeIcon },
+        { name: t('services.legalization'), Icon: LegalizationIcon },
+        { name: t('services.inspection'), Icon: SearchIcon },
+        { name: t('services.partners'), Icon: UserPlusIcon },
     ];
 
     return (
@@ -270,6 +270,7 @@ const ServicesSection: React.FC = () => {
 
 const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; isGray?: boolean }> = ({ title, purpose, isGray }) => {
     const { properties } = useProperties();
+    const { t } = useLanguage();
     const filteredProperties = properties.filter(p => p.purpose === purpose && p.status === 'AVAILABLE').slice(0, 6);
     
     if(filteredProperties.length === 0) return null;
@@ -286,7 +287,7 @@ const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; 
             <AnimateOnScroll delay={300}>
                 <div className="text-center mt-12">
                     <Link to={`/search?purpose=${purpose}`} className="inline-block bg-primary-green text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:opacity-95 transition-all">
-                        Ver Mais
+                        {t('section.see_more')}
                     </Link>
                 </div>
             </AnimateOnScroll>
@@ -342,51 +343,54 @@ const Testimonials: React.FC = () => {
     </Section>
 )};
 
-const ContactSection: React.FC = () => (
-    <div className="bg-primary-blue text-white">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-             <AnimateOnScroll>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                    <div>
-                        <h2 className="text-3xl font-extrabold">Entre em Contato</h2>
-                        <p className="mt-4 text-lg text-white/70">Tem alguma pergunta ou quer agendar uma visita? Nossa equipe está pronta para te ajudar. Preencha o formulário ou visite nosso escritório.</p>
-                        <div className="mt-8 space-y-4">
-                            <div className="flex items-center">
-                                <MapPinIcon className="w-6 h-6 text-white/80" />
-                                <p className="ml-4">Rua Principal, 123, Centro, São Paulo - SP</p>
-                            </div>
-                            <div className="flex items-center">
-                                <PhoneIcon className="w-6 h-6 text-white/80" />
-                                <p className="ml-4">+55 (11) 5555-4444</p>
-                            </div>
-                            <div className="flex items-center">
-                                <MailIcon className="w-6 h-6 text-white/80" />
-                                <p className="ml-4">contato@rezuski.com</p>
+const ContactSection: React.FC = () => {
+    const { t } = useLanguage();
+    return (
+        <div className="bg-primary-blue text-white">
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+                 <AnimateOnScroll>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <h2 className="text-3xl font-extrabold">{t('contact.title')}</h2>
+                            <p className="mt-4 text-lg text-white/70">{t('contact.subtitle')}</p>
+                            <div className="mt-8 space-y-4">
+                                <div className="flex items-center">
+                                    <MapPinIcon className="w-6 h-6 text-white/80" />
+                                    <p className="ml-4">{t('contact.address_label')}</p>
+                                </div>
+                                <div className="flex items-center">
+                                    <PhoneIcon className="w-6 h-6 text-white/80" />
+                                    <p className="ml-4">{t('contact.phone_label')}</p>
+                                </div>
+                                <div className="flex items-center">
+                                    <MailIcon className="w-6 h-6 text-white/80" />
+                                    <p className="ml-4">{t('contact.email_label')}</p>
+                                </div>
                             </div>
                         </div>
+                        <div className="bg-white p-8 rounded-lg shadow-2xl">
+                            <form className="space-y-6">
+                                <div>
+                                    <label htmlFor="name" className="text-sm font-medium text-slate-700">{t('contact.form.name')}</label>
+                                    <input type="text" id="name" className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
+                                </div>
+                                <div>
+                                    <label htmlFor="email" className="text-sm font-medium text-slate-700">{t('contact.form.email')}</label>
+                                    <input type="email" id="email" className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
+                                </div>
+                                <div>
+                                    <label htmlFor="message" className="text-sm font-medium text-slate-700">{t('contact.form.message')}</label>
+                                    <textarea id="message" rows={4} className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green"></textarea>
+                                </div>
+                                <button type="submit" className="w-full bg-primary-green text-white font-semibold py-3 rounded-lg hover:opacity-95 transition-colors">{t('contact.form.send')}</button>
+                            </form>
+                        </div>
                     </div>
-                    <div className="bg-white p-8 rounded-lg shadow-2xl">
-                        <form className="space-y-6">
-                            <div>
-                                <label htmlFor="name" className="text-sm font-medium text-slate-700">Nome</label>
-                                <input type="text" id="name" className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
-                            </div>
-                            <div>
-                                <label htmlFor="email" className="text-sm font-medium text-slate-700">Email</label>
-                                <input type="email" id="email" className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
-                            </div>
-                            <div>
-                                <label htmlFor="message" className="text-sm font-medium text-slate-700">Mensagem</label>
-                                <textarea id="message" rows={4} className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green"></textarea>
-                            </div>
-                            <button type="submit" className="w-full bg-primary-green text-white font-semibold py-3 rounded-lg hover:opacity-95 transition-colors">Enviar Mensagem</button>
-                        </form>
-                    </div>
-                </div>
-             </AnimateOnScroll>
+                 </AnimateOnScroll>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const HomePage: React.FC = () => {
   const { t } = useLanguage();
