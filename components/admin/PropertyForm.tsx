@@ -8,7 +8,7 @@ import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import OpenAI from "openai";
 import { useLanguage } from '../../contexts/LanguageContext';
-import { apiKey } from '../../constants';
+import { apiKey, openRouterApiEndpoint } from '../../constants';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -210,8 +210,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     };
     
     const checkApiKey = () => {
-        if (!apiKey || !apiKey.startsWith('sk-')) {
-            alert('A chave da API da OpenAI não está configurada ou é inválida. Por favor, adicione sua chave no arquivo `constants.ts` para usar os recursos de IA.');
+        if (!apiKey || !apiKey.startsWith('sk-or-')) {
+            alert('A chave da API da OpenRouter não está configurada ou é inválida. Por favor, adicione sua chave no arquivo `.env.local` para usar os recursos de IA.');
             return false;
         }
         return true;
@@ -225,7 +225,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setIsGeneratingAI(true);
         try {
-            const openai = new OpenAI({ apiKey: apiKey, dangerouslyAllowBrowser: true });
+            const openai = new OpenAI({
+                baseURL: openRouterApiEndpoint,
+                apiKey: apiKey,
+                dangerouslyAllowBrowser: true,
+            });
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
 
@@ -269,7 +273,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             `;
             
             const response = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo-0125",
+                model: "experimental/gemini-2.0-flash",
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userPrompt }

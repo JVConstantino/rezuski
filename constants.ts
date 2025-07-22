@@ -9,7 +9,8 @@ export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/obj
 // You can get a key from https://platform.openai.com/account/api-keys
 // In a real production environment, this key should not be hardcoded but managed
 // through a secure process like environment variables injected during a build step.
-export const apiKey = process.env.OPENAI_API_KEY;
+export const apiKey = process.env.OPENROUTER_API_KEY;
+export const openRouterApiEndpoint = 'https://openrouter.ai/api/v1';
 
 
 // Mock data has been migrated to Supabase. These constants are kept for reference or for parts of the app not yet migrated.
