@@ -6,7 +6,7 @@ export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/obj
 
 // OpenRouter API configuration
 // This key is used for AI features (translation and content optimization)
-export const apiKey = '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';
+export const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 export const openRouterApiEndpoint = 'https://openrouter.ai/api/v1';
 
 
