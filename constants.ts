@@ -4,11 +4,12 @@ import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, Ba
 
 export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
 
-// IMPORTANT: Replace with your actual Google Gemini API Key.
+// IMPORTANT: Replace with your actual OpenAI API Key.
 // This is required for the AI features (translation and content optimization) to work.
+// You can get a key from https://platform.openai.com/account/api-keys
 // In a real production environment, this key should not be hardcoded but managed
 // through a secure process like environment variables injected during a build step.
-export const GEMINI_API_KEY = 'AIzaSyB1piDU8IydDH1V5pTi69vg2wbBeBh53mo';
+export const OPENAI_API_KEY = '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';
 
 
 // Mock data has been migrated to Supabase. These constants are kept for reference or for parts of the app not yet migrated.

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus, PropertyTypes } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
@@ -7,9 +6,9 @@ import { useImages } from '../../contexts/ImageContext';
 import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
-import { GoogleGenAI, Type } from "@google/genai";
+import OpenAI from "openai";
 import { useLanguage } from '../../contexts/LanguageContext';
-import { GEMINI_API_KEY } from '../../constants';
+import { OPENAI_API_KEY } from '../../constants';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -36,8 +35,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const { supportedLanguages } = useLanguage();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-    const [isOptimizing, setIsOptimizing] = useState(false);
-    const [isTranslating, setIsTranslating] = useState<string | null>(null);
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     const [activeLangTab, setActiveLangTab] = useState('pt-BR');
 
     const [formData, setFormData] = useState({
@@ -212,30 +210,31 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     };
     
     const checkApiKey = () => {
-        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
-            alert('A chave da API do Gemini não está configurada. Por favor, adicione sua chave no arquivo `constants.ts` para usar os recursos de IA.');
+        if (!OPENAI_API_KEY || !OPENAI_API_KEY.startsWith('sk-')) {
+            alert('A chave da API da OpenAI não está configurada ou é inválida. Por favor, adicione sua chave no arquivo `constants.ts` para usar os recursos de IA.');
             return false;
         }
         return true;
     };
 
-    const handleOptimizeWithAI = async () => {
+    const handleGenerateContentWithAI = async () => {
         if (!checkApiKey()) return;
-        setIsOptimizing(true);
+        if (!formData.title || !formData.description) {
+            alert('Por favor, preencha o título e a descrição em português primeiro para servirem de base para a IA.');
+            return;
+        }
+        setIsGeneratingAI(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
+            const openai = new OpenAI({ apiKey: OPENAI_API_KEY, dangerouslyAllowBrowser: true });
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
+            const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
+
+            const systemPrompt = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
             
-            const prompt = `
-                Você é um especialista em marketing imobiliário e SEO que cria anúncios de imóveis para o mercado brasileiro.
-                Com base nos detalhes da propriedade a seguir, gere um título e uma descrição de anúncio completa, profissional e otimizada.
+            const userPrompt = `
+                Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}.
 
-                Siga ESTRITAMENTE o formato do exemplo abaixo para a descrição. Use quebras de linha para separar os parágrafos e as seções. Use o caractere '▫️ ' (com um espaço depois) para os itens das listas.
-
-                ## Exemplo de Formato de Saída:
-                [Título Gerado]
-                
+                ## Exemplo de Formato para a Descrição em Português (pt-BR):
                 [Parágrafo Introdutório Gerado]
 
                 [Parágrafo com detalhes de área construída, terreno, etc.]
@@ -252,7 +251,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
                 [Parágrafo de Conclusão, ideal para quem o imóvel se destina]
 
-                ## Detalhes da Propriedade para Gerar o Anúncio:
+                ## Detalhes da Propriedade para Usar:
                 - Tipo: ${formData.propertyType}
                 - Finalidade: ${formData.purpose === 'RENT' ? 'Aluguel' : 'Venda'}
                 - Localização: ${formData.address}, ${formData.neighborhood}, ${formData.city}, ${formData.state}
@@ -262,101 +261,56 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 - Ano de Construção: ${formData.yearBuilt || 'Não informado'}
                 - Qualidade da Manutenção: ${formData.repairQuality}
                 - Comodidades: ${amenitiesString || 'Nenhuma listada'}
-                - Título Atual (para referência): ${JSON.stringify(formData.title)}
-                - Descrição Atual (para referência): ${JSON.stringify(formData.description)}
+                - Conteúdo Atual (para referência):
+                  - Título: ${JSON.stringify(formData.title)}
+                  - Descrição: ${JSON.stringify(formData.description)}
 
-                Gere o título e a descrição. O título deve ser cativante e informativo. A descrição deve ser bem estruturada, detalhada e usar o formato de tópicos especificado, mantendo um tom profissional e vendedor. A resposta deve ser em JSON.
+                Gere o JSON completo com todas as otimizações e traduções.
             `;
-
-            const responseSchema = {
-                type: Type.OBJECT,
-                properties: {
-                    title: {
-                        type: Type.STRING,
-                        description: "O título otimizado para SEO para o imóvel. Deve ser cativante e incluir detalhes chave como tipo do imóvel e localização.",
-                    },
-                    description: {
-                        type: Type.STRING,
-                        description: "A descrição completa e otimizada do imóvel. Deve ser bem estruturada com parágrafos e listas (usando '▫️ ' para cada item), de fácil leitura, e destacar os principais pontos de venda e comodidades, seguindo estritamente o formato solicitado no prompt.",
-                    },
-                },
-                required: ["title", "description"],
-            };
-
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: responseSchema,
-                },
+            
+            const response = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo-0125",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                response_format: { type: "json_object" },
             });
-            
-            const responseText = response.text.trim();
-            const jsonResponse = JSON.parse(responseText);
-            
-            if (jsonResponse.title && jsonResponse.description) {
-                setFormData(prev => ({
-                    ...prev,
-                    title: jsonResponse.title,
-                    description: jsonResponse.description,
-                }));
+
+            const content = response.choices[0].message.content;
+            if (content) {
+                const jsonResponse = JSON.parse(content);
+                
+                const allTranslations: Property['translations'] = {};
+                
+                for (const lang of supportedLanguages) {
+                    const langData = jsonResponse[lang.code];
+                    if (langData && langData.title && langData.description) {
+                        if (lang.code === 'pt-BR') {
+                            setFormData(prev => ({
+                                ...prev,
+                                title: langData.title,
+                                description: langData.description,
+                            }));
+                        } else {
+                            allTranslations[lang.code] = {
+                                title: langData.title,
+                                description: langData.description
+                            };
+                        }
+                    }
+                }
+                setTranslations(allTranslations);
+
             } else {
-                throw new Error("Formato de resposta da IA inválido.");
+                throw new Error("Resposta da IA vazia.");
             }
 
         } catch (error) {
-            console.error("Erro ao otimizar com IA:", error);
-            alert("Ocorreu um erro durante a otimização com IA. Verifique se sua chave de API está correta em `constants.ts` e se o texto não contém caracteres especiais que possam causar problemas. Detalhes no console.");
+            console.error("Erro ao gerar conteúdo com IA:", error);
+            alert("Ocorreu um erro durante a geração de conteúdo com IA. Verifique se sua chave de API da OpenAI está correta em `constants.ts`. Detalhes no console.");
         } finally {
-            setIsOptimizing(false);
-        }
-    };
-
-    const handleAutoTranslate = async (targetLocale: string, targetLanguageName: string) => {
-        if (!checkApiKey()) return;
-        if (!formData.title || !formData.description) {
-            alert('Por favor, preencha o título e a descrição em português primeiro.');
-            return;
-        }
-        setIsTranslating(targetLocale);
-        try {
-            const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-            
-            const prompt = `Translate the following real estate property listing from Brazilian Portuguese to ${targetLanguageName}. Provide only the translated JSON object.
-            Original (pt-BR):
-            Title: ${JSON.stringify(formData.title)}
-            Description: ${JSON.stringify(formData.description)}
-            `;
-            
-            const responseSchema = {
-                type: Type.OBJECT,
-                properties: {
-                    title: { type: Type.STRING, description: `The translated title in ${targetLanguageName}.` },
-                    description: { type: Type.STRING, description: `The translated description in ${targetLanguageName}.` },
-                },
-                required: ["title", "description"],
-            };
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: responseSchema,
-                },
-            });
-            
-            const result = JSON.parse(response.text.trim());
-            
-            handleTranslationChange(targetLocale, 'title', result.title);
-            handleTranslationChange(targetLocale, 'description', result.description);
-
-        } catch (e) {
-            console.error("Translation Error:", e);
-            alert(`Falha ao traduzir para ${targetLanguageName}. Verifique se sua chave de API está correta em 'constants.ts' e tente novamente. Detalhes no console.`);
-        } finally {
-            setIsTranslating(null);
+            setIsGeneratingAI(false);
         }
     };
 
@@ -498,12 +452,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                                     <div className="mt-2 flex justify-end">
                                         <button
                                             type="button"
-                                            onClick={handleOptimizeWithAI}
-                                            disabled={isOptimizing}
+                                            onClick={handleGenerateContentWithAI}
+                                            disabled={isGeneratingAI}
                                             className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-secondary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
                                         >
-                                            <SparklesIcon className={`w-5 h-5 mr-2 ${isOptimizing ? 'animate-spin' : ''}`} />
-                                            {isOptimizing ? 'Otimizando...' : 'Otimizar com IA'}
+                                            <SparklesIcon className={`w-5 h-5 mr-2 ${isGeneratingAI ? 'animate-spin' : ''}`} />
+                                            {isGeneratingAI ? 'Otimizando e Traduzindo...' : 'Otimizar com IA'}
                                         </button>
                                     </div>
                                 </div>
@@ -511,15 +465,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-lg font-semibold text-slate-700">Tradução para {supportedLanguages.find(l=>l.code === activeLangTab)?.name}</h3>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAutoTranslate(activeLangTab, supportedLanguages.find(l=>l.code === activeLangTab)?.name || '')}
-                                            disabled={isTranslating === activeLangTab}
-                                            className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-secondary-blue/90 text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
-                                        >
-                                            <SparklesIcon className={`w-4 h-4 mr-2 ${isTranslating === activeLangTab ? 'animate-spin' : ''}`} />
-                                            {isTranslating === activeLangTab ? 'Traduzindo...' : 'Traduzir com IA'}
-                                        </button>
                                     </div>
                                     <div className="space-y-4">
                                         <div>
