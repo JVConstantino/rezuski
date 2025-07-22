@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Property } from '../types';
-import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon } from './Icons';
+import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { localizeProperty } from '../lib/localize';
 
@@ -11,7 +10,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty }) => {
-    const { locale } = useLanguage();
+    const { locale, t } = useLanguage();
     const property = localizeProperty(originalProperty, locale);
 
     const getPriceDisplay = (p: Property) => {
@@ -24,17 +23,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty 
                 break;
             case 'RENT':
                 price = p.rentPrice;
-                suffix = '/mês';
+                suffix = t('price.per_month');
                 break;
             case 'SEASONAL':
                 price = p.rentPrice;
-                suffix = '/diária';
+                suffix = t('price.per_day');
                 break;
             default:
-                return { text: 'Sob consulta', suffix: '' };
+                return { text: t('price.on_request'), suffix: '' };
         }
 
-        const formattedPrice = price ? `R$ ${price.toLocaleString('pt-BR')}` : 'Sob consulta';
+        const formattedPrice = price ? `R$ ${price.toLocaleString('pt-BR')}` : t('price.on_request');
         return { text: formattedPrice, suffix };
     };
 
@@ -63,15 +62,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty 
             <MapPinIcon className="w-4 h-4 mr-1.5 flex-shrink-0" />
             {locationDisplay || property.address}
         </p>
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
+            <span className="font-semibold bg-slate-100 px-2 py-1 rounded">{t(`propertyType:${property.propertyType}`)}</span>
+            {property.code && (
+                <span className="font-mono bg-slate-100 px-2 py-1 rounded flex items-center">
+                    <HashIcon className="w-3 h-3 mr-1"/>{property.code}
+                </span>
+            )}
+        </div>
         <hr className="my-4 border-t border-slate-200" />
         <div className="flex justify-between text-sm text-slate-600">
           <div className="flex items-center">
             <BedIcon className="w-4 h-4 mr-2 text-primary-blue" />
-            <span>{property.bedrooms} Quartos</span>
+            <span>{property.bedrooms} {t('details.bedrooms')}</span>
           </div>
           <div className="flex items-center">
             <BathIcon className="w-4 h-4 mr-2 text-primary-blue" />
-            <span>{property.bathrooms} Banheiros</span>
+            <span>{property.bathrooms} {t('details.bathrooms')}</span>
           </div>
           <div className="flex items-center">
             <MaximizeIcon className="w-4 h-4 mr-2 text-primary-blue" />
@@ -80,7 +87,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty 
         </div>
         <div className="mt-auto pt-5">
             <Link to={`/property/${property.id}`} className="w-full block text-center bg-primary-green text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
-                Ver Imóvel
+                {t('property.view_property')}
             </Link>
         </div>
       </div>

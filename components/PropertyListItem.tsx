@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Property } from '../types';
-import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon } from './Icons';
+import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { localizeProperty } from '../lib/localize';
 
@@ -11,7 +10,7 @@ interface PropertyListItemProps {
 }
 
 const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalProperty }) => {
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   const property = localizeProperty(originalProperty, locale);
 
   const getPriceDisplay = (p: Property) => {
@@ -24,15 +23,15 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
             break;
         case 'RENT':
             price = p.rentPrice;
-            suffix = <span className="text-sm font-normal text-slate-500">/mês</span>;
+            suffix = <span className="text-sm font-normal text-slate-500">{t('price.per_month')}</span>;
             break;
         case 'SEASONAL':
             price = p.rentPrice;
-            suffix = <span className="text-sm font-normal text-slate-500">/diária</span>;
+            suffix = <span className="text-sm font-normal text-slate-500">{t('price.per_day')}</span>;
             break;
     }
 
-    const formattedPrice = price ? `R$ ${price.toLocaleString('pt-BR')}` : 'Sob consulta';
+    const formattedPrice = price ? `R$ ${price.toLocaleString('pt-BR')}` : t('price.on_request');
     return { text: formattedPrice, suffix };
   };
 
@@ -56,6 +55,14 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
                     <MapPinIcon className="w-4 h-4 mr-1.5 flex-shrink-0" />
                     {locationDisplay || property.address}
                 </p>
+                <div className="mt-2 flex items-center gap-x-3 text-xs text-slate-600">
+                    <span className="font-semibold bg-slate-100 px-2 py-1 rounded">{t(`propertyType:${property.propertyType}`)}</span>
+                    {property.code && (
+                        <span className="font-mono bg-slate-100 px-2 py-1 rounded flex items-center">
+                            <HashIcon className="w-3 h-3 mr-1"/>{property.code}
+                        </span>
+                    )}
+                </div>
             </div>
             <p className="text-2xl font-bold text-primary-blue flex-shrink-0 ml-4">
                 {displayPrice}
@@ -73,11 +80,11 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
                  <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600">
                   <div className="flex items-center">
                     <BedIcon className="w-4 h-4 mr-2 text-primary-blue" />
-                    <span>{property.bedrooms} Quartos</span>
+                    <span>{property.bedrooms} {t('details.bedrooms')}</span>
                   </div>
                   <div className="flex items-center">
                     <BathIcon className="w-4 h-4 mr-2 text-primary-blue" />
-                    <span>{property.bathrooms} Banheiros</span>
+                    <span>{property.bathrooms} {t('details.bathrooms')}</span>
                   </div>
                   <div className="flex items-center">
                     <MaximizeIcon className="w-4 h-4 mr-2 text-primary-blue" />
@@ -86,7 +93,7 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
                 </div>
                 <div className="mt-4 sm:mt-0 flex-shrink-0">
                     <Link to={`/property/${property.id}`} className="inline-block bg-primary-green text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-green transition-all duration-200">
-                        Ver Imóvel
+                        {t('property.view_property')}
                     </Link>
                 </div>
             </div>

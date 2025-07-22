@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
@@ -14,6 +13,7 @@ interface AuthContextType {
     openLoginModal: () => void;
     closeLoginModal: () => void;
     sendPasswordResetEmail: (email: string) => Promise<void>;
+    updateProfile: (data: { name?: string; avatarUrl?: string; }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -140,7 +140,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const sendPasswordResetEmail = async (email: string) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin, // Or a specific password reset page
+            redirectTo: window.self.location.origin, // Or a specific password reset page
         });
 
         if (error) {
@@ -150,12 +150,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const updateProfile = async (data: { name?: string; avatarUrl?: string; }) => {
+        if (!user) {
+            throw new Error("User not authenticated.");
+        }
+
+        const updates = {
+            ...data,
+            updated_at: new Date().toISOString(),
+        };
+
+        const { data: updatedProfile, error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', user.id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating profile:', error);
+            throw new Error('Failed to update profile.');
+        }
+
+        if (updatedProfile) {
+            setUser(prevUser => {
+                if (!prevUser) return null;
+                return {
+                    ...prevUser,
+                    name: updatedProfile.name || prevUser.name,
+                    avatarUrl: updatedProfile.avatarUrl || prevUser.avatarUrl,
+                };
+            });
+        }
+    };
+
     const openLoginModal = () => setLoginModalOpen(true);
     const closeLoginModal = () => setLoginModalOpen(false);
     
     const isAuthenticated = !!user && user.role === 'ADMIN';
 
-    const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal, sendPasswordResetEmail };
+    const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal, sendPasswordResetEmail, updateProfile };
 
     return (
         <AuthContext.Provider value={value}>

@@ -1,8 +1,4 @@
 
-
-
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -10,14 +6,33 @@ import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import PropertyListItem from '../../components/PropertyListItem';
 import { useProperties } from '../../contexts/PropertyContext';
-import { MapPinIcon, DollarSignIcon, ChevronLeftIcon, ChevronRightIcon, LayoutGridIcon, ListIcon, HashIcon, FilterIcon, XIcon, ChevronsLeftIcon, ChevronsRightIcon, ChevronDownIcon, BedIcon, BathIcon } from '../../components/Icons';
-import { PropertyStatus, PropertyPurpose } from '../../types';
+import { MapPinIcon, DollarSignIcon, ChevronLeftIcon, ChevronRightIcon, LayoutGridIcon, ListIcon, HashIcon, FilterIcon, XIcon, ChevronsLeftIcon, ChevronsRightIcon, ChevronDownIcon, BedIcon, BathIcon, SearchIcon, BuildingIcon } from '../../components/Icons';
+import { PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
 import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS, COMMON_AMENITIES } from '../../constants';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const FilterPanel = ({ filters, onFilterChange, onApply }) => {
-    const { t } = useLanguage();
+    const { t, propertyTypes } = useLanguage();
+    const { properties } = useProperties();
+
+    const availableCities = useMemo(() => {
+        if (!properties) return [];
+        const allCities = properties.map(p => p.city.trim()).filter(Boolean);
+        return ['any', ...Array.from(new Set(allCities)).sort()];
+    }, [properties]);
+
+    const availableNeighborhoods = useMemo(() => {
+        if (!properties || filters.city === 'any') {
+            return [];
+        }
+        const neighborhoodsInCity = properties
+            .filter(p => p.city === filters.city)
+            .map(p => p.neighborhood.trim())
+            .filter(Boolean);
+        return ['any', ...Array.from(new Set(neighborhoodsInCity)).sort()];
+    }, [properties, filters.city]);
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
         onApply();
@@ -48,13 +63,13 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                         <button type="button" onClick={() => onFilterChange('purpose', 'SEASONAL')} className={`px-4 py-2 text-sm font-medium border border-slate-300 rounded-r-md w-full transition-colors ${filters.purpose === 'SEASONAL' ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>{t('search.seasonal_button')}</button>
                     </div>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-700">{t('search.location_name')}</label>
+                 <div>
+                    <label className="block text-sm font-medium text-slate-700">{t('search.description')}</label>
                     <div className="relative mt-1">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <MapPinIcon className="w-5 h-5 text-slate-400" />
+                            <SearchIcon className="w-5 h-5 text-slate-400" />
                         </span>
-                        <input type="text" name="location" value={filters.location} onChange={e => onFilterChange(e.target.name, e.target.value)} placeholder={t('search.location_placeholder_long')} className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                        <input type="text" name="searchTerm" value={filters.searchTerm} onChange={e => onFilterChange(e.target.name, e.target.value)} placeholder={t('search.description.placeholder')} className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                     </div>
                 </div>
                 <div>
@@ -63,7 +78,43 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <HashIcon className="w-5 h-5 text-slate-400" />
                         </span>
-                        <input type="text" name="code" value={filters.code} onChange={e => onFilterChange(e.target.name, e.target.value)} placeholder={t('search.code_placeholder')} className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                        <input type="text" name="code" value={filters.code} onChange={e => onFilterChange(e.target.name, e.target.value)} placeholder={t('search.code.placeholder')} className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700">{t('search.property_type')}</label>
+                    <div className="relative mt-1">
+                        <select name="propertyType" value={filters.propertyType} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                            <option value="any">{t('search.all_types')}</option>
+                            {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
+                        </select>
+                         <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                        </span>
+                    </div>
+                </div>
+                 <div>
+                    <label className="block text-sm font-medium text-slate-700">{t('search.city')}</label>
+                    <div className="relative mt-1">
+                        <select name="city" value={filters.city} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                            <option value="any">{t('search.all_cities')}</option>
+                            {availableCities.filter(c => c !== 'any').map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700">{t('search.neighborhood')}</label>
+                    <div className="relative mt-1">
+                        <select name="neighborhood" value={filters.neighborhood} onChange={e => onFilterChange(e.target.name, e.target.value)} disabled={filters.city === 'any' || availableNeighborhoods.length <= 1} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none disabled:bg-slate-50">
+                            <option value="any">{t('search.all_neighborhoods')}</option>
+                            {availableNeighborhoods.filter(n => n !== 'any').map(n => <option key={n} value={n}>{n}</option>)}
+                        </select>
+                         <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                        </span>
                     </div>
                 </div>
                 <div>
@@ -142,9 +193,12 @@ const SearchResultsPage: React.FC = () => {
     
     const [filters, setFilters] = useState({
         purpose: (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
-        location: searchParams.get('location') || '',
+        searchTerm: searchParams.get('searchTerm') || '',
+        city: searchParams.get('city') || 'any',
+        neighborhood: searchParams.get('neighborhood') || 'any',
         priceRange: searchParams.get('priceRange') || 'any',
         code: searchParams.get('code') || '',
+        propertyType: searchParams.get('propertyType') || 'any',
         bedrooms: searchParams.get('bedrooms') || 'any',
         bathrooms: searchParams.get('bathrooms') || 'any',
         amenities: searchParams.getAll('amenities') || [],
@@ -155,9 +209,12 @@ const SearchResultsPage: React.FC = () => {
     useEffect(() => {
         const urlFilters = {
             purpose: (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
-            location: searchParams.get('location') || '',
+            searchTerm: searchParams.get('searchTerm') || '',
+            city: searchParams.get('city') || 'any',
+            neighborhood: searchParams.get('neighborhood') || 'any',
             priceRange: searchParams.get('priceRange') || 'any',
             code: searchParams.get('code') || '',
+            propertyType: searchParams.get('propertyType') || 'any',
             bedrooms: searchParams.get('bedrooms') || 'any',
             bathrooms: searchParams.get('bathrooms') || 'any',
             amenities: searchParams.getAll('amenities') || [],
@@ -168,8 +225,11 @@ const SearchResultsPage: React.FC = () => {
     const applyFilters = (currentFilters) => {
         const newParams = new URLSearchParams();
         newParams.set('purpose', currentFilters.purpose as string);
-        if (currentFilters.location) newParams.set('location', currentFilters.location);
+        if (currentFilters.searchTerm) newParams.set('searchTerm', currentFilters.searchTerm);
+        if (currentFilters.city && currentFilters.city !== 'any') newParams.set('city', currentFilters.city);
+        if (currentFilters.neighborhood && currentFilters.neighborhood !== 'any') newParams.set('neighborhood', currentFilters.neighborhood);
         if (currentFilters.code) newParams.set('code', currentFilters.code);
+        if (currentFilters.propertyType && currentFilters.propertyType !== 'any') newParams.set('propertyType', currentFilters.propertyType);
         if (currentFilters.priceRange && currentFilters.priceRange !== 'any') newParams.set('priceRange', currentFilters.priceRange);
         if (currentFilters.bedrooms && currentFilters.bedrooms !== 'any') newParams.set('bedrooms', currentFilters.bedrooms);
         if (currentFilters.bathrooms && currentFilters.bathrooms !== 'any') newParams.set('bathrooms', currentFilters.bathrooms);
@@ -188,6 +248,9 @@ const SearchResultsPage: React.FC = () => {
         if (field === 'purpose') {
             newFilters.priceRange = 'any';
         }
+        if (field === 'city') {
+            newFilters.neighborhood = 'any';
+        }
         setFilters(newFilters);
         // Auto-apply on desktop
         if (window.innerWidth >= 768) {
@@ -199,23 +262,22 @@ const SearchResultsPage: React.FC = () => {
         let results = properties.filter(p => p.status === 'AVAILABLE');
         
         const purpose = searchParams.get('purpose');
-        const location = searchParams.get('location')?.toLowerCase();
+        const searchTerm = searchParams.get('searchTerm')?.toLowerCase();
+        const city = searchParams.get('city');
+        const neighborhood = searchParams.get('neighborhood');
         const code = searchParams.get('code')?.toLowerCase();
+        const propertyType = searchParams.get('propertyType');
         const priceRangeKey = searchParams.get('priceRange');
         const bedrooms = searchParams.get('bedrooms');
         const bathrooms = searchParams.get('bathrooms');
         const amenities = searchParams.getAll('amenities');
 
         if (purpose) { results = results.filter(p => p.purpose === purpose); }
-        if (location) { 
-            results = results.filter(p => 
-                p.title.toLowerCase().includes(location) || 
-                p.address.toLowerCase().includes(location) || 
-                p.city.toLowerCase().includes(location) ||
-                (p.neighborhood && p.neighborhood.toLowerCase().includes(location))
-            ); 
-        }
+        if (searchTerm) { results = results.filter(p => p.title.toLowerCase().includes(searchTerm)); }
+        if (city && city !== 'any') { results = results.filter(p => p.city === city); }
+        if (neighborhood && neighborhood !== 'any') { results = results.filter(p => p.neighborhood === neighborhood); }
         if (code) { results = results.filter(p => p.code?.toLowerCase().includes(code)); }
+        if (propertyType && propertyType !== 'any') { results = results.filter(p => p.propertyType === propertyType); }
         
         if (priceRangeKey && priceRangeKey !== 'any') {
             const [minStr, maxStr] = priceRangeKey.split('-');

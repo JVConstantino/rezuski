@@ -1,40 +1,65 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
-import { useCategories } from '../../contexts/CategoryContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
 import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, QuoteIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon } from '../../components/Icons';
-import { PropertyPurpose } from '../../types';
+import { PropertyPurpose, PropertyType } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
 
 const HeroSection = () => {
     const navigate = useNavigate();
-    const { t } = useLanguage();
+    const { t, propertyTypes } = useLanguage();
+    const { properties } = useProperties();
     const [searchPurpose, setSearchPurpose] = useState<PropertyPurpose>('RENT');
-    const [location, setLocation] = useState('');
-    const [priceRange, setPriceRange] = useState('any');
+    const [searchTerm, setSearchTerm] = useState('');
     const [code, setCode] = useState('');
+    const [propertyType, setPropertyType] = useState<PropertyType | 'any'>('any');
+    const [city, setCity] = useState('any');
+    const [neighborhood, setNeighborhood] = useState('any');
+    const [priceRange, setPriceRange] = useState('any');
+
+    const availableCities = useMemo(() => {
+        if (!properties) return [];
+        const allCities = properties.map(p => p.city.trim()).filter(Boolean);
+        return ['any', ...Array.from(new Set(allCities)).sort()];
+    }, [properties]);
+
+    const availableNeighborhoods = useMemo(() => {
+        if (!properties || city === 'any') return [];
+        const neighborhoodsInCity = properties
+            .filter(p => p.city === city)
+            .map(p => p.neighborhood.trim())
+            .filter(Boolean);
+        return ['any', ...Array.from(new Set(neighborhoodsInCity)).sort()];
+    }, [properties, city]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         const params = new URLSearchParams();
         params.append('purpose', searchPurpose);
-        if (location) params.append('location', location);
+        if (searchTerm) params.append('searchTerm', searchTerm);
         if (code) params.append('code', code);
+        if (propertyType !== 'any') params.append('propertyType', propertyType);
+        if (city !== 'any') params.append('city', city);
+        if (neighborhood !== 'any') params.append('neighborhood', neighborhood);
         if (priceRange && priceRange !== 'any') {
             params.append('priceRange', priceRange);
         }
         
         navigate(`/search?${params.toString()}`);
     }
+
+    const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setCity(e.target.value);
+        setNeighborhood('any');
+    };
     
     const handlePurposeChange = (purpose: PropertyPurpose) => {
         setSearchPurpose(purpose);
@@ -89,18 +114,17 @@ const HeroSection = () => {
                 </div>
                 <div className="p-6">
                     <form onSubmit={handleSearch}>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.location')}</label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                           <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.description')}</label>
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <MapPinIcon className="w-5 h-5 text-slate-400" />
+                                        <SearchIcon className="w-5 h-5 text-slate-400" />
                                     </span>
-                                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder={t('search.location.placeholder')} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
+                                    <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={t('search.description.placeholder')} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                                 </div>
                             </div>
-                           
-                             <div className="md:col-span-2">
+                           <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.code')}</label>
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -109,8 +133,54 @@ const HeroSection = () => {
                                     <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder={t('search.code.placeholder')} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                                 </div>
                             </div>
-
-                            <div className="md:col-span-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.property_type')}</label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <BuildingIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                    <select value={propertyType} onChange={e => setPropertyType(e.target.value as PropertyType | 'any')} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                                        <option value="any">{t('search.all_types')}</option>
+                                        {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
+                                    </select>
+                                    <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                </div>
+                            </div>
+                           <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.city')}</label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <MapPinIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                    <select value={city} onChange={handleCityChange} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                                        <option value="any">{t('search.all_cities')}</option>
+                                        {availableCities.filter(c => c !== 'any').map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.neighborhood')}</label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <MapPinIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                    <select value={neighborhood} onChange={e => setNeighborhood(e.target.value)} disabled={city === 'any' || availableNeighborhoods.length <= 1} className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none disabled:bg-slate-50">
+                                        <option value="any">{t('search.all_neighborhoods')}</option>
+                                        {availableNeighborhoods.filter(n => n !== 'any').map(n => <option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                     <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                                    </span>
+                                </div>
+                            </div>
+                           
+                            <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('search.price')}</label>
                                  <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -132,7 +202,7 @@ const HeroSection = () => {
                                 </div>
                             </div>
                             
-                            <div className="md:col-span-4 mt-4">
+                            <div className="md:col-span-3 mt-4">
                                 <button type="submit" className="w-full flex items-center justify-center bg-primary-green text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
                                     <SearchIcon className="w-5 h-5 mr-2" />
                                     {t('search.button')}
@@ -221,7 +291,7 @@ const PopularProperties: React.FC = () => {
 };
 
 const Categories: React.FC = () => {
-    const { categories } = useCategories();
+    const { categories } = useLanguage();
     const { t } = useLanguage();
     return (
         <Section title={t('section.categories')} isGray={false}>
@@ -229,8 +299,8 @@ const Categories: React.FC = () => {
                 {categories.map((cat, index) => (
                     <AnimateOnScroll key={cat.id} delay={100 * (index + 1)}>
                         <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
-                            <img src={cat.iconUrl} alt={cat.name} className="w-16 h-16" />
-                            <p className="mt-4 font-semibold text-slate-700">{cat.name}</p>
+                            <img src={cat.iconUrl} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
+                            <p className="mt-4 font-semibold text-slate-700">{t(`category:${cat.id}`)}</p>
                         </div>
                     </AnimateOnScroll>
                 ))}

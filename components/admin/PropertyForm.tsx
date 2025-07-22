@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus, PropertyTypes } from '../../types';
+import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
 import { useImages } from '../../contexts/ImageContext';
 import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
-import OpenAI from "openai";
 import { useLanguage } from '../../contexts/LanguageContext';
-import { apiKey, openRouterApiEndpoint } from '../../constants';
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -32,7 +31,7 @@ const AVAILABLE_AMENITIES = [
 const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing }) => {
     const { categories } = useCategories();
     const { refresh: refreshGallery } = useImages();
-    const { supportedLanguages } = useLanguage();
+    const { t, propertyTypes, supportedLanguages } = useLanguage();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -210,8 +209,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     };
     
     const checkApiKey = () => {
-        if (!apiKey || !apiKey.startsWith('sk-or-')) {
-            alert('A chave da API da OpenRouter não está configurada ou é inválida. Por favor, adicione sua chave no arquivo `.env.local` para usar os recursos de IA.');
+        if (!process.env.API_KEY) {
+            alert('A chave da API do Gemini não está configurada. Por favor, certifique-se de que a variável de ambiente API_KEY está definida.');
             return false;
         }
         return true;
@@ -225,15 +224,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setIsGeneratingAI(true);
         try {
-            const openai = new OpenAI({
-                baseURL: openRouterApiEndpoint,
-                apiKey: apiKey,
-                dangerouslyAllowBrowser: true,
-            });
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
 
-            const systemPrompt = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
+            const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
             
             const userPrompt = `
                 Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}.
@@ -271,17 +266,38 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
                 Gere o JSON completo com todas as otimizações e traduções.
             `;
-            
-            const response = await openai.chat.completions.create({
-                model: "experimental/gemini-2.0-flash",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                response_format: { type: "json_object" },
+
+            const langSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING }
+                },
+                required: ['title', 'description']
+            };
+
+            const responseSchema = {
+                type: Type.OBJECT,
+                properties: {
+                    'pt-BR': langSchema,
+                    'en-US': langSchema,
+                    'es-ES': langSchema,
+                    'fr-FR': langSchema,
+                    'it-IT': langSchema,
+                },
+            };
+
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: userPrompt,
+                config: {
+                    systemInstruction,
+                    responseMimeType: "application/json",
+                    responseSchema,
+                }
             });
 
-            const content = response.choices[0].message.content;
+            const content = response.text;
             if (content) {
                 const jsonResponse = JSON.parse(content);
                 
@@ -312,7 +328,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
         } catch (error) {
             console.error("Erro ao gerar conteúdo com IA:", error);
-            alert("Ocorreu um erro durante a geração de conteúdo com IA. Verifique se sua chave de API da OpenAI está correta em `constants.ts`. Detalhes no console.");
+            alert("Ocorreu um erro durante a geração de conteúdo com IA. Verifique se sua chave de API está configurada corretamente. Detalhes no console.");
         } finally {
             setIsGeneratingAI(false);
         }
@@ -493,7 +509,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                              <div>
                                 <label className="block text-sm font-medium text-slate-700">Tipo de Imóvel</label>
                                 <select name="propertyType" value={formData.propertyType} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    {PropertyTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                                    {propertyTypes.map((type) => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
                                 </select>
                             </div>
                             <div>

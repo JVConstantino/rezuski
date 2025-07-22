@@ -2,10 +2,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCategories } from '../../contexts/CategoryContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { PlusIcon, EditIcon, TrashIcon } from '../../components/Icons';
 
 const CategoriesPage: React.FC = () => {
     const { categories, deleteCategory } = useCategories();
+    const { t } = useLanguage();
 
     const handleDelete = (id: string, name: string) => {
         if (window.confirm(`Tem certeza que deseja remover a categoria "${name}"?`)) {
@@ -30,7 +32,7 @@ const CategoriesPage: React.FC = () => {
                         <div key={category.id} className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 <img src={category.iconUrl} alt={category.name} className="w-10 h-10 object-contain" />
-                                <p className="font-semibold text-slate-800">{category.name}</p>
+                                <p className="font-semibold text-slate-800">{t(`category:${category.id}`)}</p>
                             </div>
                             <div className="flex space-x-1">
                                 <Link to={`/admin/categories/edit/${category.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Editar">
@@ -61,7 +63,7 @@ const CategoriesPage: React.FC = () => {
                                         <img src={category.iconUrl} alt={category.name} className="w-10 h-10 object-contain" />
                                     </td>
                                     <td className="p-4">
-                                        <p className="font-semibold text-slate-800">{category.name}</p>
+                                        <p className="font-semibold text-slate-800">{t(`category:${category.id}`)}</p>
                                     </td>
                                     <td className="p-4">
                                         <div className="flex justify-center space-x-2">

@@ -1,14 +1,9 @@
 
 
+
 import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, BackgroundCheckStatus, Broker, Testimonial, Category, Tenant, ResourceDocument, User, Property, Application } from './types';
 
 export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
-
-// OpenRouter API configuration
-// This key is used for AI features (translation and content optimization)
-export const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-export const openRouterApiEndpoint = 'https://openrouter.ai/api/v1';
-
 
 // Mock data has been migrated to Supabase. These constants are kept for reference or for parts of the app not yet migrated.
 // In a full migration, these would be removed entirely.

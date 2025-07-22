@@ -1,5 +1,6 @@
 
 
+
 export type UserRole = 'ADMIN' | 'OWNER' | 'TENANT' | 'BUYER' | 'SELLER';
 
 export type PropertyStatus = 'AVAILABLE' | 'RENTED' | 'SOLD' | 'ARCHIVED';
@@ -36,6 +37,7 @@ export enum PriceHistoryEvent {
 export type PropertyPurpose = 'RENT' | 'SALE' | 'SEASONAL';
 
 export type PropertyType = 'Casa' | 'Apartamento' | 'Condomínio' | 'Comercial' | 'Terreno' | 'Sobrado';
+
 export const PropertyTypes: PropertyType[] = ['Casa', 'Apartamento', 'Condomínio', 'Comercial', 'Terreno', 'Sobrado'];
 
 
@@ -62,6 +64,9 @@ export interface Category {
   id:string;
   name: string;
   iconUrl: string;
+  translations?: {
+      [locale: string]: string;
+  }
 }
 
 export interface Amenity {

@@ -22,13 +22,6 @@ const PropertiesPage: React.FC = () => {
     }
   }
 
-  const propertyStatusDisplay: Record<string, string> = {
-    ['AVAILABLE']: 'Disponível',
-    ['RENTED']: 'Alugado',
-    ['SOLD']: 'Vendido',
-    ['ARCHIVED']: 'Arquivado',
-  };
-
   const propertyStatusColor: Record<string, string> = {
       ['AVAILABLE']: 'bg-green-100 text-green-800',
       ['RENTED']: 'bg-yellow-100 text-yellow-800',
@@ -40,7 +33,7 @@ const PropertiesPage: React.FC = () => {
     if (prop.purpose === 'SALE') {
         return `R$ ${prop.salePrice?.toLocaleString('pt-BR')}`;
     }
-    const suffix = prop.purpose === 'RENT' ? '/mês' : '/diária';
+    const suffix = prop.purpose === 'RENT' ? t('price.per_month') : t('price.per_day');
     return `R$ ${prop.rentPrice?.toLocaleString('pt-BR')}${suffix}`;
   }
 
@@ -92,12 +85,12 @@ const PropertiesPage: React.FC = () => {
                             </div>
                         </div>
                          <span className={`flex-shrink-0 ml-2 px-2 py-1 text-xs font-medium rounded-full ${propertyStatusColor[prop.status] || 'bg-slate-100 text-slate-800'}`}>
-                            {propertyStatusDisplay[prop.status] || prop.status}
+                            {t(`property.status.${prop.status}`)}
                         </span>
                     </div>
                      <div>
                         <p className="font-medium text-slate-800">{getPriceDisplay(prop)}</p>
-                        <p className="text-sm text-slate-500 capitalize">{prop.purpose.toLowerCase()} - {t(`propertyType.${prop.propertyType}`)}</p>
+                        <p className="text-sm text-slate-500 capitalize">{t(`property.purpose.${prop.purpose}`)} - {t(`propertyType:${prop.propertyType}`)}</p>
                     </div>
                     <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
                         <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar"><EyeIcon className="w-5 h-5"/></Link>
@@ -138,16 +131,16 @@ const PropertiesPage: React.FC = () => {
                   <td className="p-4 font-mono text-sm text-slate-600">{prop.code || '-'}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${propertyStatusColor[prop.status] || 'bg-slate-100 text-slate-800'}`}>
-                      {propertyStatusDisplay[prop.status] || prop.status}
+                      {t(`property.status.${prop.status}`)}
                     </span>
                   </td>
                   <td className="p-4 text-slate-600 capitalize">
-                    {prop.purpose.toLowerCase()}
+                    {t(`property.purpose.${prop.purpose}`)}
                   </td>
                   <td className="p-4 font-medium text-slate-800">
                     {getPriceDisplay(prop)}
                   </td>
-                  <td className="p-4 text-slate-600">{t(`propertyType.${prop.propertyType}`)}</td>
+                  <td className="p-4 text-slate-600">{t(`propertyType:${prop.propertyType}`)}</td>
                   <td className="p-4">
                     <div className="flex justify-center space-x-2">
                       <Link to={`/admin/properties/${prop.id}`} className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" title="Visualizar">

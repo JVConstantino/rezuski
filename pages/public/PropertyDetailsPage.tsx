@@ -375,7 +375,7 @@ const PropertyDetailsPage: React.FC = () => {
   const handleShare = async () => {
     if (!property) return;
 
-    const urlToShare = new URL(window.location.href).href;
+    const urlToShare = new URL(window.self.location.href).href;
 
     const shareData = {
       title: `Confira este imóvel: ${property.title}`,

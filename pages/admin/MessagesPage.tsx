@@ -131,7 +131,7 @@ const ChatWindow: React.FC<{
         
         const { error: msgError } = await supabase
             .from('messages')
-            .insert(messagePayload);
+            .insert([messagePayload]);
 
         if (msgError) {
             console.error("Error sending message:", msgError);

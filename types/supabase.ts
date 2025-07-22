@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -34,10 +33,10 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json[]
+          amenities: Json
+          priceHistory: Json
           availableDate?: string
           listedByUserId?: string
-          priceHistory: Json[]
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -66,10 +65,10 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json[]
+          amenities: Json
+          priceHistory: Json
           availableDate?: string
           listedByUserId?: string
-          priceHistory: Json[]
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
@@ -98,20 +97,20 @@ export type Database = {
           status?: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images?: string[]
-          amenities?: Json[]
+          amenities?: Json
           availableDate?: string
           listedByUserId?: string
-          priceHistory?: Json[]
+          priceHistory?: Json
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
         }
-      }
+      },
       profiles: {
         Row: {
           id: string
-          updatedAt?: string | null
+          updated_at?: string | null
           email: string
           name?: string
           avatarUrl?: string
@@ -119,7 +118,7 @@ export type Database = {
         }
         Insert: {
           id: string
-          updatedAt?: string | null
+          updated_at?: string | null
           email: string
           name?: string
           avatarUrl?: string
@@ -127,13 +126,13 @@ export type Database = {
         }
         Update: {
           id?: string
-          updatedAt?: string | null
+          updated_at?: string | null
           email?: string
           name?: string
           avatarUrl?: string
           role?: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
         }
-      }
+      },
       brokers: {
         Row: {
           id: string
@@ -159,24 +158,44 @@ export type Database = {
           phone?: string
           email?: string
         }
-      }
+      },
       categories: {
         Row: {
           id: string
           name: string
           iconUrl: string
+          translations: Json | null
         }
         Insert: {
           id?: string
           name: string
           iconUrl: string
+          translations?: Json | null
         }
         Update: {
           id?: string
           name?: string
           iconUrl?: string
+          translations?: Json | null
         }
-      }
+      },
+      property_type_translations: {
+        Row: {
+            id: string;
+            name: string;
+            translations: Json | null;
+        };
+        Insert: {
+            id?: string;
+            name: string;
+            translations?: Json | null;
+        };
+        Update: {
+            id?: string;
+            name?: string;
+            translations?: Json | null;
+        };
+      },
       resources: {
         Row: {
             id: string;
@@ -193,7 +212,7 @@ export type Database = {
             title?: string;
             fileUrl?: string;
         };
-      }
+      },
       conversations: {
         Row: {
           id: string
@@ -225,7 +244,7 @@ export type Database = {
           last_message_preview?: string | null
           admin_has_unread?: boolean
         }
-      }
+      },
       messages: {
         Row: {
           id: string
@@ -254,7 +273,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_view_count: {
+        Args: {
+          prop_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
