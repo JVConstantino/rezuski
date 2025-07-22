@@ -8,7 +8,7 @@ import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import OpenAI from "openai";
 import { useLanguage } from '../../contexts/LanguageContext';
-import { OPENAI_API_KEY } from '../../constants';
+import { apiKey } from '../../constants';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -210,7 +210,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     };
     
     const checkApiKey = () => {
-        if (!OPENAI_API_KEY || !OPENAI_API_KEY.startsWith('sk-')) {
+        if (!apiKey || !apiKey.startsWith('sk-')) {
             alert('A chave da API da OpenAI não está configurada ou é inválida. Por favor, adicione sua chave no arquivo `constants.ts` para usar os recursos de IA.');
             return false;
         }
@@ -225,7 +225,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setIsGeneratingAI(true);
         try {
-            const openai = new OpenAI({ apiKey: OPENAI_API_KEY, dangerouslyAllowBrowser: true });
+            const openai = new OpenAI({ apiKey: apiKey, dangerouslyAllowBrowser: true });
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
 
