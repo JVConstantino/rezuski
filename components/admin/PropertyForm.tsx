@@ -9,6 +9,7 @@ import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import { GoogleGenAI, Type } from "@google/genai";
 import { useLanguage } from '../../contexts/LanguageContext';
+import { GEMINI_API_KEY } from '../../constants';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -209,11 +210,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setImages(newImages);
     };
+    
+    const checkApiKey = () => {
+        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
+            alert('A chave da API do Gemini não está configurada. Por favor, adicione sua chave no arquivo `constants.ts` para usar os recursos de IA.');
+            return false;
+        }
+        return true;
+    };
 
     const handleOptimizeWithAI = async () => {
+        if (!checkApiKey()) return;
         setIsOptimizing(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             
@@ -297,29 +307,26 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
         } catch (error) {
             console.error("Erro ao otimizar com IA:", error);
-            alert("Ocorreu um erro durante a otimização com IA. Verifique o console para mais detalhes.");
+            alert("Ocorreu um erro durante a otimização com IA. Verifique se sua chave de API está correta em `constants.ts` e se o texto não contém caracteres especiais que possam causar problemas. Detalhes no console.");
         } finally {
             setIsOptimizing(false);
         }
     };
 
     const handleAutoTranslate = async (targetLocale: string, targetLanguageName: string) => {
+        if (!checkApiKey()) return;
         if (!formData.title || !formData.description) {
             alert('Por favor, preencha o título e a descrição em português primeiro.');
             return;
         }
         setIsTranslating(targetLocale);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
             
-            const originalListing = JSON.stringify({
-                title: formData.title,
-                description: formData.description,
-            }, null, 2);
-
             const prompt = `Translate the following real estate property listing from Brazilian Portuguese to ${targetLanguageName}. Provide only the translated JSON object.
             Original (pt-BR):
-            ${originalListing}
+            Title: ${JSON.stringify(formData.title)}
+            Description: ${JSON.stringify(formData.description)}
             `;
             
             const responseSchema = {
@@ -347,7 +354,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
         } catch (e) {
             console.error("Translation Error:", e);
-            alert(`Failed to translate to ${targetLanguageName}. Check the console for more details.`);
+            alert(`Falha ao traduzir para ${targetLanguageName}. Verifique se sua chave de API está correta em 'constants.ts' e tente novamente. Detalhes no console.`);
         } finally {
             setIsTranslating(null);
         }
