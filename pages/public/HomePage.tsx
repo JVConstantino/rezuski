@@ -76,7 +76,7 @@ const HeroSection = () => {
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
             <AnimateOnScroll>
-                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-40 mx-auto mb-6 object-contain" />
+                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-32 mx-auto mb-6 object-contain" />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">
@@ -298,10 +298,10 @@ const Categories: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8">
                 {categories.map((cat, index) => (
                     <AnimateOnScroll key={cat.id} delay={100 * (index + 1)}>
-                        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
+                        <Link to={`/search?categoryId=${cat.id}`} className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
                             <img src={cat.iconUrl} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
-                            <p className="mt-4 font-semibold text-slate-700">{t(`category:${cat.id}`)}</p>
-                        </div>
+                            <p className="mt-4 font-semibold text-slate-700 text-center">{t(`category:${cat.id}`)}</p>
+                        </Link>
                     </AnimateOnScroll>
                 ))}
             </div>

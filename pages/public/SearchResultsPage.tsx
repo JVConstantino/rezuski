@@ -13,7 +13,7 @@ import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const FilterPanel = ({ filters, onFilterChange, onApply }) => {
-    const { t, propertyTypes } = useLanguage();
+    const { t, propertyTypes, categories } = useLanguage();
     const { properties } = useProperties();
 
     const availableCities = useMemo(() => {
@@ -87,6 +87,18 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                         <select name="propertyType" value={filters.propertyType} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
                             <option value="any">{t('search.all_types')}</option>
                             {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
+                        </select>
+                         <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700">{t('search.category')}</label>
+                    <div className="relative mt-1">
+                        <select name="categoryId" value={filters.categoryId || 'any'} onChange={e => onFilterChange(e.target.name, e.target.value)} className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue appearance-none">
+                            <option value="any">{t('search.all_categories')}</option>
+                            {categories.map(cat => <option key={cat.id} value={cat.id}>{t(`category:${cat.id}`)}</option>)}
                         </select>
                          <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <ChevronDownIcon className="w-5 h-5 text-slate-400" />
@@ -199,6 +211,7 @@ const SearchResultsPage: React.FC = () => {
         priceRange: searchParams.get('priceRange') || 'any',
         code: searchParams.get('code') || '',
         propertyType: searchParams.get('propertyType') || 'any',
+        categoryId: searchParams.get('categoryId') || 'any',
         bedrooms: searchParams.get('bedrooms') || 'any',
         bathrooms: searchParams.get('bathrooms') || 'any',
         amenities: searchParams.getAll('amenities') || [],
@@ -215,6 +228,7 @@ const SearchResultsPage: React.FC = () => {
             priceRange: searchParams.get('priceRange') || 'any',
             code: searchParams.get('code') || '',
             propertyType: searchParams.get('propertyType') || 'any',
+            categoryId: searchParams.get('categoryId') || 'any',
             bedrooms: searchParams.get('bedrooms') || 'any',
             bathrooms: searchParams.get('bathrooms') || 'any',
             amenities: searchParams.getAll('amenities') || [],
@@ -230,6 +244,7 @@ const SearchResultsPage: React.FC = () => {
         if (currentFilters.neighborhood && currentFilters.neighborhood !== 'any') newParams.set('neighborhood', currentFilters.neighborhood);
         if (currentFilters.code) newParams.set('code', currentFilters.code);
         if (currentFilters.propertyType && currentFilters.propertyType !== 'any') newParams.set('propertyType', currentFilters.propertyType);
+        if (currentFilters.categoryId && currentFilters.categoryId !== 'any') newParams.set('categoryId', currentFilters.categoryId);
         if (currentFilters.priceRange && currentFilters.priceRange !== 'any') newParams.set('priceRange', currentFilters.priceRange);
         if (currentFilters.bedrooms && currentFilters.bedrooms !== 'any') newParams.set('bedrooms', currentFilters.bedrooms);
         if (currentFilters.bathrooms && currentFilters.bathrooms !== 'any') newParams.set('bathrooms', currentFilters.bathrooms);
@@ -267,6 +282,7 @@ const SearchResultsPage: React.FC = () => {
         const neighborhood = searchParams.get('neighborhood');
         const code = searchParams.get('code')?.toLowerCase();
         const propertyType = searchParams.get('propertyType');
+        const categoryId = searchParams.get('categoryId');
         const priceRangeKey = searchParams.get('priceRange');
         const bedrooms = searchParams.get('bedrooms');
         const bathrooms = searchParams.get('bathrooms');
@@ -278,6 +294,7 @@ const SearchResultsPage: React.FC = () => {
         if (neighborhood && neighborhood !== 'any') { results = results.filter(p => p.neighborhood === neighborhood); }
         if (code) { results = results.filter(p => p.code?.toLowerCase().includes(code)); }
         if (propertyType && propertyType !== 'any') { results = results.filter(p => p.propertyType === propertyType); }
+        if (categoryId && categoryId !== 'any') { results = results.filter(p => p.categoryId === categoryId); }
         
         if (priceRangeKey && priceRangeKey !== 'any') {
             const [minStr, maxStr] = priceRangeKey.split('-');
