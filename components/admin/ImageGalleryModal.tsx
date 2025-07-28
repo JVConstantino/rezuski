@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useImages } from '../../contexts/ImageContext';
 import { XIcon, SearchIcon, FolderIcon, FolderPlusIcon, UploadCloudIcon, TrashIcon, MoveIcon } from '../Icons';
@@ -87,13 +86,18 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
     };
 
     const getSelectedItemsData = (): ItemToMove[] => {
-        return selectedItems.map(itemName => {
-            const item = galleryItems.find(i => i.name === itemName)!;
-            return {
-                name: item.name,
-                isFolder: item.id === null,
-            };
-        });
+        return selectedItems
+            .map(itemName => {
+                const item = galleryItems.find(i => i.name === itemName);
+                if (!item) {
+                    return null;
+                }
+                return {
+                    name: item.name,
+                    isFolder: item.id === null,
+                };
+            })
+            .filter((item): item is ItemToMove => item !== null);
     };
 
     const handleBulkDelete = () => {
