@@ -102,6 +102,7 @@ export interface Property {
   priceHistory: PriceHistory[];
   isPopular?: boolean;
   tourUrl?: string;
+  display_order?: number;
   viewCount?: number;
   translations?: {
     [locale: string]: {

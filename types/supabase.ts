@@ -41,6 +41,7 @@ export type Database = {
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
+          display_order?: number | null
         }
         Insert: {
           id?: string
@@ -73,6 +74,7 @@ export type Database = {
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
+          display_order?: number | null
         }
         Update: {
           id?: string
@@ -105,6 +107,7 @@ export type Database = {
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
+          display_order?: number | null
         }
       },
       profiles: {
