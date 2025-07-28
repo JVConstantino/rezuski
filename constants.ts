@@ -1,6 +1,3 @@
-
-
-
 import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, BackgroundCheckStatus, Broker, Testimonial, Category, Tenant, ResourceDocument, User, Property, Application } from './types';
 
 export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
@@ -14,7 +11,50 @@ export const APPLICATIONS: Application[] = [];
 export const TENANTS: Tenant[] = [];
 export const ACTIVITIES: Activity[] = [];
 export const BROKERS: Broker[] = [];
-export const TESTIMONIALS: Testimonial[] = [];
+export const TESTIMONIALS: Testimonial[] = [
+    {
+        id: 'test-1',
+        authorName: 'Fabiana Madruga',
+        authorTitle: 'Avaliação do Google',
+        text: 'Aluguei com eles por passarem uma imensa credibilidade desde o início do atendimento. Foram muito sinceros em relação aos imóveis e claros nas informações. Recomendo.',
+        avatarUrl: '',
+    },
+    {
+        id: 'test-2',
+        authorName: 'Clerio Joanir',
+        authorTitle: 'Avaliação do Google',
+        text: 'Excelente atendimento e grande profissionalismo quanto à orientações e avaliações. Local muito acolhedor. Recomendo a todos.',
+        avatarUrl: '',
+    },
+    {
+        id: 'test-3',
+        authorName: 'Thiago Wermelinger',
+        authorTitle: 'Avaliação do Google',
+        text: 'Pessoal muito simpático, profissionais, e tem um diferencial que outras não tem vai lá para conferir!',
+        avatarUrl: '',
+    },
+    {
+        id: 'test-4',
+        authorName: 'José Fabio do Amaral',
+        authorTitle: 'Avaliação do Google',
+        text: 'Realizei a compra de um imóvel e fui muito bem atendido, com responsabilidade e profissionalismo. Recomendo.',
+        avatarUrl: '',
+    },
+    {
+        id: 'test-5',
+        authorName: 'Rafael Nascimento',
+        authorTitle: 'Comentário do Google',
+        text: 'Bom atendimento e excelentes oportunidades.',
+        avatarUrl: '',
+    },
+    {
+        id: 'test-6',
+        authorName: 'Diego Ribeiro',
+        authorTitle: 'Avaliação do Google',
+        text: 'Excelente imobiliaria! Excelentes profissionais! Recomendo',
+        avatarUrl: '',
+    },
+];
 export const RESOURCES: ResourceDocument[] = [];
 
 

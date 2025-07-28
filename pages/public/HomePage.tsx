@@ -8,7 +8,7 @@ import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
-import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, QuoteIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon } from '../../components/Icons';
+import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon, StarIcon, UserCircleIcon } from '../../components/Icons';
 import { PropertyPurpose, PropertyType } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
@@ -392,19 +392,27 @@ const MeetTheBrokers: React.FC = () => {
 const Testimonials: React.FC = () => {
     const { t } = useLanguage();
     return (
-    <Section title={t('section.testimonials')} isGray={false}>
+    <Section title={t('section.testimonials')} isGray={true}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {TESTIMONIALS.map((testimonial, index) => (
                 <AnimateOnScroll key={testimonial.id} delay={100 * (index + 1)}>
-                    <div className="bg-white p-8 rounded-lg shadow-sm h-full flex flex-col border border-slate-100">
-                        <QuoteIcon className="w-8 h-8 text-primary-blue/30" />
-                        <p className="mt-4 text-slate-600 flex-grow">"{testimonial.text}"</p>
-                        <div className="mt-6 flex items-center">
-                            <img src={testimonial.avatarUrl} alt={testimonial.authorName} className="w-12 h-12 rounded-full" />
+                    <div className="bg-white p-6 rounded-lg shadow-md h-full flex flex-col border border-slate-200">
+                        <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0 bg-primary-blue/10 p-2 rounded-full">
+                                <UserCircleIcon className="w-8 h-8 text-primary-blue" />
+                            </div>
                             <div className="ml-4">
                                 <p className="font-semibold text-slate-800">{testimonial.authorName}</p>
                                 <p className="text-sm text-slate-500">{testimonial.authorTitle}</p>
                             </div>
+                        </div>
+                        <p className="text-slate-600 flex-grow mb-4">{testimonial.text}</p>
+                        <div className="flex items-center mt-auto">
+                            <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
+                            <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
+                            <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
+                            <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
+                            <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
                         </div>
                     </div>
                 </AnimateOnScroll>
