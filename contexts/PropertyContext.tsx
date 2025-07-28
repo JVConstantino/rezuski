@@ -1,5 +1,4 @@
 
-
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Property, PropertyStatus, Amenity, PriceHistory } from '../types';
 import { supabase } from '../lib/supabaseClient';
@@ -12,7 +11,6 @@ interface PropertyContextType {
     toggleArchiveProperty: (propertyId: string) => Promise<void>;
     deleteProperty: (propertyId: string) => Promise<void>;
     incrementViewCount: (propertyId: string) => Promise<void>;
-    updatePropertyOrder: (orderedProperties: Property[]) => Promise<void>;
     loading: boolean;
 }
 
@@ -27,8 +25,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         const { data, error } = await supabase
             .from('properties')
             .select('*')
-            .order('display_order', { ascending: true, nullsFirst: true })
-            .order('created_at', { ascending: false });
+            .order('createdAt', { ascending: false });
 
         if (error) {
             console.error('Error fetching properties:', error);
@@ -157,29 +154,10 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             setProperties(prev => prev.filter(p => p.id !== propertyId));
         }
     };
-    
-    const updatePropertyOrder = async (orderedProperties: Property[]) => {
-        const updates = orderedProperties.map((prop, index) => ({
-            id: prop.id,
-            display_order: index,
-        }));
-
-        const { error } = await supabase.from('properties').upsert(updates);
-
-        if (error) {
-            console.error('Error updating property order:', error);
-            alert(`Falha ao salvar a ordem: ${error.message}`);
-            // Optionally refetch to revert optimistic updates on failure
-            await fetchProperties();
-        } else {
-            // Optimistically update local state to match the new order
-             setProperties(orderedProperties);
-        }
-    };
 
 
     return (
-        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount, updatePropertyOrder }}>
+        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount }}>
             {children}
         </PropertyContext.Provider>
     );

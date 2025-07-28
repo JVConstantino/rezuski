@@ -1,28 +1,17 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Property, PropertyStatus } from '../../types';
-import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon, GripVerticalIcon } from '../../components/Icons';
+import { PropertyStatus } from '../../types';
+import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon } from '../../components/Icons';
 
 const PropertiesPage: React.FC = () => {
-  const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder } = useProperties();
+  const { properties, toggleArchiveProperty, deleteProperty } = useProperties();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
-  const [orderedProperties, setOrderedProperties] = useState<Property[]>([]);
-  const [isOrderChanged, setIsOrderChanged] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!isOrderChanged) {
-        setOrderedProperties(properties);
-    }
-  }, [properties, isOrderChanged]);
-
-  const filteredProperties = orderedProperties.filter(prop => 
+  const filteredProperties = properties.filter(prop => 
     prop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (prop.code && prop.code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -32,27 +21,6 @@ const PropertiesPage: React.FC = () => {
         await deleteProperty(id);
     }
   }
-
-  const handleSort = () => {
-    if (dragItem.current === null || dragOverItem.current === null) return;
-
-    const newOrderedProperties = [...orderedProperties];
-    const draggedItemContent = newOrderedProperties.splice(dragItem.current, 1)[0];
-    newOrderedProperties.splice(dragOverItem.current, 0, draggedItemContent);
-    
-    dragItem.current = null;
-    dragOverItem.current = null;
-    
-    setOrderedProperties(newOrderedProperties);
-    setIsOrderChanged(true);
-  };
-
-  const handleSaveOrder = async () => {
-    setIsSaving(true);
-    await updatePropertyOrder(orderedProperties);
-    setIsSaving(false);
-    setIsOrderChanged(false);
-  };
 
   const propertyStatusColor: Record<string, string> = {
       ['AVAILABLE']: 'bg-green-100 text-green-800',
@@ -78,19 +46,6 @@ const PropertiesPage: React.FC = () => {
           Adicionar Propriedade
         </Link>
       </div>
-      
-      {isOrderChanged && (
-          <div className="bg-primary-blue/10 border border-primary-blue/20 p-4 rounded-lg mb-4 flex justify-between items-center">
-              <p className="text-primary-blue font-semibold">A ordem dos imóveis foi alterada.</p>
-              <button
-                  onClick={handleSaveOrder}
-                  disabled={isSaving}
-                  className="bg-primary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:opacity-95 disabled:opacity-50"
-              >
-                  {isSaving ? 'Salvando...' : 'Salvar Ordem'}
-              </button>
-          </div>
-      )}
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="flex justify-between items-center mb-4">
@@ -152,7 +107,6 @@ const PropertiesPage: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="p-4 font-semibold text-slate-600 w-12"></th>
                 <th className="p-4 font-semibold text-slate-600">Propriedade</th>
                 <th className="p-4 font-semibold text-slate-600">Código</th>
                 <th className="p-4 font-semibold text-slate-600">Status</th>
@@ -163,21 +117,8 @@ const PropertiesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProperties.map((prop, index) => (
-                <tr 
-                    key={prop.id} 
-                    className={`border-b border-slate-200 hover:bg-slate-50 ${dragOverItem.current === index ? 'bg-blue-100' : ''}`}
-                    draggable
-                    onDragStart={() => dragItem.current = index}
-                    onDragEnter={() => dragOverItem.current = index}
-                    onDragEnd={handleSort}
-                    onDragOver={(e) => e.preventDefault()}
-                >
-                  <td className="p-4 text-center">
-                    <div className="cursor-move text-slate-400 hover:text-slate-600">
-                      <GripVerticalIcon className="w-5 h-5"/>
-                    </div>
-                  </td>
+              {filteredProperties.map(prop => (
+                <tr key={prop.id} className="border-b border-slate-200 hover:bg-slate-50">
                   <td className="p-4">
                     <div className="flex items-center space-x-3">
                       <img src={prop.images[0]} alt={prop.title} className="w-16 h-12 rounded-md object-cover" />

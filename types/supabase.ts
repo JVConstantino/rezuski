@@ -12,7 +12,7 @@ export type Database = {
       properties: {
         Row: {
           id: string
-          created_at?: string
+          createdAt?: string
           title: string
           code?: string
           address: string
@@ -41,11 +41,10 @@ export type Database = {
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
-          display_order?: number | null
         }
         Insert: {
           id?: string
-          created_at?: string
+          createdAt?: string
           title: string
           code?: string
           address: string
@@ -74,11 +73,10 @@ export type Database = {
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
-          display_order?: number | null
         }
         Update: {
           id?: string
-          created_at?: string
+          createdAt?: string
           title?: string
           code?: string
           address?: string
@@ -107,7 +105,6 @@ export type Database = {
           tourUrl?: string
           viewCount?: number
           translations?: Json | null
-          display_order?: number | null
         }
       },
       profiles: {
