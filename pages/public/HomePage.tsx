@@ -423,6 +423,21 @@ const Testimonials: React.FC = () => {
 
 const ContactSection: React.FC = () => {
     const { t } = useLanguage();
+    const [formState, setFormState] = useState({ name: '', email: '', message: '' });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setFormState(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const subject = `Nova Mensagem de Contato de ${formState.name}`;
+        const body = `Nome: ${formState.name}\nEmail: ${formState.email}\n\nMensagem:\n${formState.message}`;
+        const mailtoLink = `mailto:rezuski.imoveis@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+    };
+
     return (
         <div className="bg-primary-blue text-white">
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -432,33 +447,33 @@ const ContactSection: React.FC = () => {
                             <h2 className="text-3xl font-extrabold">{t('contact.title')}</h2>
                             <p className="mt-4 text-lg text-white/70">{t('contact.subtitle')}</p>
                             <div className="mt-8 space-y-4">
-                                <div className="flex items-center">
-                                    <MapPinIcon className="w-6 h-6 text-white/80" />
-                                    <p className="ml-4">{t('contact.address_label')}</p>
+                                <div className="flex items-start">
+                                    <MapPinIcon className="w-6 h-6 text-white/80 mt-1 flex-shrink-0" />
+                                    <p className="ml-4">Rua Romeu Caetano Guida, n0140, salas 02 e 03, Campo do Prado, Cachoeiras de Macacu. RJ - CEP: 28681-320</p>
                                 </div>
                                 <div className="flex items-center">
                                     <PhoneIcon className="w-6 h-6 text-white/80" />
-                                    <p className="ml-4">{t('contact.phone_label')}</p>
+                                    <p className="ml-4">(021) 96756-7178</p>
                                 </div>
                                 <div className="flex items-center">
                                     <MailIcon className="w-6 h-6 text-white/80" />
-                                    <p className="ml-4">{t('contact.email_label')}</p>
+                                    <p className="ml-4">rezuski.imoveis@gmail.com</p>
                                 </div>
                             </div>
                         </div>
                         <div className="bg-white p-8 rounded-lg shadow-2xl">
-                            <form className="space-y-6">
+                            <form onSubmit={handleFormSubmit} className="space-y-6">
                                 <div>
                                     <label htmlFor="name" className="text-sm font-medium text-slate-700">{t('contact.form.name')}</label>
-                                    <input type="text" id="name" className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
+                                    <input type="text" id="name" value={formState.name} onChange={handleInputChange} required className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
                                 </div>
                                 <div>
                                     <label htmlFor="email" className="text-sm font-medium text-slate-700">{t('contact.form.email')}</label>
-                                    <input type="email" id="email" className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
+                                    <input type="email" id="email" value={formState.email} onChange={handleInputChange} required className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green" />
                                 </div>
                                 <div>
                                     <label htmlFor="message" className="text-sm font-medium text-slate-700">{t('contact.form.message')}</label>
-                                    <textarea id="message" rows={4} className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green"></textarea>
+                                    <textarea id="message" rows={4} value={formState.message} onChange={handleInputChange} required className="mt-1 w-full px-4 py-2 border border-slate-300 rounded-md text-slate-900 focus:ring-primary-green focus:border-primary-green"></textarea>
                                 </div>
                                 <button type="submit" className="w-full bg-primary-green text-white font-semibold py-3 rounded-lg hover:opacity-95 transition-colors">{t('contact.form.send')}</button>
                             </form>

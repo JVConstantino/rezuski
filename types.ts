@@ -1,6 +1,5 @@
 
 
-
 export type UserRole = 'ADMIN' | 'OWNER' | 'TENANT' | 'BUYER' | 'SELLER';
 
 export type PropertyStatus = 'AVAILABLE' | 'RENTED' | 'SOLD' | 'ARCHIVED';

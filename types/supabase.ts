@@ -33,14 +33,14 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json
-          priceHistory: Json
+          amenities: any
+          priceHistory: any
           availableDate?: string
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
-          translations?: Json | null
+          translations?: any
         }
         Insert: {
           id?: string
@@ -65,14 +65,14 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json
-          priceHistory: Json
+          amenities: any
+          priceHistory: any
           availableDate?: string
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
-          translations?: Json | null
+          translations?: any
         }
         Update: {
           id?: string
@@ -97,14 +97,14 @@ export type Database = {
           status?: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images?: string[]
-          amenities?: Json
+          amenities?: any
           availableDate?: string
           listedByUserId?: string
-          priceHistory?: Json
+          priceHistory?: any
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
-          translations?: Json | null
+          translations?: any
         }
       },
       profiles: {
@@ -164,36 +164,36 @@ export type Database = {
           id: string
           name: string
           iconUrl: string
-          translations: Json | null
+          translations: any
         }
         Insert: {
           id?: string
           name: string
           iconUrl: string
-          translations?: Json | null
+          translations?: any
         }
         Update: {
           id?: string
           name?: string
           iconUrl?: string
-          translations?: Json | null
+          translations?: any
         }
       },
       property_type_translations: {
         Row: {
             id: string;
             name: string;
-            translations: Json | null;
+            translations: any;
         };
         Insert: {
             id?: string;
             name: string;
-            translations?: Json | null;
+            translations?: any;
         };
         Update: {
             id?: string;
             name?: string;
-            translations?: Json | null;
+            translations?: any;
         };
       },
       resources: {
