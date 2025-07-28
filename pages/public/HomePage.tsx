@@ -374,7 +374,7 @@ const MeetTheBrokers: React.FC = () => {
             {brokers.map((broker, index) => (
                 <AnimateOnScroll key={broker.id} delay={100 * (index + 1)}>
                     <div className="bg-white p-6 rounded-lg shadow-sm text-center hover:shadow-lg transition-shadow h-full border border-slate-100">
-                        <img src={broker.avatarUrl} alt={broker.name} className="w-24 h-24 rounded-full mx-auto" />
+                        <img src={broker.avatarUrl} alt={broker.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
                         <h3 className="mt-4 text-lg font-semibold text-slate-800">{broker.name}</h3>
                         <p className="text-sm text-primary-blue font-medium">{broker.title}</p>
                         <div className="mt-4 flex justify-center space-x-3">
