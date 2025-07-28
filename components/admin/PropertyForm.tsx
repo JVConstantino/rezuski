@@ -21,10 +21,36 @@ interface ImageState {
 }
 
 const AVAILABLE_AMENITIES = [
-    'Piscina', 'Churrasqueira', 'Salão de Festas', 'Academia', 'Playground',
-    'Quadra Poliesportiva', 'Sauna', 'Portaria 24h', 'Garagem', 'Área de Serviço',
-    'Cozinha Americana', 'Varanda Gourmet', 'Escritório', 'Mobiliado', 'Armários Embutidos',
-    'Lareira', 'Ar Condicionado', 'Quintal'
+    'Academia',
+    'Ar Condicionado',
+    'Armários Embutidos',
+    'Área de Serviço',
+    'Árvores frutíferas',
+    'Banheira',
+    'Campo de futebol',
+    'Canil',
+    'Churrasqueira',
+    'Closet',
+    'Cozinha Americana',
+    'Escritório',
+    'Galpão',
+    'Garagem',
+    'Hidromassagem',
+    'Jardim',
+    'Lago',
+    'Lareira',
+    'Mobiliado',
+    'Nascente',
+    'Piscina',
+    'Playground',
+    'Portaria 24h',
+    'Quadra Poliesportiva',
+    'Quintal',
+    'Sacada',
+    'Sala de jogos',
+    'Salão de Festas',
+    'Sauna',
+    'Varanda Gourmet'
 ];
 
 
