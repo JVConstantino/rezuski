@@ -12,7 +12,7 @@ export type Database = {
       properties: {
         Row: {
           id: string
-          createdAt?: string
+          created_at?: string
           title: string
           code?: string
           address: string
@@ -45,7 +45,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          createdAt?: string
+          created_at?: string
           title: string
           code?: string
           address: string
@@ -78,7 +78,7 @@ export type Database = {
         }
         Update: {
           id?: string
-          createdAt?: string
+          created_at?: string
           title?: string
           code?: string
           address?: string
