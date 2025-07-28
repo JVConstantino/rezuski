@@ -1,7 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Broker } from '../../types';
 import ImageGalleryModal from './ImageGalleryModal';
+import { supabase } from '../../lib/supabaseClient';
 
 interface BrokerFormProps {
     initialData?: Broker;
@@ -18,6 +18,8 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
         avatarUrl: '',
     });
     const [isGalleryOpen, setGalleryOpen] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (initialData) {
@@ -39,6 +41,31 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
     const handleSelectAvatarFromGallery = (images: string[]) => {
         if (images.length > 0) {
             setFormData(prev => ({ ...prev, avatarUrl: images[0] }));
+        }
+    };
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setIsUploading(true);
+    
+            const filePath = `public/avatars/${Date.now()}-${file.name}`;
+            
+            try {
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, file);
+    
+                if (uploadError) throw uploadError;
+    
+                const { data } = supabase.storage.from('property-images').getPublicUrl(filePath);
+                setFormData(prev => ({ ...prev, avatarUrl: data.publicUrl }));
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                alert('Erro ao enviar avatar.');
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
@@ -64,14 +91,26 @@ const BrokerForm: React.FC<BrokerFormProps> = ({ initialData, onSubmit, isEditin
                                     alt="Avatar Preview"
                                     className="w-40 h-40 rounded-full object-cover border"
                                 />
+                                {isUploading && <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-blue"></div></div>}
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setGalleryOpen(true)}
-                                className="mt-4 w-full bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50"
-                            >
-                                Selecionar da Galeria
-                            </button>
+                            <div className="mt-4 flex items-center space-x-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setGalleryOpen(true)}
+                                    className="flex-1 bg-white py-2 px-3 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                >
+                                    Galeria
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex-1 bg-white py-2 px-3 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                    disabled={isUploading}
+                                >
+                                    {isUploading ? 'Enviando...' : 'Enviar'}
+                                </button>
+                                <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
+                            </div>
                         </div>
                     </div>
                     <div className="md:col-span-2 space-y-6">
