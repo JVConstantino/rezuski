@@ -51,40 +51,46 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const fetchItemsForPath = async (path: string) => {
         setLoading(true);
-        const { data, error } = await supabase.storage.from(BUCKET_NAME).list(path, {
-            limit: 200,
-            offset: 0,
-            sortBy: { column: 'name', order: 'asc' },
-        });
-
-        if (error) {
-            console.error(`Error listing storage items for path "${path}":`, error);
-            setGalleryItems([]);
-        } else if (data) {
-            const itemsWithUrls = data
-                .filter(item => item.name !== PLACEHOLDER_FILE) // Hide placeholder from UI
-                .map(item => {
-                    if (item.id !== null) {
-                        const fullPath = `${path}/${item.name}`;
-                        const { data: { publicUrl } } = supabase.storage
-                            .from(BUCKET_NAME)
-                            .getPublicUrl(fullPath);
-                        return { ...item, publicUrl };
-                    }
-                    return item;
-                });
-
-            const sortedData = itemsWithUrls.sort((a, b) => {
-                const aIsFolder = a.id === null;
-                const bIsFolder = b.id === null;
-                if (aIsFolder && !bIsFolder) return -1;
-                if (!aIsFolder && bIsFolder) return 1;
-                return a.name.localeCompare(b.name);
+        try {
+            const { data, error } = await supabase.storage.from(BUCKET_NAME).list(path, {
+                limit: 200,
+                offset: 0,
+                sortBy: { column: 'name', order: 'asc' },
             });
-            
-            setGalleryItems(sortedData);
+
+            if (error) {
+                console.error(`Error listing storage items for path "${path}":`, error);
+                setGalleryItems([]);
+            } else if (data) {
+                const itemsWithUrls = data
+                    .filter(item => item.name !== PLACEHOLDER_FILE) // Hide placeholder from UI
+                    .map(item => {
+                        if (item.id !== null) { // It's a file
+                            const fullPath = `${path}/${item.name}`;
+                            const { data: urlData } = supabase.storage
+                                .from(BUCKET_NAME)
+                                .getPublicUrl(fullPath);
+                            return { ...item, publicUrl: urlData.publicUrl };
+                        }
+                        return item; // It's a folder
+                    });
+
+                const sortedData = itemsWithUrls.sort((a, b) => {
+                    const aIsFolder = a.id === null;
+                    const bIsFolder = b.id === null;
+                    if (aIsFolder && !bIsFolder) return -1;
+                    if (!aIsFolder && bIsFolder) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+                
+                setGalleryItems(sortedData);
+            }
+        } catch (e) {
+            console.error("An exception occurred while fetching gallery items:", e);
+            setGalleryItems([]);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
     
     const refresh = () => {

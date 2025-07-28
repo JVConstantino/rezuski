@@ -1,10 +1,11 @@
 
 
+
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { 
     LayoutGridIcon, HomeIcon, FileTextIcon, UsersIcon, MessageSquareIcon, 
-    BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon, FolderIcon
+    BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon, FolderIcon, HouseUserIcon
 } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { LOGO_URL } from '../../constants';
@@ -13,6 +14,8 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
     const navLinks = [
         { name: "Painel", path: "/admin/dashboard", icon: <LayoutGridIcon className="w-5 h-5"/> },
         { name: "Propriedades", path: "/admin/properties", icon: <HomeIcon className="w-5 h-5"/> },
+        { name: "Aplicações", path: "/admin/applications", icon: <FileTextIcon className="w-5 h-5"/> },
+        { name: "Inquilinos", path: "/admin/tenants", icon: <HouseUserIcon className="w-5 h-5"/> },
         { name: "Corretores", path: "/admin/brokers", icon: <UsersIcon className="w-5 h-5"/> },
         { name: "Categorias", path: "/admin/categories", icon: <LayoutGridIcon className="w-5 h-5"/> },
         { name: "Recursos", path: "/admin/resources", icon: <FileTextIcon className="w-5 h-5"/> },

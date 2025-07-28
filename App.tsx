@@ -28,6 +28,9 @@ import PropertiesPage from './pages/admin/PropertiesPage';
 import PropertyDetailPage from './pages/admin/PropertyDetailPage';
 import AddPropertyPage from './pages/admin/AddPropertyPage';
 import EditPropertyPage from './pages/admin/EditPropertyPage';
+import ApplicationsPage from './pages/admin/ApplicationsPage';
+import ApplicationSummaryPage from './pages/admin/ApplicationSummaryPage';
+import TenantsPage from './pages/admin/TenantsPage';
 import MessagesPage from './pages/admin/MessagesPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import SettingsPage from './pages/admin/SettingsPage';
@@ -71,25 +74,28 @@ const AppContent: React.FC = () => {
                                         {/* Admin Routes */}
                                         <Route element={<ProtectedRoute />}>
                                             <Route path="/admin" element={<AdminLayout />}>
-                                            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                                            <Route path="dashboard" element={<DashboardPage />} />
-                                            <Route path="properties" element={<PropertiesPage />} />
-                                            <Route path="properties/new" element={<AddPropertyPage />} />
-                                            <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
-                                            <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                            <Route path="brokers" element={<BrokersPage />} />
-                                            <Route path="brokers/new" element={<AddBrokerPage />} />
-                                            <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
-                                            <Route path="categories" element={<CategoriesPage />} />
-                                            <Route path="categories/new" element={<AddCategoryPage />} />
-                                            <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
-                                            <Route path="resources" element={<AdminResourcesPage />} />
-                                            <Route path="resources/new" element={<AddResourcePage />} />
-                                            <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
-                                            <Route path="gallery" element={<GalleryPage />} />
-                                            <Route path="messages" element={<MessagesPage />} />
-                                            <Route path="reports" element={<ReportsPage />} />
-                                            <Route path="settings" element={<SettingsPage />} />
+                                                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                                                <Route path="dashboard" element={<DashboardPage />} />
+                                                <Route path="properties" element={<PropertiesPage />} />
+                                                <Route path="properties/new" element={<AddPropertyPage />} />
+                                                <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
+                                                <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
+                                                <Route path="applications" element={<ApplicationsPage />} />
+                                                <Route path="application/:applicationId" element={<ApplicationSummaryPage />} />
+                                                <Route path="tenants" element={<TenantsPage />} />
+                                                <Route path="brokers" element={<BrokersPage />} />
+                                                <Route path="brokers/new" element={<AddBrokerPage />} />
+                                                <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
+                                                <Route path="categories" element={<CategoriesPage />} />
+                                                <Route path="categories/new" element={<AddCategoryPage />} />
+                                                <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
+                                                <Route path="resources" element={<AdminResourcesPage />} />
+                                                <Route path="resources/new" element={<AddResourcePage />} />
+                                                <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
+                                                <Route path="gallery" element={<GalleryPage />} />
+                                                <Route path="messages" element={<MessagesPage />} />
+                                                <Route path="reports" element={<ReportsPage />} />
+                                                <Route path="settings" element={<SettingsPage />} />
                                             </Route>
                                         </Route>
 
