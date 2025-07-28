@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -52,39 +51,56 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const fetchItemsForPath = async (path: string) => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.storage.from(BUCKET_NAME).list(path, {
+            const { data: listData, error } = await supabase.storage.from(BUCKET_NAME).list(path, {
                 limit: 200,
                 offset: 0,
                 sortBy: { column: 'name', order: 'asc' },
             });
-
+    
             if (error) {
                 console.error(`Error listing storage items for path "${path}":`, error);
                 setGalleryItems([]);
-            } else if (data) {
-                const itemsWithUrls = data
-                    .filter(item => item.name !== PLACEHOLDER_FILE) // Hide placeholder from UI
-                    .map(item => {
-                        if (item.id !== null) { // It's a file
-                            const fullPath = `${path}/${item.name}`;
-                            const { data: urlData } = supabase.storage
-                                .from(BUCKET_NAME)
-                                .getPublicUrl(fullPath);
+                return; // Exit early, finally will run
+            }
+    
+            if (!listData) {
+                // This case should ideally not happen if error is null, but as a safeguard.
+                setGalleryItems([]);
+                return; // Exit early, finally will run
+            }
+    
+            const itemsWithUrls = listData
+                .filter(item => item && item.name !== PLACEHOLDER_FILE) // Add a check for item
+                .map(item => {
+                    if (item.id !== null) { // It's a file
+                        const fullPath = `${path}/${item.name}`;
+                        const { data: urlData } = supabase.storage
+                            .from(BUCKET_NAME)
+                            .getPublicUrl(fullPath);
+                        
+                        // The safest check for publicUrl
+                        if (urlData && typeof urlData.publicUrl === 'string') {
                             return { ...item, publicUrl: urlData.publicUrl };
                         }
-                        return item; // It's a folder
-                    });
-
-                const sortedData = itemsWithUrls.sort((a, b) => {
-                    const aIsFolder = a.id === null;
-                    const bIsFolder = b.id === null;
-                    if (aIsFolder && !bIsFolder) return -1;
-                    if (!aIsFolder && bIsFolder) return 1;
-                    return a.name.localeCompare(b.name);
+                        // If we can't get a URL, we can't use the image.
+                        // We return null and filter it out later.
+                        return null;
+                    }
+                    return item; // It's a folder
                 });
-                
-                setGalleryItems(sortedData);
-            }
+    
+            const validItems = itemsWithUrls.filter(Boolean);
+    
+            const sortedData = validItems.sort((a, b) => {
+                if (!a || !b) return 0; // Should not happen with filter
+                const aIsFolder = a.id === null;
+                const bIsFolder = b.id === null;
+                if (aIsFolder && !bIsFolder) return -1;
+                if (!aIsFolder && bIsFolder) return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            setGalleryItems(sortedData as any[]);
         } catch (e) {
             console.error("An exception occurred while fetching gallery items:", e);
             setGalleryItems([]);
