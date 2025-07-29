@@ -102,6 +102,7 @@ export interface Property {
   isPopular?: boolean;
   tourUrl?: string;
   viewCount?: number;
+  display_order?: number;
   translations?: {
     [locale: string]: {
         title?: string;

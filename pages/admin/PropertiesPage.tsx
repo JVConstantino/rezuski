@@ -1,20 +1,75 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { PropertyStatus } from '../../types';
-import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon } from '../../components/Icons';
+import { Property, PropertyStatus } from '../../types';
+import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon, GripVerticalIcon } from '../../components/Icons';
 
 const PropertiesPage: React.FC = () => {
-  const { properties, toggleArchiveProperty, deleteProperty } = useProperties();
+  const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder } = useProperties();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [localProperties, setLocalProperties] = useState<Property[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<Property | null>(null);
 
-  const filteredProperties = properties.filter(prop => 
+  const filteredProperties = localProperties.filter(prop => 
     prop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (prop.code && prop.code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  
+  useEffect(() => {
+    setLocalProperties(properties);
+  }, [properties]);
+
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, property: Property) => {
+    setDraggedItem(property);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.5';
+  };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault(); 
+    e.currentTarget.style.background = '#f0f9ff';
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.currentTarget.style.background = '';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLTableRowElement>, targetProperty: Property) => {
+    e.preventDefault();
+    e.currentTarget.style.background = '';
+    
+    if (!draggedItem || draggedItem.id === targetProperty.id) return;
+
+    const currentIndex = localProperties.findIndex(p => p.id === draggedItem.id);
+    const targetIndex = localProperties.findIndex(p => p.id === targetProperty.id);
+
+    const newList = [...localProperties];
+    const [removed] = newList.splice(currentIndex, 1);
+    newList.splice(targetIndex, 0, removed);
+
+    setLocalProperties(newList);
+    setIsDirty(true);
+    setDraggedItem(null);
+  };
+  
+  const handleDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
+      e.currentTarget.style.opacity = '1';
+      setDraggedItem(null);
+  }
+  
+  const handleSaveChanges = async () => {
+      const updates = localProperties.map((p, index) => ({
+          id: p.id,
+          display_order: index,
+      }));
+      await updatePropertyOrder(updates);
+      setIsDirty(false);
+  };
+
 
   const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE o imóvel "${title}"? Esta ação não pode ser desfeita.`)) {
@@ -41,10 +96,17 @@ const PropertiesPage: React.FC = () => {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-slate-900">Gerenciar Propriedades</h1>
-        <Link to="/admin/properties/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
-          <PlusIcon className="w-5 h-5 mr-2" />
-          Adicionar Propriedade
-        </Link>
+        <div className="flex items-center space-x-3">
+          {isDirty && (
+            <button onClick={handleSaveChanges} className="bg-primary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+              Salvar Ordem
+            </button>
+          )}
+          <Link to="/admin/properties/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+            <PlusIcon className="w-5 h-5 mr-2" />
+            Adicionar Propriedade
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -107,6 +169,7 @@ const PropertiesPage: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="p-4 font-semibold text-slate-600 w-12"></th>
                 <th className="p-4 font-semibold text-slate-600">Propriedade</th>
                 <th className="p-4 font-semibold text-slate-600">Código</th>
                 <th className="p-4 font-semibold text-slate-600">Status</th>
@@ -118,7 +181,19 @@ const PropertiesPage: React.FC = () => {
             </thead>
             <tbody>
               {filteredProperties.map(prop => (
-                <tr key={prop.id} className="border-b border-slate-200 hover:bg-slate-50">
+                <tr 
+                  key={prop.id}
+                  draggable="true"
+                  onDragStart={(e) => handleDragStart(e, prop)}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, prop)}
+                  onDragEnd={handleDragEnd}
+                  className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+                >
+                  <td className="p-4 text-center text-slate-400">
+                    <GripVerticalIcon className="cursor-move mx-auto" />
+                  </td>
                   <td className="p-4">
                     <div className="flex items-center space-x-3">
                       <img src={prop.images[0]} alt={prop.title} className="w-16 h-12 rounded-md object-cover" />

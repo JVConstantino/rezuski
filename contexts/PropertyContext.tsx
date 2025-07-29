@@ -11,48 +11,112 @@ interface PropertyContextType {
     toggleArchiveProperty: (propertyId: string) => Promise<void>;
     deleteProperty: (propertyId: string) => Promise<void>;
     incrementViewCount: (propertyId: string) => Promise<void>;
+    updatePropertyOrder: (updates: { id: string; display_order: number }[]) => Promise<void>;
     loading: boolean;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
 
+const VIEW_COUNT_STORAGE_KEY = 'rezuski_property_view_counts';
+
+// Helper to get view counts from localStorage
+const getStoredViewCounts = (): Record<string, number> => {
+    try {
+        const stored = localStorage.getItem(VIEW_COUNT_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.error("Error reading view counts from localStorage", error);
+        return {};
+    }
+};
+
+// Helper to set view counts in localStorage
+const setStoredViewCounts = (counts: Record<string, number>) => {
+    try {
+        localStorage.setItem(VIEW_COUNT_STORAGE_KEY, JSON.stringify(counts));
+    } catch (error) {
+        console.error("Error saving view counts to localStorage", error);
+    }
+};
+
+
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchProperties = async () => {
+    const fetchProperties = useCallback(async () => {
         setLoading(true);
         const { data, error } = await supabase
             .from('properties')
             .select('*')
+            .order('display_order', { ascending: true, nullsFirst: false })
             .order('createdAt', { ascending: false });
 
         if (error) {
             console.error('Error fetching properties:', error);
             setProperties([]);
         } else {
-            setProperties(data as unknown as Property[]);
+            const fetchedProperties = data as unknown as Property[];
+            const storedViewCounts = getStoredViewCounts();
+
+            // Merge stored view counts with fetched data. Prioritize higher value.
+            const propertiesWithLocalViews = fetchedProperties.map(prop => ({
+                ...prop,
+                viewCount: Math.max(storedViewCounts[prop.id] || 0, prop.viewCount || 0),
+            }));
+            
+            // Sync back the merged counts to localStorage
+            const newStoredCounts = { ...storedViewCounts };
+            propertiesWithLocalViews.forEach(prop => {
+                newStoredCounts[prop.id] = prop.viewCount || 0;
+            });
+            setStoredViewCounts(newStoredCounts);
+
+            setProperties(propertiesWithLocalViews);
         }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         fetchProperties();
-    }, []);
+    }, [fetchProperties]);
+    
+    const updatePropertyOrder = async (updates: { id: string; display_order: number }[]) => {
+        const { error } = await supabase.from('properties').upsert(updates);
+        if (error) {
+            console.error('Error updating property order:', error.message);
+            alert(`Erro ao salvar a ordem: ${error.message}`);
+        } else {
+            // Refetch to get the correctly ordered list from the DB
+            await fetchProperties();
+        }
+    };
 
     const incrementViewCount = useCallback(async (propertyId: string) => {
-        const { data, error } = await supabase.rpc('increment_view_count', {
+        // Optimistic UI update and localStorage update
+        setProperties(prev => {
+            const newProperties = prev.map(p =>
+                p.id === propertyId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p
+            );
+            
+            const propertyToUpdate = newProperties.find(p => p.id === propertyId);
+            if (propertyToUpdate) {
+                const storedViewCounts = getStoredViewCounts();
+                storedViewCounts[propertyId] = propertyToUpdate.viewCount || 0;
+                setStoredViewCounts(storedViewCounts);
+            }
+            
+            return newProperties;
+        });
+
+        // Update backend (fire and forget)
+        const { error } = await supabase.rpc('increment_view_count', {
             prop_id: propertyId
         });
 
         if (error) {
-            console.error('Error incrementing view count:', error.message);
-        } else {
-            setProperties(prev =>
-                prev.map(p =>
-                    p.id === propertyId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p
-                )
-            );
+            console.error('Error incrementing view count in DB:', error.message);
+            // Optional: handle error, maybe revert optimistic update if needed
         }
     }, []);
 
@@ -66,7 +130,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error adding property:', error.message);
             alert(`Error adding property: ${error.message}`);
         } else if (data) {
-            setProperties(prev => [data[0] as unknown as Property, ...prev]);
+            await fetchProperties(); // Refetch to maintain order
         }
     };
 
@@ -157,7 +221,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
 
     return (
-        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount }}>
+        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount, updatePropertyOrder }}>
             {children}
         </PropertyContext.Provider>
     );

@@ -33,14 +33,15 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: any
-          priceHistory: any
+          amenities: Json
+          priceHistory: Json
           availableDate?: string
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
-          translations?: any
+          display_order?: number
+          translations?: Json | null
         }
         Insert: {
           id?: string
@@ -65,14 +66,15 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: any
-          priceHistory: any
+          amenities: Json
+          priceHistory: Json
           availableDate?: string
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
-          translations?: any
+          display_order?: number
+          translations?: Json | null
         }
         Update: {
           id?: string
@@ -97,16 +99,18 @@ export type Database = {
           status?: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images?: string[]
-          amenities?: any
+          amenities?: Json
           availableDate?: string
           listedByUserId?: string
-          priceHistory?: any
+          priceHistory?: Json
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
-          translations?: any
+          display_order?: number
+          translations?: Json | null
         }
-      },
+        Relationships: []
+      }
       profiles: {
         Row: {
           id: string
@@ -132,7 +136,8 @@ export type Database = {
           avatarUrl?: string
           role?: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
         }
-      },
+        Relationships: []
+      }
       brokers: {
         Row: {
           id: string
@@ -158,44 +163,47 @@ export type Database = {
           phone?: string
           email?: string
         }
-      },
+        Relationships: []
+      }
       categories: {
         Row: {
           id: string
           name: string
           iconUrl: string
-          translations: any
+          translations: Json | null
         }
         Insert: {
           id?: string
           name: string
           iconUrl: string
-          translations?: any
+          translations?: Json | null
         }
         Update: {
           id?: string
           name?: string
           iconUrl?: string
-          translations?: any
+          translations?: Json | null
         }
-      },
+        Relationships: []
+      }
       property_type_translations: {
         Row: {
             id: string;
             name: string;
-            translations: any;
+            translations: Json | null;
         };
         Insert: {
             id?: string;
             name: string;
-            translations?: any;
+            translations?: Json | null;
         };
         Update: {
             id?: string;
             name?: string;
-            translations?: any;
+            translations?: Json | null;
         };
-      },
+        Relationships: []
+      }
       resources: {
         Row: {
             id: string;
@@ -212,7 +220,8 @@ export type Database = {
             title?: string;
             fileUrl?: string;
         };
-      },
+        Relationships: []
+      }
       conversations: {
         Row: {
           id: string
@@ -244,7 +253,8 @@ export type Database = {
           last_message_preview?: string | null
           admin_has_unread?: boolean
         }
-      },
+        Relationships: []
+      }
       messages: {
         Row: {
           id: string
@@ -267,6 +277,7 @@ export type Database = {
           sender?: "ADMIN" | "CUSTOMER"
           content?: string
         }
+        Relationships: []
       }
     }
     Views: {
