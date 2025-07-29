@@ -1,3 +1,5 @@
+import type { Amenity, PriceHistory } from "../types";
+
 export type Json =
   | string
   | number
@@ -33,15 +35,15 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json
-          priceHistory: Json
+          amenities: Amenity[]
+          priceHistory: PriceHistory[]
           availableDate?: string
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
           display_order?: number
-          translations?: Json | null
+          translations?: { [key: string]: { title?: string; description?: string } } | null
         },
         Insert: {
           id?: string
@@ -66,15 +68,15 @@ export type Database = {
           status: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images: string[]
-          amenities: Json
-          priceHistory: Json
+          amenities: Amenity[]
+          priceHistory: PriceHistory[]
           availableDate?: string
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
           display_order?: number
-          translations?: Json | null
+          translations?: { [key: string]: { title?: string; description?: string } } | null
         },
         Update: {
           id?: string
@@ -99,15 +101,15 @@ export type Database = {
           status?: "AVAILABLE" | "RENTED" | "SOLD" | "ARCHIVED"
           yearBuilt?: number
           images?: string[]
-          amenities?: Json
+          amenities?: Amenity[]
           availableDate?: string
           listedByUserId?: string
-          priceHistory?: Json
+          priceHistory?: PriceHistory[]
           isPopular?: boolean
           tourUrl?: string
           viewCount?: number
           display_order?: number
-          translations?: Json | null
+          translations?: { [key: string]: { title?: string; description?: string } } | null
         },
         Relationships: []
       },
@@ -170,19 +172,19 @@ export type Database = {
           id: string
           name: string
           iconUrl: string
-          translations: Json | null
+          translations: { [locale: string]: string } | null
         },
         Insert: {
           id?: string
           name: string
           iconUrl: string
-          translations?: Json | null
+          translations?: { [locale: string]: string } | null
         },
         Update: {
           id?: string
           name?: string
           iconUrl?: string
-          translations?: Json | null
+          translations?: { [locale: string]: string } | null
         },
         Relationships: []
       },
@@ -190,17 +192,17 @@ export type Database = {
         Row: {
             id: string
             name: string
-            translations: Json | null
+            translations: { [locale: string]: string } | null
         },
         Insert: {
             id?: string
             name: string
-            translations?: Json | null
+            translations?: { [locale: string]: string } | null
         },
         Update: {
             id?: string
             name?: string
-            translations?: Json | null
+            translations?: { [locale: string]: string } | null
         },
         Relationships: []
       },

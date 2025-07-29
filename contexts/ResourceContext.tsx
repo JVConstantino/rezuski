@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { ResourceDocument } from '../types';
 import { supabase } from '../lib/supabaseClient';
@@ -25,7 +24,7 @@ export const ResourceProvider: React.FC<{ children: ReactNode }> = ({ children }
                 console.error('Error fetching resources:', error);
                 setResources([]);
             } else {
-                setResources(data as ResourceDocument[]);
+                setResources(data || []);
             }
             setLoading(false);
         };
@@ -43,7 +42,7 @@ export const ResourceProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (error) {
             console.error('Error adding resource:', error);
         } else if (data) {
-            setResources(prev => [...prev, data as ResourceDocument]);
+            setResources(prev => [...prev, data]);
         }
     };
 

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { translations } from '../translations';
 import { supabase } from '../lib/supabaseClient';
@@ -62,7 +61,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
                 if (propertyTypesRes.error) throw propertyTypesRes.error;
 
                 setDynamicData({
-                    categories: categoriesRes.data as Category[],
+                    categories: categoriesRes.data || [],
                     propertyTypes: propertyTypesRes.data || [],
                 });
             } catch (error) {

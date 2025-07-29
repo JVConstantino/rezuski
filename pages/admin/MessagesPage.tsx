@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Conversation, Message } from '../../types';
@@ -85,7 +84,7 @@ const ChatWindow: React.FC<{
                 .order('created_at', { ascending: true });
             
             if (error) console.error("Error fetching messages:", error);
-            else setMessages(data as Message[]);
+            else setMessages(data || []);
         };
         fetchMessages();
     }, [conversation]);
@@ -209,7 +208,7 @@ const MessagesPage: React.FC = () => {
                 .order('last_message_at', { ascending: false });
 
             if (error) console.error("Error fetching conversations:", error);
-            else setConversations(data as Conversation[]);
+            else setConversations(data || []);
         };
         fetchConversations();
 

@@ -239,33 +239,33 @@ const Section: React.FC<{
 );
 
 
-const PopularProperties: React.FC = () => {
+const RecentProperties: React.FC = () => {
     const { properties, loading } = useProperties();
     const { t } = useLanguage();
-    
-    // Sort by viewCount descending and take the top properties
-    const popular = [...properties]
-        .filter(p => p.viewCount && p.viewCount > 0 && p.status === 'AVAILABLE')
-        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
-        .slice(0, 3);
+
+    const recentProperties = [...properties]
+        .filter(p => p.status === 'AVAILABLE')
+        .slice(0, 9);
 
     if (loading) {
         return (
-             <Section title={t('section.popular')} isGray={true}>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+             <Section title={t('section.recent')} isGray={true}>
+                 <div className="flex space-x-8 -mx-4 px-4">
                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden animate-pulse">
-                            <div className="w-full h-52 bg-slate-200"></div>
-                            <div className="p-5 space-y-4">
-                                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                                <div className="h-6 bg-slate-200 rounded w-1/2"></div>
-                                <div className="h-4 bg-slate-200 rounded w-full"></div>
-                                <div className="pt-4 flex justify-between">
-                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                        <div key={index} className="flex-shrink-0 w-full sm:w-1/2 md:w-1/3">
+                            <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden animate-pulse">
+                                <div className="w-full h-52 bg-slate-200"></div>
+                                <div className="p-5 space-y-4">
+                                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                    <div className="h-6 bg-slate-200 rounded w-1/2"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-full"></div>
+                                    <div className="pt-4 flex justify-between">
+                                        <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                        <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                        <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                    </div>
+                                    <div className="h-10 bg-slate-200 rounded-lg mt-4"></div>
                                 </div>
-                                <div className="h-10 bg-slate-200 rounded-lg mt-4"></div>
                             </div>
                         </div>
                      ))}
@@ -274,18 +274,22 @@ const PopularProperties: React.FC = () => {
         );
     }
     
-    if (popular.length === 0) {
-        return null; // Don't render the section if there are no popular properties
+    if (recentProperties.length === 0) {
+        return null;
     }
 
     return (
-        <Section title={t('section.popular')} subtitle={t('section.popular.subtitle')} isGray={true}>
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                {popular.map((property, index) => (
-                    <AnimateOnScroll key={property.id} delay={100 * (index + 1)}>
-                        <PropertyCard property={property} />
-                    </AnimateOnScroll>
-                ))}
+        <Section title={t('section.recent')} subtitle={t('section.recent.subtitle')} isGray={true}>
+             <div className="relative -mx-4">
+                <div className="flex overflow-x-auto space-x-8 pb-4 px-4 snap-x snap-mandatory">
+                    {recentProperties.map((property, index) => (
+                        <div key={property.id} className="snap-center md:snap-start flex-shrink-0 w-11/12 sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.34rem)]">
+                            <AnimateOnScroll delay={100 * (index + 1)}>
+                                <PropertyCard property={property} />
+                            </AnimateOnScroll>
+                        </div>
+                    ))}
+                </div>
             </div>
         </Section>
     );
@@ -494,7 +498,7 @@ const HomePage: React.FC = () => {
       <main>
         <HeroSection />
         <ServicesSection />
-        <PopularProperties />
+        <RecentProperties />
         <Categories />
         <PropertiesForPurpose title={t('section.for_sale')} purpose={'SALE'} isGray={true} />
         <PropertiesForPurpose title={t('section.for_rent')} purpose={'RENT'} isGray={false} />

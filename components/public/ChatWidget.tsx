@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useMatch } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -80,14 +79,14 @@ const ChatWidget: React.FC = () => {
             localStorage.removeItem(LOCAL_STORAGE_KEY);
             setConversation(null);
         } else {
-            setConversation(convoData as Conversation);
+            setConversation(convoData);
             const { data: msgData, error: msgError } = await supabase
                 .from('messages')
                 .select('*')
                 .eq('conversation_id', conversationId)
                 .order('created_at', { ascending: true });
             
-            setMessages(msgData as Message[] || []);
+            setMessages(msgData || []);
             setView('chat');
         }
         setIsLoading(false);
@@ -125,7 +124,7 @@ const ChatWidget: React.FC = () => {
                 console.error("Error creating conversation:", insertError);
             } else {
                 localStorage.setItem(LOCAL_STORAGE_KEY, newConvo.id);
-                setConversation(newConvo as Conversation);
+                setConversation(newConvo);
                 setMessages([]);
                 setView('chat');
             }

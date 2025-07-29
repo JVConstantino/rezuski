@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Broker } from '../types';
 import { supabase } from '../lib/supabaseClient';
@@ -25,7 +24,7 @@ export const BrokerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 console.error('Error fetching brokers:', error);
                 setBrokers([]);
             } else {
-                setBrokers(data as Broker[]);
+                setBrokers(data || []);
             }
             setLoading(false);
         };
@@ -44,8 +43,8 @@ export const BrokerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             return null;
         }
         if (data) {
-            setBrokers(prev => [...prev, data as Broker]);
-            return data as Broker;
+            setBrokers(prev => [...prev, data]);
+            return data;
         }
         return null;
     };

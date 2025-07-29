@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Category } from '../types';
 import { supabase } from '../lib/supabaseClient';
@@ -25,7 +24,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
                 console.error('Error fetching categories:', error);
                 setCategories([]);
             } else {
-                setCategories(data as Category[]);
+                setCategories(data || []);
             }
             setLoading(false);
         };
@@ -42,7 +41,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (error) {
             console.error('Error adding category:', error);
         } else if (data) {
-            setCategories(prev => [...prev, data as Category]);
+            setCategories(prev => [...prev, data]);
         }
     };
 

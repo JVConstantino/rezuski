@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Category } from '../../types';
@@ -28,7 +27,7 @@ const ConnectionTestPage: React.FC = () => {
                 }
 
                 setStatus('success');
-                setData(categories as Category[]);
+                setData(categories);
                 setError(null);
 
             } catch (err: any) {
