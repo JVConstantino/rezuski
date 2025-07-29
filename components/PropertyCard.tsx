@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Property } from '../types';
 import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
-import { localizeProperty } from '../lib/localize';
+import { localizeProperty, getOptimizedImageUrl } from '../lib/localize';
 
 interface PropertyCardProps {
   property: Property;
@@ -39,11 +39,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty 
 
   const { text: displayPrice, suffix: priceSuffix } = getPriceDisplay(property);
   const locationDisplay = [property.neighborhood, property.city].filter(Boolean).join(', ');
+  const optimizedImageUrl = getOptimizedImageUrl(property.images[0], { width: 500, height: 208 });
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-lg">
       <div className="relative">
-        <img src={property.images[0]} alt={property.title} className="w-full h-52 object-cover" />
+        <img src={optimizedImageUrl} alt={property.title} className="w-full h-52 object-cover" />
         {property.isPopular && (
           <div className="absolute top-3 left-3 bg-primary-blue text-white text-xs font-bold px-2 py-1 rounded">
             POPULAR

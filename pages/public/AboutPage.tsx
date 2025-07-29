@@ -6,6 +6,7 @@ import BottomNavBar from '../../components/BottomNavBar';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import { MapPinIcon, PhoneIcon, MailIcon } from '../../components/Icons';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getOptimizedImageUrl } from '../../lib/localize';
 
 const AboutPage: React.FC = () => {
     const { t } = useLanguage();
@@ -15,6 +16,7 @@ const AboutPage: React.FC = () => {
     const email = "rezuski.imoveis@gmail.com";
 
     const mapQuery = encodeURIComponent(address1);
+    const facadeImageUrl = "https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/fachada.jpeg";
     
     return (
         <div className="bg-white min-h-screen flex flex-col">
@@ -38,8 +40,8 @@ const AboutPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
                             <AnimateOnScroll>
                                 <img 
-                                    src="https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/fachada.jpeg" 
-                                    alt="Equipe da Rezuski Imóveis" 
+                                    src={getOptimizedImageUrl(facadeImageUrl, { width: 800, height: 600 })}
+                                    alt="Fachada da Rezuski Imóveis" 
                                     className="rounded-lg shadow-lg object-cover"
                                 />
                             </AnimateOnScroll>

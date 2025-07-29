@@ -113,6 +113,10 @@ export const translations = {
         'property.purpose.RENT': 'Aluguel',
         'property.purpose.SALE': 'Venda',
         'property.purpose.SEASONAL': 'Temporada',
+        'quality:Excelente': 'Excelente',
+        'quality:Bom': 'Bom',
+        'quality:Razoável': 'Razoável',
+        'quality:Ruim': 'Ruim',
     },
     'en-US': {
         'nav.home': 'Home',
@@ -226,6 +230,10 @@ export const translations = {
         'property.purpose.RENT': 'Rent',
         'property.purpose.SALE': 'Sale',
         'property.purpose.SEASONAL': 'Seasonal',
+        'quality:Excelente': 'Excellent',
+        'quality:Bom': 'Good',
+        'quality:Razoável': 'Fair',
+        'quality:Ruim': 'Poor',
     },
     'es-ES': {
         'nav.home': 'Inicio',
@@ -339,6 +347,10 @@ export const translations = {
         'property.purpose.SALE': 'Venta',
         'property.purpose.SEASONAL': 'Temporada',
         'services.legalization': 'Legalización',
+        'quality:Excelente': 'Excelente',
+        'quality:Bom': 'Bueno',
+        'quality:Razoável': 'Aceptable',
+        'quality:Ruim': 'Pobre',
     },
     'fr-FR': {
         'nav.home': 'Accueil',
@@ -452,6 +464,10 @@ export const translations = {
         'property.purpose.RENT': 'Location',
         'property.purpose.SALE': 'Vente',
         'property.purpose.SEASONAL': 'Saisonnier',
+        'quality:Excelente': 'Excellent',
+        'quality:Bom': 'Bon',
+        'quality:Razoável': 'Passable',
+        'quality:Ruim': 'Mauvais',
     },
     'it-IT': {
         'nav.home': 'Home',
@@ -565,5 +581,9 @@ export const translations = {
         'property.purpose.RENT': 'Affitto',
         'property.purpose.SALE': 'Vendita',
         'property.purpose.SEASONAL': 'Stagionale',
+        'quality:Excelente': 'Eccellente',
+        'quality:Bom': 'Buono',
+        'quality:Razoável': 'Discreto',
+        'quality:Ruim': 'Povero',
     }
 };

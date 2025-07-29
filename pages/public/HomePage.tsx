@@ -12,6 +12,7 @@ import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailI
 import { PropertyPurpose, PropertyType } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
+import { getOptimizedImageUrl } from '../../lib/localize';
 
 const HeroSection = () => {
     const navigate = useNavigate();
@@ -299,7 +300,7 @@ const Categories: React.FC = () => {
                 {categories.map((cat, index) => (
                     <AnimateOnScroll key={cat.id} delay={100 * (index + 1)}>
                         <Link to={`/search?categoryId=${cat.id}`} className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
-                            <img src={cat.iconUrl} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
+                            <img src={getOptimizedImageUrl(cat.iconUrl, { width: 64, height: 64 })} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
                             <p className="mt-4 font-semibold text-slate-700 text-center">{t(`category:${cat.id}`)}</p>
                         </Link>
                     </AnimateOnScroll>
@@ -325,12 +326,12 @@ const ServicesSection: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-8 justify-items-center">
                 {services.map(({ name, Icon }, index) => (
                      <AnimateOnScroll key={name} delay={100 * index} className="w-full">
-                        <a href="#" className="flex flex-col items-center space-y-3 text-center group w-full p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                        <div className="flex flex-col items-center space-y-3 text-center group w-full p-2 rounded-lg hover:bg-slate-100 transition-colors">
                             <Icon className={`w-10 h-10 text-slate-800`}/>
                             <p className="font-medium text-slate-700 group-hover:text-primary-blue transition-colors min-h-[2.5rem] flex items-center justify-center">
                                 {name}
                             </p>
-                        </a>
+                        </div>
                     </AnimateOnScroll>
                 ))}
             </div>
@@ -374,7 +375,7 @@ const MeetTheBrokers: React.FC = () => {
             {brokers.map((broker, index) => (
                 <AnimateOnScroll key={broker.id} delay={100 * (index + 1)}>
                     <div className="bg-white p-6 rounded-lg shadow-sm text-center hover:shadow-lg transition-shadow h-full border border-slate-100">
-                        <img src={broker.avatarUrl} alt={broker.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
+                        <img src={getOptimizedImageUrl(broker.avatarUrl, { width: 96, height: 96 })} alt={broker.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
                         <h3 className="mt-4 text-lg font-semibold text-slate-800">{broker.name}</h3>
                         <p className="text-sm text-primary-blue font-medium">{broker.title}</p>
                         <div className="mt-4 flex justify-center space-x-3">

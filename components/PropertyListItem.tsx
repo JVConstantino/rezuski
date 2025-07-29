@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Property } from '../types';
 import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
-import { localizeProperty } from '../lib/localize';
+import { localizeProperty, getOptimizedImageUrl } from '../lib/localize';
 
 interface PropertyListItemProps {
   property: Property;
@@ -37,12 +37,13 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
 
   const { text: displayPrice, suffix: priceSuffix } = getPriceDisplay(property);
   const locationDisplay = [property.neighborhood, property.city].filter(Boolean).join(', ');
+  const optimizedImageUrl = getOptimizedImageUrl(property.images[0], { width: 400, height: 400 });
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col md:flex-row transition-shadow hover:shadow-md">
       <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
         <Link to={`/property/${property.id}`}>
-         <img src={property.images[0]} alt={property.title} className="w-full h-48 md:h-full object-cover" />
+         <img src={optimizedImageUrl} alt={property.title} className="w-full h-48 md:h-full object-cover" />
         </Link>
       </div>
       <div className="p-5 flex flex-col flex-grow md:w-2/3 lg:w-3/4">

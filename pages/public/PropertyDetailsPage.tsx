@@ -10,7 +10,7 @@ import { Share2Icon, MapIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, 
 import { Property, PriceHistory } from '../../types';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { localizeProperty } from '../../lib/localize';
+import { localizeProperty, getOptimizedImageUrl } from '../../lib/localize';
 
 declare var mapboxgl: any;
 
@@ -120,7 +120,7 @@ const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (
                                 onClick={() => selectImage(index)} 
                                 className={`flex-shrink-0 w-32 aspect-[16/9] rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue transition-all ${currentIndex === index ? 'ring-2 ring-primary-blue' : 'opacity-70 hover:opacity-100'}`}
                             >
-                                <img src={img} alt={`Miniatura ${index + 1}`} className="w-full h-full object-cover" />
+                                <img src={getOptimizedImageUrl(img, { width: 128, height: 72 })} alt={`Miniatura ${index + 1}`} className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>
@@ -180,7 +180,7 @@ const PropertyInfoBadges: React.FC<{ property: Property }> = ({ property }) => {
         <div className="flex items-center space-x-2 p-3 bg-slate-100 rounded-lg">
         <CheckCircleIcon className="w-6 h-6 text-primary-green" />
         <div>
-            <div className="font-semibold text-slate-800">{property.repairQuality}</div>
+            <div className="font-semibold text-slate-800">{t(`quality:${property.repairQuality}`)}</div>
             <div className="text-sm text-slate-500">{t('details.quality')}</div>
         </div>
         </div>

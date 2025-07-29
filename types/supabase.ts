@@ -42,7 +42,7 @@ export type Database = {
           viewCount?: number
           display_order?: number
           translations?: Json | null
-        }
+        },
         Insert: {
           id?: string
           createdAt?: string
@@ -75,7 +75,7 @@ export type Database = {
           viewCount?: number
           display_order?: number
           translations?: Json | null
-        }
+        },
         Update: {
           id?: string
           createdAt?: string
@@ -108,9 +108,9 @@ export type Database = {
           viewCount?: number
           display_order?: number
           translations?: Json | null
-        }
+        },
         Relationships: []
-      }
+      },
       profiles: {
         Row: {
           id: string
@@ -119,7 +119,7 @@ export type Database = {
           name?: string
           avatarUrl?: string
           role: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
-        }
+        },
         Insert: {
           id: string
           updated_at?: string | null
@@ -127,7 +127,7 @@ export type Database = {
           name?: string
           avatarUrl?: string
           role: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
-        }
+        },
         Update: {
           id?: string
           updated_at?: string | null
@@ -135,9 +135,9 @@ export type Database = {
           name?: string
           avatarUrl?: string
           role?: "ADMIN" | "OWNER" | "TENANT" | "BUYER" | "SELLER"
-        }
+        },
         Relationships: []
-      }
+      },
       brokers: {
         Row: {
           id: string
@@ -146,7 +146,7 @@ export type Database = {
           avatarUrl: string
           phone: string
           email: string
-        }
+        },
         Insert: {
           id?: string
           name: string
@@ -154,7 +154,7 @@ export type Database = {
           avatarUrl: string
           phone: string
           email: string
-        }
+        },
         Update: {
           id?: string
           name?: string
@@ -162,66 +162,66 @@ export type Database = {
           avatarUrl?: string
           phone?: string
           email?: string
-        }
+        },
         Relationships: []
-      }
+      },
       categories: {
         Row: {
           id: string
           name: string
           iconUrl: string
           translations: Json | null
-        }
+        },
         Insert: {
           id?: string
           name: string
           iconUrl: string
           translations?: Json | null
-        }
+        },
         Update: {
           id?: string
           name?: string
           iconUrl?: string
           translations?: Json | null
-        }
+        },
         Relationships: []
-      }
+      },
       property_type_translations: {
         Row: {
-            id: string;
-            name: string;
-            translations: Json | null;
-        };
+            id: string
+            name: string
+            translations: Json | null
+        },
         Insert: {
-            id?: string;
-            name: string;
-            translations?: Json | null;
-        };
+            id?: string
+            name: string
+            translations?: Json | null
+        },
         Update: {
-            id?: string;
-            name?: string;
-            translations?: Json | null;
-        };
+            id?: string
+            name?: string
+            translations?: Json | null
+        },
         Relationships: []
-      }
+      },
       resources: {
         Row: {
-            id: string;
-            title: string;
-            fileUrl: string;
-        };
+            id: string
+            title: string
+            fileUrl: string
+        },
         Insert: {
-            id?: string;
-            title: string;
-            fileUrl: string;
-        };
+            id?: string
+            title: string
+            fileUrl: string
+        },
         Update: {
-            id?: string;
-            title?: string;
-            fileUrl?: string;
-        };
+            id?: string
+            title?: string
+            fileUrl?: string
+        },
         Relationships: []
-      }
+      },
       conversations: {
         Row: {
           id: string
@@ -232,7 +232,7 @@ export type Database = {
           last_message_at: string
           last_message_preview: string | null
           admin_has_unread: boolean
-        }
+        },
         Insert: {
           id?: string
           created_at?: string
@@ -242,7 +242,7 @@ export type Database = {
           last_message_at?: string
           last_message_preview?: string | null
           admin_has_unread?: boolean
-        }
+        },
         Update: {
           id?: string
           created_at?: string
@@ -252,9 +252,9 @@ export type Database = {
           last_message_at?: string
           last_message_preview?: string | null
           admin_has_unread?: boolean
-        }
+        },
         Relationships: []
-      }
+      },
       messages: {
         Row: {
           id: string
@@ -262,27 +262,27 @@ export type Database = {
           conversation_id: string
           sender: "ADMIN" | "CUSTOMER"
           content: string
-        }
+        },
         Insert: {
           id?: string
           created_at?: string
           conversation_id: string
           sender: "ADMIN" | "CUSTOMER"
           content: string
-        }
+        },
         Update: {
           id?: string
           created_at?: string
           conversation_id?: string
           sender?: "ADMIN" | "CUSTOMER"
           content?: string
-        }
+        },
         Relationships: []
       }
-    }
+    },
     Views: {
       [_ in never]: never
-    }
+    },
     Functions: {
       increment_view_count: {
         Args: {
@@ -290,10 +290,10 @@ export type Database = {
         }
         Returns: undefined
       }
-    }
+    },
     Enums: {
       [_ in never]: never
-    }
+    },
     CompositeTypes: {
       [_ in never]: never
     }
