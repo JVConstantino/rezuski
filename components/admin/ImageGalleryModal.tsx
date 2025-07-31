@@ -136,8 +136,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
         );
     };
 
-    if (!isOpen) return null;
-
     const filteredItems = galleryItems.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const selectableItems = useMemo(() => {
@@ -154,6 +152,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
         const selectableNames = selectableItems.map(item => item.name);
         return selectableNames.every(name => selectedItems.includes(name));
     }, [selectableItems, selectedItems]);
+
+    if (!isOpen) return null;
 
     const handleSelectAll = () => {
         const selectableNames = selectableItems.map(item => item.name);
