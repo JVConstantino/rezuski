@@ -18,6 +18,15 @@
         }
       }
     </script>
+    <style>
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+    </style>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css' rel='stylesheet' />
   <script type="importmap">
 {
@@ -28,7 +37,7 @@
     "recharts": "https://esm.sh/recharts@3.1.0",
     "react-router-dom": "https://esm.sh/react-router-dom@7.6.3",
     "react-intersection-observer": "https://esm.sh/react-intersection-observer@9.13.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.44.4",
+    "@supabase/supabase-js": "https://esm.sh/supabase/supabase-js@2.44.4",
     "@supabase/functions-js": "https://esm.sh/@supabase/functions-js@2.4.1",
     "@supabase/gotrue-js": "https://esm.sh/@supabase/gotrue-js@2.6.2",
     "@supabase/postgrest-js": "https://esm.sh/@supabase/postgrest-js@1.15.5",

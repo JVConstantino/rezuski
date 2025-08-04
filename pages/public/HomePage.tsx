@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -8,7 +8,7 @@ import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
-import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon, StarIcon, UserCircleIcon } from '../../components/Icons';
+import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon, StarIcon, UserCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { PropertyPurpose, PropertyType } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
@@ -242,11 +242,58 @@ const Section: React.FC<{
 const RecentProperties: React.FC = () => {
     const { properties, loading } = useProperties();
     const { t } = useLanguage();
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const autoScrollIntervalRef = useRef<number | null>(null);
 
     const recentProperties = [...properties]
         .filter(p => p.status === 'AVAILABLE')
         .slice(0, 9);
+    
+    const scrollAmount = 350;
 
+    const startAutoScroll = useCallback(() => {
+        if (autoScrollIntervalRef.current) return; // Already running
+        autoScrollIntervalRef.current = window.setInterval(() => {
+            if (scrollContainerRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+                if (scrollLeft + clientWidth >= scrollWidth - 1) { // -1 for precision
+                    scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                }
+            }
+        }, 5000);
+    }, [scrollAmount]);
+    
+    const stopAutoScroll = () => {
+        if (autoScrollIntervalRef.current) {
+            clearInterval(autoScrollIntervalRef.current);
+            autoScrollIntervalRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        if(recentProperties.length > 3) {
+             startAutoScroll();
+        }
+        return () => stopAutoScroll();
+    }, [startAutoScroll, recentProperties.length]);
+
+    const handleMouseEnter = () => stopAutoScroll();
+    const handleMouseLeave = () => {
+        if(recentProperties.length > 3) {
+            startAutoScroll();
+        }
+    };
+    
+    const handleScroll = (direction: 'left' | 'right') => {
+        stopAutoScroll();
+        if (scrollContainerRef.current) {
+            const amount = direction === 'left' ? -scrollAmount : scrollAmount;
+            scrollContainerRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+    };
+    
     if (loading) {
         return (
              <Section title={t('section.recent')} isGray={true}>
@@ -278,18 +325,46 @@ const RecentProperties: React.FC = () => {
         return null;
     }
 
+    const showNavButtons = recentProperties.length > 3;
+
     return (
         <Section title={t('section.recent')} subtitle={t('section.recent.subtitle')} isGray={true}>
-             <div className="relative -mx-4">
-                <div className="flex overflow-x-auto space-x-8 pb-4 px-4 snap-x snap-mandatory">
+             <div 
+                className="relative -mx-4 group"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+             >
+                <div 
+                    ref={scrollContainerRef}
+                    className="flex overflow-x-auto space-x-8 pb-4 px-4 snap-x snap-mandatory hide-scrollbar"
+                >
                     {recentProperties.map((property, index) => (
-                        <div key={property.id} className="snap-center md:snap-start flex-shrink-0 w-11/12 sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.34rem)]">
+                        <div key={property.id} className="snap-center md:snap-start flex-shrink-0 w-11/12 sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.34rem)]" style={{minWidth: '320px'}}>
                             <AnimateOnScroll delay={100 * (index + 1)}>
                                 <PropertyCard property={property} />
                             </AnimateOnScroll>
                         </div>
                     ))}
                 </div>
+                
+                {showNavButtons && (
+                    <>
+                        <button 
+                            onClick={() => handleScroll('left')} 
+                            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md hover:bg-white transition-opacity opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            aria-label="Scroll left"
+                        >
+                            <ChevronLeftIcon className="w-6 h-6 text-slate-700" />
+                        </button>
+                        <button 
+                            onClick={() => handleScroll('right')} 
+                            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md hover:bg-white transition-opacity opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            aria-label="Scroll right"
+                        >
+                            <ChevronRightIcon className="w-6 h-6 text-slate-700" />
+                        </button>
+                    </>
+                )}
             </div>
         </Section>
     );
