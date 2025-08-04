@@ -104,8 +104,37 @@ export const BATHROOM_OPTIONS: Record<string, string> = {
     '4': '4+',
 };
 
-export const COMMON_AMENITIES = [
-    'Piscina', 'Churrasqueira', 'Garagem', 'Academia', 'Mobiliado', 'Quintal', 'Varanda Gourmet', 'Playground'
+export const AVAILABLE_AMENITIES = [
+    'Academia',
+    'Ar Condicionado',
+    'Armários Embutidos',
+    'Área de Serviço',
+    'Árvores frutíferas',
+    'Banheira',
+    'Campo de futebol',
+    'Canil',
+    'Churrasqueira',
+    'Closet',
+    'Cozinha Americana',
+    'Escritório',
+    'Galpão',
+    'Garagem',
+    'Hidromassagem',
+    'Jardim',
+    'Lago',
+    'Lareira',
+    'Mobiliado',
+    'Nascente',
+    'Piscina',
+    'Playground',
+    'Portaria 24h',
+    'Quadra Poliesportiva',
+    'Quintal',
+    'Sacada',
+    'Sala de jogos',
+    'Salão de Festas',
+    'Sauna',
+    'Varanda Gourmet'
 ];
 
 

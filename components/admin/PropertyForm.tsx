@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
@@ -8,6 +7,7 @@ import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { GoogleGenAI, Type } from "@google/genai";
+import { AVAILABLE_AMENITIES } from '../../constants';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -19,40 +19,6 @@ interface ImageState {
     preview: string;
     isPrimary: boolean;
 }
-
-const AVAILABLE_AMENITIES = [
-    'Academia',
-    'Ar Condicionado',
-    'Armários Embutidos',
-    'Área de Serviço',
-    'Árvores frutíferas',
-    'Banheira',
-    'Campo de futebol',
-    'Canil',
-    'Churrasqueira',
-    'Closet',
-    'Cozinha Americana',
-    'Escritório',
-    'Galpão',
-    'Garagem',
-    'Hidromassagem',
-    'Jardim',
-    'Lago',
-    'Lareira',
-    'Mobiliado',
-    'Nascente',
-    'Piscina',
-    'Playground',
-    'Portaria 24h',
-    'Quadra Poliesportiva',
-    'Quintal',
-    'Sacada',
-    'Sala de jogos',
-    'Salão de Festas',
-    'Sauna',
-    'Varanda Gourmet'
-];
-
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing }) => {
     const { categories } = useCategories();

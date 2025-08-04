@@ -117,6 +117,8 @@ export const translations = {
         'quality:Bom': 'Bom',
         'quality:Razoável': 'Razoável',
         'quality:Ruim': 'Ruim',
+        'search.bedrooms': 'Quartos',
+        'search.bathrooms': 'Banheiros',
     },
     'en-US': {
         'nav.home': 'Home',
@@ -234,6 +236,8 @@ export const translations = {
         'quality:Bom': 'Good',
         'quality:Razoável': 'Fair',
         'quality:Ruim': 'Poor',
+        'search.bedrooms': 'Bedrooms',
+        'search.bathrooms': 'Bathrooms',
     },
     'es-ES': {
         'nav.home': 'Inicio',
@@ -351,6 +355,8 @@ export const translations = {
         'quality:Bom': 'Bueno',
         'quality:Razoável': 'Aceptable',
         'quality:Ruim': 'Pobre',
+        'search.bedrooms': 'Habitaciones',
+        'search.bathrooms': 'Baños',
     },
     'fr-FR': {
         'nav.home': 'Accueil',
@@ -468,6 +474,8 @@ export const translations = {
         'quality:Bom': 'Bon',
         'quality:Razoável': 'Passable',
         'quality:Ruim': 'Mauvais',
+        'search.bedrooms': 'Chambres',
+        'search.bathrooms': 'Salles de bain',
     },
     'it-IT': {
         'nav.home': 'Home',
@@ -585,5 +593,7 @@ export const translations = {
         'quality:Bom': 'Buono',
         'quality:Razoável': 'Discreto',
         'quality:Ruim': 'Povero',
+        'search.bedrooms': 'Camere da letto',
+        'search.bathrooms': 'Bagni',
     }
 };

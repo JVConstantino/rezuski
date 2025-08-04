@@ -8,7 +8,7 @@ import PropertyListItem from '../../components/PropertyListItem';
 import { useProperties } from '../../contexts/PropertyContext';
 import { MapPinIcon, DollarSignIcon, ChevronLeftIcon, ChevronRightIcon, LayoutGridIcon, ListIcon, HashIcon, FilterIcon, XIcon, ChevronsLeftIcon, ChevronsRightIcon, ChevronDownIcon, BedIcon, BathIcon, SearchIcon, BuildingIcon } from '../../components/Icons';
 import { PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
-import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS, COMMON_AMENITIES } from '../../constants';
+import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS, AVAILABLE_AMENITIES } from '../../constants';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -175,7 +175,7 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                  <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">{t('search.amenities')}</label>
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                        {COMMON_AMENITIES.map((amenity) => (
+                        {AVAILABLE_AMENITIES.map((amenity) => (
                             <label key={amenity} className="flex items-center space-x-3 cursor-pointer">
                                 <input
                                     type="checkbox"
