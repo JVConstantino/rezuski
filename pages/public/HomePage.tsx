@@ -243,7 +243,7 @@ const RecentProperties: React.FC = () => {
     const { properties, loading } = useProperties();
     const { t } = useLanguage();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const autoScrollIntervalRef = useRef<number | null>(null);
+    const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const recentProperties = [...properties]
         .filter(p => p.status === 'AVAILABLE')
@@ -251,35 +251,40 @@ const RecentProperties: React.FC = () => {
     
     const scrollAmount = 350;
 
-    const startAutoScroll = useCallback(() => {
-        if (autoScrollIntervalRef.current) return; // Already running
-        autoScrollIntervalRef.current = window.setInterval(() => {
-            if (scrollContainerRef.current) {
-                const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-                if (scrollLeft + clientWidth >= scrollWidth - 1) { // -1 for precision
-                    scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-                } else {
-                    scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-                }
-            }
-        }, 5000);
-    }, [scrollAmount]);
-    
-    const stopAutoScroll = () => {
+    const stopAutoScroll = useCallback(() => {
         if (autoScrollIntervalRef.current) {
             clearInterval(autoScrollIntervalRef.current);
             autoScrollIntervalRef.current = null;
         }
-    };
+    }, []);
 
+    const startAutoScroll = useCallback(() => {
+        stopAutoScroll();
+        if (scrollContainerRef.current) {
+            autoScrollIntervalRef.current = setInterval(() => {
+                if (scrollContainerRef.current) {
+                    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+                    if (scrollLeft + clientWidth >= scrollWidth - 10) {
+                        scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    }
+                }
+            }, 5000);
+        }
+    }, [scrollAmount, stopAutoScroll]);
+    
     useEffect(() => {
         if(recentProperties.length > 3) {
              startAutoScroll();
         }
-        return () => stopAutoScroll();
-    }, [startAutoScroll, recentProperties.length]);
+        return stopAutoScroll;
+    }, [startAutoScroll, stopAutoScroll, recentProperties.length]);
 
-    const handleMouseEnter = () => stopAutoScroll();
+    const handleMouseEnter = () => {
+        stopAutoScroll();
+    };
+
     const handleMouseLeave = () => {
         if(recentProperties.length > 3) {
             startAutoScroll();
