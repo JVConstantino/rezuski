@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import { supabase } from '../lib/supabaseClient';
-import type { Session, AuthChangeEvent } from '@supabase/supabase-js';
+import type { Session, AuthChangeEvent } from 'https://esm.sh/@supabase/supabase-js@2.44.4';
 
 interface AuthContextType {
     isAuthenticated: boolean;
