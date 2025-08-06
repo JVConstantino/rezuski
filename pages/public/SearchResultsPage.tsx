@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -298,12 +299,18 @@ const SearchResultsPage: React.FC = () => {
         
         if (priceRangeKey && priceRangeKey !== 'any') {
             const [minStr, maxStr] = priceRangeKey.split('-');
-            const minPrice = parseInt(minStr);
-            const maxPrice = maxStr.includes('+') ? Infinity : parseInt(maxStr);
+            
+            // parseInt will correctly handle "2001+" by parsing up to the non-digit character.
+            const minPrice = parseInt(minStr, 10);
+            
+            // If maxStr is undefined (like for "2001+"), it's a "greater than" filter.
+            const maxPrice = maxStr ? parseInt(maxStr, 10) : Infinity;
 
             results = results.filter(p => {
                 const pPrice = p.purpose === 'SALE' ? p.salePrice : p.rentPrice;
-                if (pPrice === undefined) return false;
+                if (pPrice === undefined || pPrice === null) return false;
+                
+                // For Infinity, the second part of the condition is always true.
                 return pPrice >= minPrice && pPrice <= maxPrice;
             });
         }

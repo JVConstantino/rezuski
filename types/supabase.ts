@@ -11,6 +11,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      amenities: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           id: string

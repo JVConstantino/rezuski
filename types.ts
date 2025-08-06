@@ -73,6 +73,11 @@ export interface Amenity {
   quantity: number;
 }
 
+export interface ManagedAmenity {
+  id: string;
+  name: string;
+}
+
 export interface Property {
   id: string;
   title: string;

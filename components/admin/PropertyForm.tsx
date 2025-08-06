@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
+import { useAmenities } from '../../contexts/AmenityContext';
 import { useImages } from '../../contexts/ImageContext';
 import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { GoogleGenAI, Type } from "@google/genai";
-import { AVAILABLE_AMENITIES } from '../../constants';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -22,6 +22,7 @@ interface ImageState {
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing }) => {
     const { categories } = useCategories();
+    const { amenities: managedAmenities, loading: amenitiesLoading } = useAmenities();
     const { refresh: refreshGallery } = useImages();
     const { t, propertyTypes, supportedLanguages } = useLanguage();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
@@ -54,7 +55,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     });
     
     const [amenities, setAmenities] = useState<Amenity[]>([]);
-    const [newAmenity, setNewAmenity] = useState({ name: AVAILABLE_AMENITIES[0], quantity: 1 });
+    const [newAmenity, setNewAmenity] = useState({ name: '', quantity: 1 });
     const [images, setImages] = useState<ImageState[]>([]);
     const [translations, setTranslations] = useState<Property['translations']>({});
 
@@ -92,6 +93,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             setTranslations(initialData.translations || {});
         }
     }, [initialData]);
+    
+    useEffect(() => {
+        if (!amenitiesLoading && managedAmenities.length > 0) {
+            setNewAmenity(prev => ({ ...prev, name: prev.name || managedAmenities[0].name }));
+        }
+    }, [amenitiesLoading, managedAmenities]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -117,7 +124,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const addAmenity = () => {
         if (newAmenity.name && !amenities.some(a => a.name === newAmenity.name)) {
             setAmenities([...amenities, { name: newAmenity.name, quantity: newAmenity.quantity || 1 }]);
-            setNewAmenity({ name: AVAILABLE_AMENITIES[0], quantity: 1 });
+            setNewAmenity({ name: managedAmenities[0]?.name || '', quantity: 1 });
         }
     };
     
@@ -476,221 +483,4 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                             ) : (
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-semibold text-slate-700">Tradução para {supportedLanguages.find(l=>l.code === activeLangTab)?.name}</h3>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700">Título</label>
-                                            <input type="text" value={translations?.[activeLangTab]?.title || ''} onChange={e => handleTranslationChange(activeLangTab, 'title', e.target.value)} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm"/>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700">Descrição</label>
-                                            <textarea rows={10} value={translations?.[activeLangTab]?.description || ''} onChange={e => handleTranslationChange(activeLangTab, 'description', e.target.value)} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <hr/>
-
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-800">Detalhes do Imóvel</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4">
-                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Tipo de Imóvel</label>
-                                <select name="propertyType" value={formData.propertyType} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    {propertyTypes.map((type) => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Categoria</label>
-                                <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    <option value="">-- Selecione uma Categoria --</option>
-                                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Quartos</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
-                            </div>
-                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Banheiros</label>
-                                <input type="number" step="0.5" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Área (m²)</label>
-                                <input type="number" name="areaM2" value={formData.areaM2} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Qualidade da Manutenção</label>
-                                <select name="repairQuality" value={formData.repairQuality} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
-                                    <option value="Excelente">Excelente</option>
-                                    <option value="Bom">Bom</option>
-                                    <option value="Razoável">Razoável</option>
-                                    <option value="Ruim">Ruim</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700">Ano de Construção</label>
-                                <input type="number" name="yearBuilt" value={formData.yearBuilt} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
-                            </div>
-                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Data de Disponibilidade</label>
-                                <input type="date" name="availableDate" value={formData.availableDate} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
-                            </div>
-                            <div className="flex items-center">
-                                <input type="checkbox" id="isPopular" name="isPopular" checked={formData.isPopular} onChange={handleInputChange} className="h-4 w-4 text-primary-blue focus:ring-primary-blue border-slate-300 rounded"/>
-                                <label htmlFor="isPopular" className="ml-2 block text-sm text-slate-900">Marcar como Popular</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr/>
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-800">Características e Comodidades</h2>
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {amenities.map((amenity, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-200">
-                                    <div>
-                                        <span className="font-medium text-slate-700">{amenity.name}</span>
-                                        <span className="text-slate-500 ml-2">(Qtd: {amenity.quantity})</span>
-                                    </div>
-                                    <button type="button" onClick={() => removeAmenity(index)} className="p-1 text-slate-400 hover:text-red-500 rounded-full hover:bg-red-100">
-                                        <TrashIcon className="w-4 h-4"/>
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                         <div className="mt-6 p-4 border-t border-slate-200">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Adicionar nova característica</label>
-                            <div className="flex items-end space-x-2">
-                                <div className="flex-grow">
-                                    <label htmlFor="amenity-name" className="sr-only">Característica</label>
-                                    <select 
-                                        id="amenity-name"
-                                        value={newAmenity.name} 
-                                        onChange={e => setNewAmenity(prev => ({...prev, name: e.target.value}))}
-                                        className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
-                                    >
-                                        {AVAILABLE_AMENITIES.map(name => <option key={name} value={name}>{name}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label htmlFor="amenity-quantity" className="sr-only">Quantidade</label>
-                                    <input 
-                                        id="amenity-quantity"
-                                        type="number" 
-                                        value={newAmenity.quantity}
-                                        min="1"
-                                        onChange={e => setNewAmenity(prev => ({...prev, quantity: parseInt(e.target.value, 10)}))}
-                                        className="block w-24 px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
-                                    />
-                                </div>
-                                <button 
-                                    type="button" 
-                                    onClick={addAmenity} 
-                                    className="flex items-center bg-primary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-primary-blue/90"
-                                >
-                                    <PlusIcon className="w-5 h-5 mr-1"/>
-                                    Adicionar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr/>
-                    
-                     <div>
-                        <h2 className="text-xl font-bold text-slate-800">Mídia Adicional</h2>
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-slate-700">URL do Tour 3D (src do iframe)</label>
-                            <input
-                                type="url"
-                                name="tourUrl"
-                                value={formData.tourUrl}
-                                onChange={handleInputChange}
-                                placeholder="https://exemplo.com/tour-virtual"
-                                className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
-                            />
-                            <p className="mt-2 text-xs text-slate-500">Cole aqui apenas o conteúdo do atributo "src" da tag iframe fornecida.</p>
-                        </div>
-                    </div>
-
-                    <hr/>
-                    
-                    <div>
-                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-slate-800">Fotos</h2>
-                             <button
-                                type="button"
-                                onClick={() => setGalleryOpen(true)}
-                                className="flex items-center bg-white border border-primary-blue text-primary-blue font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-primary-blue/10 transition-colors"
-                             >
-                                <PlusIcon className="w-5 h-5 mr-2" />
-                                Selecionar da Galeria
-                             </button>
-                         </div>
-                         <div className="mt-4 border-2 border-dashed border-slate-300 rounded-lg p-6">
-                            <input 
-                                type="file" 
-                                multiple 
-                                onChange={(e) => e.target.files && handleImageUpload(e.target.files)} 
-                                accept="image/*" 
-                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue/10 file:text-primary-blue hover:file:bg-primary-blue/20" 
-                                disabled={uploadProgress.total > 0} 
-                            />
-                            {uploadProgress.total > 0 && (
-                                <div className="mt-4">
-                                    <p className="text-sm font-medium text-slate-600 mb-1">
-                                        Enviando Imagem {uploadProgress.current} de {uploadProgress.total}... ({Math.round((uploadProgress.current / uploadProgress.total) * 100)}%)
-                                    </p>
-                                    <div className="w-full bg-slate-200 rounded-full h-2.5">
-                                        <div 
-                                            className="bg-primary-blue h-2.5 rounded-full transition-all duration-300 ease-linear" 
-                                            style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                {images.map((image, index) => (
-                                    <div key={index} className="relative group">
-                                        <img src={image.preview} alt={`Preview ${index}`} className="w-full h-32 object-cover rounded-lg"/>
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center space-x-2">
-                                            <button type="button" onClick={() => handleSetPrimary(index)} className="p-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" title="Marcar como principal">
-                                                <StarIcon className={`w-5 h-5 ${image.isPrimary ? 'text-yellow-400 fill-current' : 'text-slate-600'}`}/>
-                                            </button>
-                                             <button type="button" onClick={() => handleDeleteImage(index)} className="p-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" title="Remover imagem">
-                                                <TrashIcon className="w-5 h-5 text-red-600"/>
-                                            </button>
-                                        </div>
-                                        {image.isPrimary && <div className="absolute top-1 left-1 bg-yellow-400 text-white text-xs font-bold px-1.5 py-0.5 rounded">PRINCIPAL</div>}
-                                    </div>
-                                ))}
-                            </div>
-                         </div>
-                    </div>
-                </div>
-                <div className="pt-5">
-                    <div className="flex justify-end">
-                        <button type="button" className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
-                        
-                        <button type="submit" disabled={uploadProgress.total > 0} className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-green hover:opacity-95 disabled:opacity-50">
-                             {isEditing ? 'Salvar Alterações' : 'Publicar Imóvel'}
-                        </button>
-                    </div>
-                </div>
-            </form>
-            <ImageGalleryModal
-                isOpen={isGalleryOpen}
-                onClose={() => setGalleryOpen(false)}
-                onSelectImages={handleSelectFromGallery}
-                currentImages={images.map(i => i.preview)}
-            />
-        </>
-    );
-};
-
-export default PropertyForm;
+                                        <h3 className="text-lg font-semibold text-slate-
