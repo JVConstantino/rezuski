@@ -66,7 +66,8 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [loading, setLoading] = useState(true);
 
     const fetchAmenities = useCallback(async () => {
-        setLoading(true);
+        // Only set loading true if it's not already loading to prevent flickers
+        setLoading(current => current ? true : true);
         const { data, error } = await supabase.from('amenities').select('*').order('name', { ascending: true });
         if (error) {
             console.error('Error fetching amenities:', error);
@@ -85,20 +86,9 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             .on<ManagedAmenity>(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'amenities' },
-                (payload) => {
-                    const { eventType, new: newRecord, old: oldRecord } = payload;
-                    
-                    if (eventType === 'INSERT') {
-                        setAmenities(prev => {
-                            if (prev.some(a => a.id === newRecord.id)) return prev;
-                            return [...prev, newRecord].sort((a, b) => a.name.localeCompare(b.name));
-                        });
-                    } else if (eventType === 'UPDATE') {
-                        setAmenities(prev => prev.map(a => a.id === newRecord.id ? newRecord : a).sort((a, b) => a.name.localeCompare(b.name)));
-                    } else if (eventType === 'DELETE') {
-                        const oldId = (oldRecord as { id: string }).id;
-                        setAmenities(prev => prev.filter(a => a.id !== oldId));
-                    }
+                () => {
+                    // Refetch all data on any change to ensure consistency and order
+                    fetchAmenities();
                 }
             )
             .subscribe();
@@ -118,17 +108,13 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('amenities')
-            .insert([{ name: trimmedName }])
-            .select()
-            .single();
+            .insert([{ name: trimmedName }]);
 
         if (error) {
             console.error('Error adding amenity:', error);
             alert(`Erro ao adicionar comodidade: ${error.message}`);
-        } else if (data) {
-            setAmenities(prev => [...prev, data as ManagedAmenity].sort((a, b) => a.name.localeCompare(b.name)));
         }
     };
 
@@ -142,18 +128,14 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('amenities')
             .update({ name: trimmedName })
-            .eq('id', id)
-            .select()
-            .single();
+            .eq('id', id);
 
         if (error) {
             console.error('Error updating amenity:', error);
             alert(`Erro ao atualizar comodidade: ${error.message}`);
-        } else if (data) {
-            setAmenities(prev => prev.map(a => a.id === id ? data as ManagedAmenity : a).sort((a, b) => a.name.localeCompare(b.name)));
         }
     };
 
@@ -166,8 +148,6 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error deleting amenity:', error);
             alert(`Erro ao remover comodidade: ${error.message}`);
-        } else {
-            setAmenities(prev => prev.filter(a => a.id !== amenityId));
         }
     };
 
@@ -215,9 +195,17 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
     
             if (!content) throw new Error("A resposta da IA estava vazia.");
-    
-            const cleanedContent = cleanAIResponse(content);
-            const jsonResponse = JSON.parse(cleanedContent);
+            
+            let jsonResponse;
+            try {
+                const cleanedContent = cleanAIResponse(content);
+                jsonResponse = JSON.parse(cleanedContent);
+            } catch (parseError) {
+                console.error("Falha ao analisar JSON da IA.");
+                console.error("Conteúdo original da IA:", content);
+                console.error("Erro de parse:", parseError);
+                throw new Error("A IA retornou uma resposta em formato JSON inválido.");
+            }
             
             const updates = amenitiesToTranslate.map(amenity => {
                 const aiTranslations = jsonResponse[amenity.name];
@@ -235,7 +223,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (updates.length > 0) {
                 const { error } = await supabase.from('amenities').upsert(updates);
                 if (error) throw error;
-                await fetchAmenities(); // Refetch data to update UI
+                // Realtime listener will handle the UI update
             }
             
             alert('Tradução das comodidades concluída com sucesso!');
@@ -243,7 +231,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         } catch (error: any) {
             console.error("Erro ao traduzir comodidades com IA:", error);
             const errorMessage = error.message ? error.message : "Ocorreu um erro desconhecido.";
-            alert(`Ocorreu um erro ao traduzir as comodidades. A resposta da IA pode estar em um formato inesperado. Detalhes: ${errorMessage}`);
+            alert(`Ocorreu um erro ao traduzir as comodidades. ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -251,7 +239,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     return (
         <AmenityContext.Provider value={{ amenities, addAmenity, updateAmenity, deleteAmenity, translateAllAmenitiesWithAI, loading }}>
-            {!loading && children}
+            {children}
         </AmenityContext.Provider>
     );
 };
