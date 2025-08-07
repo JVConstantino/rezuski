@@ -76,6 +76,7 @@ export interface Amenity {
 export interface ManagedAmenity {
   id: string;
   name: string;
+  translations?: { [locale: string]: string; };
 }
 
 export interface Property {

@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAmenities } from '../../contexts/AmenityContext';
+import { useAIConfig } from '../../contexts/AIConfigContext';
 import { ManagedAmenity } from '../../types';
-import { PlusIcon, EditIcon, TrashIcon, CheckCircleIcon, XIcon } from '../../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, CheckCircleIcon, XIcon, SparklesIcon } from '../../components/Icons';
 
 const AmenitiesPage: React.FC = () => {
-    const { amenities, addAmenity, updateAmenity, deleteAmenity, loading } = useAmenities();
+    const { amenities, addAmenity, updateAmenity, deleteAmenity, loading, translateAllAmenitiesWithAI } = useAmenities();
+    const { activeConfig, loading: aiConfigLoading } = useAIConfig();
     const [newAmenityName, setNewAmenityName] = useState('');
     const [editingAmenityId, setEditingAmenityId] = useState<string | null>(null);
     const [editingAmenityName, setEditingAmenityName] = useState('');
+    const [isTranslating, setIsTranslating] = useState(false);
+    const navigate = useNavigate();
 
     const handleAddAmenity = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,9 +45,35 @@ const AmenitiesPage: React.FC = () => {
         }
     };
 
+    const handleTranslateAll = async () => {
+        if (aiConfigLoading) {
+            alert('Carregando configurações de IA, por favor aguarde.');
+            return;
+        }
+        if (!activeConfig?.api_key || !activeConfig?.model) {
+            alert('Nenhum provedor de IA ativo foi configurado. Por favor, configure e ative um provedor no painel de Configurações.');
+            navigate('/admin/settings');
+            return;
+        }
+        setIsTranslating(true);
+        await translateAllAmenitiesWithAI(activeConfig);
+        setIsTranslating(false);
+    };
+
     return (
         <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-6">Gerenciar Comodidades</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h1 className="text-3xl font-bold text-slate-900">Gerenciar Comodidades</h1>
+                <button
+                    onClick={handleTranslateAll}
+                    disabled={isTranslating || loading || aiConfigLoading}
+                    className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200 disabled:opacity-50"
+                >
+                    <SparklesIcon className={`w-5 h-5 mr-2 ${isTranslating ? 'animate-spin' : ''}`} />
+                    {isTranslating ? 'Traduzindo...' : 'Traduzir Tudo com IA'}
+                </button>
+            </div>
+
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
                 <form onSubmit={handleAddAmenity} className="flex items-center space-x-3 mb-6 pb-6 border-b border-slate-200">
@@ -59,7 +90,7 @@ const AmenitiesPage: React.FC = () => {
                     </button>
                 </form>
 
-                {loading ? (
+                {loading && !isTranslating ? (
                      <div className="text-center py-10 text-slate-500">
                         <p>Carregando comodidades...</p>
                     </div>

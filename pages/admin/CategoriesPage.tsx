@@ -1,13 +1,16 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCategories } from '../../contexts/CategoryContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { PlusIcon, EditIcon, TrashIcon } from '../../components/Icons';
+import { useAIConfig } from '../../contexts/AIConfigContext';
+import { PlusIcon, EditIcon, TrashIcon, SparklesIcon } from '../../components/Icons';
 
 const CategoriesPage: React.FC = () => {
-    const { categories, deleteCategory } = useCategories();
+    const { categories, deleteCategory, translateAllCategoriesWithAI, loading } = useCategories();
     const { t } = useLanguage();
+    const { activeConfig, loading: aiConfigLoading } = useAIConfig();
+    const [isTranslating, setIsTranslating] = useState(false);
+    const navigate = useNavigate();
 
     const handleDelete = (id: string, name: string) => {
         if (window.confirm(`Tem certeza que deseja remover a categoria "${name}"?`)) {
@@ -15,14 +18,39 @@ const CategoriesPage: React.FC = () => {
         }
     }
 
+    const handleTranslateAll = async () => {
+        if (aiConfigLoading) {
+            alert('Carregando configurações de IA, por favor aguarde.');
+            return;
+        }
+        if (!activeConfig?.api_key || !activeConfig?.model) {
+            alert('Nenhum provedor de IA ativo foi configurado. Por favor, configure e ative um provedor no painel de Configurações.');
+            navigate('/admin/settings');
+            return;
+        }
+        setIsTranslating(true);
+        await translateAllCategoriesWithAI(activeConfig);
+        setIsTranslating(false);
+    };
+
     return (
         <div>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-3xl font-bold text-slate-900">Gerenciar Categorias</h1>
-                <Link to="/admin/categories/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
-                    <PlusIcon className="w-5 h-5 mr-2" />
-                    Adicionar Categoria
-                </Link>
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={handleTranslateAll}
+                        disabled={isTranslating || loading || aiConfigLoading}
+                        className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200 disabled:opacity-50"
+                    >
+                        <SparklesIcon className={`w-5 h-5 mr-2 ${isTranslating ? 'animate-spin' : ''}`} />
+                        {isTranslating ? 'Traduzindo...' : 'Traduzir Tudo com IA'}
+                    </button>
+                    <Link to="/admin/categories/new" className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 transition-all duration-200">
+                        <PlusIcon className="w-5 h-5 mr-2" />
+                        Adicionar Categoria
+                    </Link>
+                </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm">
