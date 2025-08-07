@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { ManagedAmenity } from '../types';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface AmenityContextType {
     amenities: ManagedAmenity[];
@@ -28,21 +29,42 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
             setLoading(false);
         };
+        
         fetchAmenities();
+
+        const channel = supabase
+            .channel('amenities-realtime')
+            .on<ManagedAmenity>(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'amenities' },
+                (payload) => {
+                    const { eventType, new: newRecord, old: oldRecord } = payload;
+                    
+                    if (eventType === 'INSERT') {
+                        setAmenities(prev => [...prev, newRecord].sort((a, b) => a.name.localeCompare(b.name)));
+                    } else if (eventType === 'UPDATE') {
+                        setAmenities(prev => prev.map(a => a.id === newRecord.id ? newRecord : a).sort((a, b) => a.name.localeCompare(b.name)));
+                    } else if (eventType === 'DELETE') {
+                        const oldId = (oldRecord as { id: string }).id;
+                        setAmenities(prev => prev.filter(a => a.id !== oldId));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const addAmenity = async (name: string) => {
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('amenities')
-            .insert([{ name }])
-            .select()
-            .single();
+            .insert([{ name }]);
 
         if (error) {
             console.error('Error adding amenity:', error);
             alert(`Erro ao adicionar comodidade: ${error.message}`);
-        } else if (data) {
-            setAmenities(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
         }
     };
 
@@ -55,8 +77,6 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error updating amenity:', error);
             alert(`Erro ao atualizar comodidade: ${error.message}`);
-        } else {
-            setAmenities(prev => prev.map(a => (a.id === id ? { ...a, name } : a)).sort((a, b) => a.name.localeCompare(b.name)));
         }
     };
 
@@ -69,8 +89,6 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error deleting amenity:', error);
             alert(`Erro ao remover comodidade: ${error.message}`);
-        } else {
-            setAmenities(prev => prev.filter(a => a.id !== amenityId));
         }
     };
 
