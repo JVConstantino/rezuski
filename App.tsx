@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
@@ -12,6 +9,9 @@ import { ResourceProvider } from './contexts/ResourceContext';
 import { ImageProvider } from './contexts/ImageContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AmenityProvider } from './contexts/AmenityContext';
+import { UserProvider } from './contexts/UserContext';
+import { ApplicationProvider } from './contexts/ApplicationContext';
+import { TenantProvider } from './contexts/TenantContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginModalController from './components/LoginModalController';
 import ChatWidget from './components/public/ChatWidget';
@@ -58,61 +58,67 @@ const AppContent: React.FC = () => {
     return (
         <LanguageProvider>
             <AuthProvider>
-                <ResourceProvider>
-                    <CategoryProvider>
-                        <BrokerProvider>
-                            <PropertyProvider>
-                                <AmenityProvider>
-                                    <ImageProvider>
-                                        <LoginModalController />
-                                        <Routes>
-                                            {/* Public Routes */}
-                                            <Route path="/" element={<HomePage />} />
-                                            <Route path="/search" element={<SearchResultsPage />} />
-                                            <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
-                                            <Route path="/resources" element={<ResourcesPage />} />
-                                            <Route path="/about" element={<AboutPage />} />
-                                            <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
+                <UserProvider>
+                    <ApplicationProvider>
+                        <TenantProvider>
+                            <ResourceProvider>
+                                <CategoryProvider>
+                                    <BrokerProvider>
+                                        <PropertyProvider>
+                                            <AmenityProvider>
+                                                <ImageProvider>
+                                                    <LoginModalController />
+                                                    <Routes>
+                                                        {/* Public Routes */}
+                                                        <Route path="/" element={<HomePage />} />
+                                                        <Route path="/search" element={<SearchResultsPage />} />
+                                                        <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
+                                                        <Route path="/resources" element={<ResourcesPage />} />
+                                                        <Route path="/about" element={<AboutPage />} />
+                                                        <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
 
-                                            {/* Admin Routes */}
-                                            <Route element={<ProtectedRoute />}>
-                                                <Route path="/admin" element={<AdminLayout />}>
-                                                    <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                                                    <Route path="dashboard" element={<DashboardPage />} />
-                                                    <Route path="properties" element={<PropertiesPage />} />
-                                                    <Route path="properties/new" element={<AddPropertyPage />} />
-                                                    <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
-                                                    <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                                    <Route path="applications" element={<ApplicationsPage />} />
-                                                    <Route path="application/:applicationId" element={<ApplicationSummaryPage />} />
-                                                    <Route path="tenants" element={<TenantsPage />} />
-                                                    <Route path="brokers" element={<BrokersPage />} />
-                                                    <Route path="brokers/new" element={<AddBrokerPage />} />
-                                                    <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
-                                                    <Route path="categories" element={<CategoriesPage />} />
-                                                    <Route path="categories/new" element={<AddCategoryPage />} />
-                                                    <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
-                                                    <Route path="resources" element={<AdminResourcesPage />} />
-                                                    <Route path="resources/new" element={<AddResourcePage />} />
-                                                    <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
-                                                    <Route path="gallery" element={<GalleryPage />} />
-                                                    <Route path="amenities" element={<AmenitiesPage />} />
-                                                    <Route path="messages" element={<MessagesPage />} />
-                                                    <Route path="reports" element={<ReportsPage />} />
-                                                    <Route path="settings" element={<SettingsPage />} />
-                                                </Route>
-                                            </Route>
+                                                        {/* Admin Routes */}
+                                                        <Route element={<ProtectedRoute />}>
+                                                            <Route path="/admin" element={<AdminLayout />}>
+                                                                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                                                                <Route path="dashboard" element={<DashboardPage />} />
+                                                                <Route path="properties" element={<PropertiesPage />} />
+                                                                <Route path="properties/new" element={<AddPropertyPage />} />
+                                                                <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
+                                                                <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
+                                                                <Route path="applications" element={<ApplicationsPage />} />
+                                                                <Route path="application/:applicationId" element={<ApplicationSummaryPage />} />
+                                                                <Route path="tenants" element={<TenantsPage />} />
+                                                                <Route path="brokers" element={<BrokersPage />} />
+                                                                <Route path="brokers/new" element={<AddBrokerPage />} />
+                                                                <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
+                                                                <Route path="categories" element={<CategoriesPage />} />
+                                                                <Route path="categories/new" element={<AddCategoryPage />} />
+                                                                <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
+                                                                <Route path="resources" element={<AdminResourcesPage />} />
+                                                                <Route path="resources/new" element={<AddResourcePage />} />
+                                                                <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
+                                                                <Route path="gallery" element={<GalleryPage />} />
+                                                                <Route path="amenities" element={<AmenitiesPage />} />
+                                                                <Route path="messages" element={<MessagesPage />} />
+                                                                <Route path="reports" element={<ReportsPage />} />
+                                                                <Route path="settings" element={<SettingsPage />} />
+                                                            </Route>
+                                                        </Route>
 
-                                            {/* Fallback Route */}
-                                            <Route path="*" element={<Navigate to="/" replace />} />
-                                        </Routes>
-                                        {!isAdminPage && <ChatWidget />}
-                                    </ImageProvider>
-                                </AmenityProvider>
-                            </PropertyProvider>
-                        </BrokerProvider>
-                    </CategoryProvider>
-                </ResourceProvider>
+                                                        {/* Fallback Route */}
+                                                        <Route path="*" element={<Navigate to="/" replace />} />
+                                                    </Routes>
+                                                    {!isAdminPage && <ChatWidget />}
+                                                </ImageProvider>
+                                            </AmenityProvider>
+                                        </PropertyProvider>
+                                    </BrokerProvider>
+                                </CategoryProvider>
+                            </ResourceProvider>
+                        </TenantProvider>
+                    </ApplicationProvider>
+                </UserProvider>
             </AuthProvider>
         </LanguageProvider>
     );

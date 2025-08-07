@@ -29,6 +29,104 @@ export type Database = {
         }
         Relationships: []
       }
+      applications: {
+        Row: {
+          id: string
+          propertyId: string
+          applicantId: string
+          applicationDate: string
+          status: "Pending" | "Accepted" | "Rejected" | "Draft"
+          totalIncome: number | null
+          incomeToRentRatio: number | null
+          occupants: number | null
+          moveInDate: string | null
+          vehicles: string | null
+          backgroundChecks: Json | null
+          creditReport: Json | null
+          reference: Json | null
+        }
+        Insert: {
+          id?: string
+          propertyId: string
+          applicantId: string
+          applicationDate?: string
+          status?: "Pending" | "Accepted" | "Rejected" | "Draft"
+          totalIncome?: number | null
+          incomeToRentRatio?: number | null
+          occupants?: number | null
+          moveInDate?: string | null
+          vehicles?: string | null
+          backgroundChecks?: Json | null
+          creditReport?: Json | null
+          reference?: Json | null
+        }
+        Update: {
+          id?: string
+          propertyId?: string
+          applicantId?: string
+          applicationDate?: string
+          status?: "Pending" | "Accepted" | "Rejected" | "Draft"
+          totalIncome?: number | null
+          incomeToRentRatio?: number | null
+          occupants?: number | null
+          moveInDate?: string | null
+          vehicles?: string | null
+          backgroundChecks?: Json | null
+          creditReport?: Json | null
+          reference?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_applicantid_fkey"
+            columns: ["applicantId"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_propertyid_fkey"
+            columns: ["propertyId"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
+      tenants: {
+        Row: {
+          id: string
+          userId: string
+          propertyId: string
+          leaseEndDate: string
+          rentAmount: number
+        }
+        Insert: {
+          id?: string
+          userId: string
+          propertyId: string
+          leaseEndDate: string
+          rentAmount: number
+        }
+        Update: {
+          id?: string
+          userId?: string
+          propertyId?: string
+          leaseEndDate?: string
+          rentAmount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_propertyid_fkey"
+            columns: ["propertyId"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_userid_fkey"
+            columns: ["userId"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
       properties: {
         Row: {
           id: string

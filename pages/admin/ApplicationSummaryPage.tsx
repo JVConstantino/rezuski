@@ -1,11 +1,10 @@
-
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { APPLICATIONS, USERS } from '../../constants';
 import { useProperties } from '../../contexts/PropertyContext';
-import { Application, Property, User, CreditReport, BackgroundCheck } from '../../types';
+import { Application, Property, User, CreditReport, BackgroundCheck, BackgroundCheckStatus } from '../../types';
 import { CheckCircleIcon, ChevronLeftIcon } from '../../components/Icons';
+import { useApplications } from '../../contexts/ApplicationContext';
+import { useUsers } from '../../contexts/UserContext';
 
 const CreditScoreGauge: React.FC<{ score: number }> = ({ score }) => {
     const percentage = (score - 300) / (850 - 300);
@@ -60,11 +59,11 @@ const CreditReportSection: React.FC<{ report: CreditReport }> = ({ report }) => 
                 </div>
                  <div>
                     <p className="text-sm text-slate-500">Pagamentos Mensais</p>
-                    <p className="text-lg font-semibold text-slate-800">${report.estimatedMonthlyPayments?.toLocaleString()}</p>
+                    <p className="text-lg font-semibold text-slate-800">R$ {report.estimatedMonthlyPayments?.toLocaleString('pt-BR')}</p>
                 </div>
                  <div>
                     <p className="text-sm text-slate-500">Dívida Total</p>
-                    <p className="text-lg font-semibold text-slate-800">${report.totalDebt?.toLocaleString()}</p>
+                    <p className="text-lg font-semibold text-slate-800">R$ {report.totalDebt?.toLocaleString('pt-BR')}</p>
                 </div>
             </div>
         </div>
@@ -79,7 +78,7 @@ const BackgroundCheckSection: React.FC<{ checks: BackgroundCheck[] }> = ({ check
             {checks.map(check => (
                  <li key={check.id} className="flex justify-between items-center">
                     <span className="text-slate-700">{check.type}</span>
-                     <span className={`flex items-center px-3 py-1 text-sm font-medium rounded-full ${check.status === 'Clean' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                     <span className={`flex items-center px-3 py-1 text-sm font-medium rounded-full ${check.status === BackgroundCheckStatus.CLEAN ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         <CheckCircleIcon className="w-4 h-4 mr-1.5"/>
                         {check.status}
                     </span>
@@ -107,14 +106,29 @@ const ApplicantInfoCard: React.FC<{ applicant: User, application: Application }>
 
 const ApplicationSummaryPage: React.FC = () => {
     const { applicationId } = useParams<{ applicationId: string }>();
-    const { properties } = useProperties();
-    const application = APPLICATIONS.find(a => a.id === applicationId);
-    const applicant = USERS.find(u => u.id === application?.applicantId);
+    const { properties, loading: propLoading } = useProperties();
+    const { applications, loading: appLoading } = useApplications();
+    const { users, loading: userLoading } = useUsers();
+
+    if (propLoading || appLoading || userLoading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+            </div>
+        );
+    }
+
+    const application = applications.find(a => a.id === applicationId);
+    const applicant = users.find(u => u.id === application?.applicantId);
     const property = properties.find(p => p.id === application?.propertyId);
 
     if (!application || !applicant || !property) {
         return <div className="text-center p-8">Aplicação não encontrada.</div>;
     }
+    
+    // Cast JSONB fields from Supabase
+    const creditReport = application.creditReport as CreditReport | undefined;
+    const backgroundChecks = application.backgroundChecks as BackgroundCheck[] | undefined;
 
     return (
         <div>
@@ -144,8 +158,8 @@ const ApplicationSummaryPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    {application.creditReport && <CreditReportSection report={application.creditReport} />}
-                    {application.backgroundChecks.length > 0 && <BackgroundCheckSection checks={application.backgroundChecks}/>}
+                    {creditReport && <CreditReportSection report={creditReport} />}
+                    {backgroundChecks && backgroundChecks.length > 0 && <BackgroundCheckSection checks={backgroundChecks}/>}
                 </div>
                 <div className="lg:col-span-1">
                     <ApplicantInfoCard applicant={applicant} application={application} />

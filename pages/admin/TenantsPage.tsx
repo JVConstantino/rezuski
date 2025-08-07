@@ -1,25 +1,35 @@
-
-
 import React from 'react';
-import { TENANTS, USERS } from '../../constants';
 import { useProperties } from '../../contexts/PropertyContext';
+import { useTenants } from '../../contexts/TenantContext';
+import { useUsers } from '../../contexts/UserContext';
 import { SearchIcon, MessageSquareIcon } from '../../components/Icons';
 
 const TenantsPage: React.FC = () => {
-  const { properties } = useProperties();
+  const { properties, loading: propertiesLoading } = useProperties();
+  const { tenants, loading: tenantsLoading } = useTenants();
+  const { users, loading: usersLoading } = useUsers();
+
+  if (propertiesLoading || tenantsLoading || usersLoading) {
+    return (
+        <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue"></div>
+        </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="text-3xl font-bold text-slate-900 mb-6">Gerenciar Inquilinos</h1>
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <div className="relative w-1/3">
+          <div className="relative w-full md:w-1/3">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <SearchIcon className="w-5 h-5 text-slate-400" />
             </span>
             <input
               type="text"
               placeholder="Buscar por nome do inquilino..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
             />
           </div>
         </div>
@@ -36,8 +46,8 @@ const TenantsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {TENANTS.map(tenant => {
-                const user = USERS.find(u => u.id === tenant.userId);
+              {tenants.map(tenant => {
+                const user = users.find(u => u.id === tenant.userId);
                 const property = properties.find(p => p.id === tenant.propertyId);
                 if (!user || !property) return null;
                 
@@ -68,6 +78,11 @@ const TenantsPage: React.FC = () => {
               })}
             </tbody>
           </table>
+          {tenants.length === 0 && !tenantsLoading && (
+            <div className="text-center py-10 text-slate-500">
+                <p>Nenhum inquilino encontrado.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

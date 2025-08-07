@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from '../../types';
 import { useCategories } from '../../contexts/CategoryContext';
 import { useAmenities } from '../../contexts/AmenityContext';
@@ -29,6 +30,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     const [activeLangTab, setActiveLangTab] = useState('pt-BR');
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -229,7 +231,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
             const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
             
-            const userPrompt = `
+            const userPrompt = \`
                 Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}.
 
                 ## Exemplo de Formato para a Descrição em Português (pt-BR):
@@ -264,7 +266,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                   - Descrição: ${JSON.stringify(formData.description)}
 
                 Gere o JSON completo com todas as otimizações e traduções.
-            `;
+            \`;
 
             const langSchema = {
                 type: Type.OBJECT,
@@ -483,4 +485,180 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                             ) : (
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-semibold text-slate-
+                                        <h3 className="text-lg font-semibold text-slate-800">Tradução: {supportedLanguages.find(l => l.code === activeLangTab)?.name}</h3>
+                                    </div>
+                                    <div>
+                                        <label htmlFor={`title-${activeLangTab}`} className="block text-sm font-medium text-slate-700">Título ({activeLangTab})</label>
+                                        <input
+                                            id={`title-${activeLangTab}`}
+                                            type="text"
+                                            value={translations?.[activeLangTab]?.title || ''}
+                                            onChange={e => handleTranslationChange(activeLangTab, 'title', e.target.value)}
+                                            className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                                        />
+                                    </div>
+                                    <div className="mt-4">
+                                        <label htmlFor={`description-${activeLangTab}`} className="block text-sm font-medium text-slate-700">Descrição ({activeLangTab})</label>
+                                        <textarea
+                                            id={`description-${activeLangTab}`}
+                                            rows={10}
+                                            value={translations?.[activeLangTab]?.description || ''}
+                                            onChange={e => handleTranslationChange(activeLangTab, 'description', e.target.value)}
+                                            className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Detalhes e Características</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">Tipo de Imóvel</label>
+                                <select name="propertyType" value={formData.propertyType} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
+                                    {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">Categoria</label>
+                                <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
+                                    <option value="">Nenhuma</option>
+                                    {categories.map(cat => <option key={cat.id} value={cat.id}>{t(`category:${cat.id}`)}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">Quartos</label>
+                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700">Banheiros</label>
+                                <input type="number" step="0.5" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700">Área (m²)</label>
+                                <input type="number" name="areaM2" value={formData.areaM2} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700">Qualidade</label>
+                                <select name="repairQuality" value={formData.repairQuality} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm">
+                                    <option value="Excelente">Excelente</option>
+                                    <option value="Bom">Bom</option>
+                                    <option value="Razoável">Razoável</option>
+                                    <option value="Ruim">Ruim</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700">Ano de Construção</label>
+                                <input type="number" name="yearBuilt" value={formData.yearBuilt} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700">Data de Disponibilidade</label>
+                                <input type="date" name="availableDate" value={formData.availableDate} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-slate-700">URL do Tour Virtual 3D</label>
+                                <input type="url" name="tourUrl" value={formData.tourUrl} onChange={handleInputChange} placeholder="https://..." className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                            </div>
+                            <div className="flex items-center pt-6">
+                                <input id="isPopular" name="isPopular" type="checkbox" checked={formData.isPopular} onChange={handleInputChange} className="h-4 w-4 text-primary-blue focus:ring-primary-blue border-slate-300 rounded" />
+                                <label htmlFor="isPopular" className="ml-2 block text-sm text-slate-900">Marcar como popular</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Comodidades</h2>
+                        <div className="mt-4 space-y-3">
+                            {amenities.map((amenity, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 bg-slate-100 rounded-md">
+                                    <span className="text-slate-700">{amenity.name} ({amenity.quantity})</span>
+                                    <button type="button" onClick={() => removeAmenity(index)} className="p-1 text-red-500 hover:bg-red-100 rounded-full">
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 flex items-center space-x-2">
+                            <select
+                                value={newAmenity.name}
+                                onChange={e => setNewAmenity({ ...newAmenity, name: e.target.value })}
+                                className="flex-grow px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                            >
+                                <option value="" disabled>{amenitiesLoading ? 'Carregando...' : 'Selecione'}</option>
+                                {managedAmenities.map(ma => <option key={ma.id} value={ma.name}>{ma.name}</option>)}
+                            </select>
+                            <input
+                                type="number"
+                                value={newAmenity.quantity}
+                                onChange={e => setNewAmenity({ ...newAmenity, quantity: parseInt(e.target.value) || 1 })}
+                                className="w-20 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                                min="1"
+                            />
+                            <button type="button" onClick={addAmenity} className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-3 rounded-lg shadow-sm hover:bg-secondary-blue/90">
+                                <PlusIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Imagens</h2>
+                        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {images.map((image, index) => (
+                                <div key={index} className="relative group">
+                                    <img src={image.preview} alt={`Preview ${index}`} className="w-full h-32 object-cover rounded-lg" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
+                                        <button type="button" onClick={() => handleSetPrimary(index)} disabled={index === 0} className="text-white disabled:opacity-50">
+                                            <StarIcon className={`w-6 h-6 ${index === 0 ? 'text-yellow-400 fill-current' : ''}`} />
+                                        </button>
+                                        <button type="button" onClick={() => handleDeleteImage(index)} className="text-red-500">
+                                            <TrashIcon className="w-6 h-6" />
+                                        </button>
+                                    </div>
+                                    {index === 0 && <div className="absolute top-1 right-1 bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded">Principal</div>}
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 flex items-center space-x-2">
+                            <button type="button" onClick={() => setGalleryOpen(true)} className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-100">Selecionar da Galeria</button>
+                            <label className="cursor-pointer px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-100">
+                                <span>Enviar Arquivos</span>
+                                <input type="file" multiple onChange={(e) => e.target.files && handleImageUpload(e.target.files)} className="hidden" />
+                            </label>
+                        </div>
+                        {uploadProgress.total > 0 && (
+                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
+                                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}></div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="pt-8 flex justify-end space-x-3">
+                    <button type="button" onClick={() => navigate(-1)} className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+                    {isEditing && (
+                        <button type="button" onClick={() => triggerSubmit('ARCHIVED')} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95">Salvar e Arquivar</button>
+                    )}
+                    <button type="submit" className="bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95">
+                        {isEditing ? 'Salvar Alterações' : 'Adicionar Propriedade'}
+                    </button>
+                </div>
+            </form>
+            <ImageGalleryModal
+                isOpen={isGalleryOpen}
+                onClose={() => setGalleryOpen(false)}
+                onSelectImages={handleSelectFromGallery}
+                currentImages={images.map(i => i.preview)}
+            />
+        </>
+    );
+};
+
+export default PropertyForm;

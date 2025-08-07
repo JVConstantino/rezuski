@@ -49,6 +49,7 @@ export const translations = {
         'services.sale': 'Venda',
         'services.rent': 'Locação',
         'services.evaluation': 'Avaliação',
+        'services.legalization': 'Legalização',
         'services.inspection': 'Vistoria Imobiliária',
         'services.partners': 'Ver parceiros',
         'section.see_more': 'Ver Mais',
