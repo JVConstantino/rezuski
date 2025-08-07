@@ -89,7 +89,10 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
                     const { eventType, new: newRecord, old: oldRecord } = payload;
                     
                     if (eventType === 'INSERT') {
-                        setAmenities(prev => [...prev, newRecord].sort((a, b) => a.name.localeCompare(b.name)));
+                        setAmenities(prev => {
+                            if (prev.some(a => a.id === newRecord.id)) return prev;
+                            return [...prev, newRecord].sort((a, b) => a.name.localeCompare(b.name));
+                        });
                     } else if (eventType === 'UPDATE') {
                         setAmenities(prev => prev.map(a => a.id === newRecord.id ? newRecord : a).sort((a, b) => a.name.localeCompare(b.name)));
                     } else if (eventType === 'DELETE') {
@@ -115,13 +118,17 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('amenities')
-            .insert([{ name: trimmedName }]);
+            .insert([{ name: trimmedName }])
+            .select()
+            .single();
 
         if (error) {
             console.error('Error adding amenity:', error);
             alert(`Erro ao adicionar comodidade: ${error.message}`);
+        } else if (data) {
+            setAmenities(prev => [...prev, data as ManagedAmenity].sort((a, b) => a.name.localeCompare(b.name)));
         }
     };
 
@@ -135,14 +142,18 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('amenities')
             .update({ name: trimmedName })
-            .eq('id', id);
+            .eq('id', id)
+            .select()
+            .single();
 
         if (error) {
             console.error('Error updating amenity:', error);
             alert(`Erro ao atualizar comodidade: ${error.message}`);
+        } else if (data) {
+            setAmenities(prev => prev.map(a => a.id === id ? data as ManagedAmenity : a).sort((a, b) => a.name.localeCompare(b.name)));
         }
     };
 
@@ -155,6 +166,8 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error deleting amenity:', error);
             alert(`Erro ao remover comodidade: ${error.message}`);
+        } else {
+            setAmenities(prev => prev.filter(a => a.id !== amenityId));
         }
     };
 
