@@ -106,9 +106,18 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [fetchAmenities]);
 
     const addAmenity = async (name: string) => {
+        const trimmedName = name.trim();
+        const normalizedName = trimmedName.toLowerCase();
+        
+        const existingAmenity = amenities.find(a => a.name.trim().toLowerCase() === normalizedName);
+        if (existingAmenity) {
+            alert(`A comodidade "${trimmedName}" já existe.`);
+            return;
+        }
+
         const { error } = await supabase
             .from('amenities')
-            .insert([{ name }]);
+            .insert([{ name: trimmedName }]);
 
         if (error) {
             console.error('Error adding amenity:', error);
@@ -117,9 +126,18 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     const updateAmenity = async (id: string, name: string) => {
+        const trimmedName = name.trim();
+        const normalizedName = trimmedName.toLowerCase();
+        
+        const existingAmenity = amenities.find(a => a.name.trim().toLowerCase() === normalizedName && a.id !== id);
+        if (existingAmenity) {
+            alert(`A comodidade "${trimmedName}" já existe.`);
+            return;
+        }
+
         const { error } = await supabase
             .from('amenities')
-            .update({ name })
+            .update({ name: trimmedName })
             .eq('id', id);
 
         if (error) {
