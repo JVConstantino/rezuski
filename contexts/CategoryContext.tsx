@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Category } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { AIConfig } from './AIConfigContext';
@@ -17,11 +17,54 @@ interface CategoryContextType {
 
 const CategoryContext = createContext<CategoryContextType | undefined>(undefined);
 
+// Helper to clean potential markdown and extra text from AI JSON responses
+const cleanAIResponse = (response: string): string => {
+    // Remove markdown code blocks first
+    let cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
+    
+    // Find the start and end of the main JSON object or array
+    const firstBrace = cleaned.indexOf('{');
+    const firstBracket = cleaned.indexOf('[');
+    
+    let startIndex = -1;
+    
+    if (firstBrace === -1 && firstBracket === -1) {
+        return cleaned; // No JSON structure found
+    }
+    
+    if (firstBrace !== -1 && firstBracket !== -1) {
+        startIndex = Math.min(firstBrace, firstBracket);
+    } else if (firstBrace !== -1) {
+        startIndex = firstBrace;
+    } else {
+        startIndex = firstBracket;
+    }
+
+    const lastBrace = cleaned.lastIndexOf('}');
+    const lastBracket = cleaned.lastIndexOf(']');
+    
+    let endIndex = -1;
+
+    if (lastBrace !== -1 && lastBracket !== -1) {
+        endIndex = Math.max(lastBrace, lastBracket);
+    } else if (lastBrace !== -1) {
+        endIndex = lastBrace;
+    } else {
+        endIndex = lastBracket;
+    }
+
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+        return cleaned.substring(startIndex, endIndex + 1);
+    }
+
+    return cleaned;
+};
+
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         setLoading(true);
         const { data, error } = await supabase.from('categories').select('*');
         if (error) {
@@ -31,11 +74,11 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             setCategories(data || []);
         }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         fetchCategories();
-    }, []);
+    }, [fetchCategories]);
 
     const addCategory = async (category: Omit<Category, 'id'>) => {
         const { data, error } = await supabase
@@ -122,7 +165,8 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     
             if (!content) throw new Error("A resposta da IA estava vazia.");
             
-            const jsonResponse = JSON.parse(content);
+            const cleanedContent = cleanAIResponse(content);
+            const jsonResponse = JSON.parse(cleanedContent);
     
             const updates = categoriesToTranslate.map(category => {
                 const aiTranslations = jsonResponse[category.name];
@@ -145,9 +189,10 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             
             alert('Tradução das categorias concluída com sucesso!');
             
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao traduzir categorias com IA:", error);
-            alert("Ocorreu um erro ao traduzir as categorias. Verifique o console para mais detalhes.");
+            const errorMessage = error.message ? error.message : "Ocorreu um erro desconhecido.";
+            alert(`Ocorreu um erro ao traduzir as categorias. A resposta da IA pode estar em um formato inesperado. Detalhes: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
