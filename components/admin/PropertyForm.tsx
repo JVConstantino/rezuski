@@ -231,7 +231,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
 
             const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
             
-            const userPrompt = \`
+            const userPrompt = `
                 Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}.
 
                 ## Exemplo de Formato para a Descrição em Português (pt-BR):
@@ -266,7 +266,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                   - Descrição: ${JSON.stringify(formData.description)}
 
                 Gere o JSON completo com todas as otimizações e traduções.
-            \`;
+            `;
 
             const langSchema = {
                 type: Type.OBJECT,
