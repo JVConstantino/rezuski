@@ -10,6 +10,7 @@ import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { GoogleGenAI, Type } from "@google/genai";
+import OpenAI from 'openai';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -216,15 +217,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             alert('Carregando configurações de IA, por favor aguarde.');
             return;
         }
-
+    
         if (!aiConfig?.api_key || !aiConfig?.model) {
             alert('Nenhum provedor de IA ativo foi configurado. Por favor, configure e ative um provedor no painel de Configurações.');
             navigate('/admin/settings');
-            return;
-        }
-
-        if (aiConfig.provider.toLowerCase() !== 'gemini') {
-            alert('Esta funcionalidade está atualmente implementada apenas para o provedor Google Gemini.');
             return;
         }
         
@@ -234,92 +230,56 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setIsGeneratingAI(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: aiConfig.api_key });
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
-
-            const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
+    
+            const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON válido, sem nenhum texto ou formatação adicional fora dele. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
             
-            const userPrompt = `
-                Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}.
-
-                ## Exemplo de Formato para a Descrição em Português (pt-BR):
-                [Parágrafo Introdutório Gerado]
-
-                [Parágrafo com detalhes de área construída, terreno, etc.]
-
-                Entre os ambientes, destacam-se:
-
-                ▫️ [Item 1 da lista de ambientes]
-                ▫️ [Item 2 da lista de ambientes]
-
-                Detalhes de estrutura e acabamento:
-
-                ▫️ [Item 1 da lista de detalhes]
-                ▫️ [Item 2 da lista de detalhes]
-
-                [Parágrafo de Conclusão, ideal para quem o imóvel se destina]
-
-                ## Detalhes da Propriedade para Usar:
-                - Tipo: ${formData.propertyType}
-                - Finalidade: ${formData.purpose === 'RENT' ? 'Aluguel' : 'Venda'}
-                - Localização: ${formData.address}, ${formData.neighborhood}, ${formData.city}, ${formData.state}
-                - Quartos: ${formData.bedrooms || 'Não informado'}
-                - Banheiros: ${formData.bathrooms || 'Não informado'}
-                - Área Construída: ${formData.areaM2 ? formData.areaM2 + ' m²' : 'Não informada'}
-                - Ano de Construção: ${formData.yearBuilt || 'Não informado'}
-                - Qualidade da Manutenção: ${formData.repairQuality}
-                - Comodidades: ${amenitiesString || 'Nenhuma listada'}
-                - Conteúdo Atual (para referência):
-                  - Título: ${JSON.stringify(formData.title)}
-                  - Descrição: ${JSON.stringify(formData.description)}
-
-                Gere o JSON completo com todas as otimizações e traduções.
-            `;
-
-            const langSchema = {
-                type: Type.OBJECT,
-                properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING }
-                },
-                required: ['title', 'description']
-            };
-
-            const responseSchema = {
-                type: Type.OBJECT,
-                properties: {
-                    'pt-BR': langSchema,
-                    'en-US': langSchema,
-                    'es-ES': langSchema,
-                    'fr-FR': langSchema,
-                    'it-IT': langSchema,
-                },
-            };
+            const userPrompt = `Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}. ## Detalhes da Propriedade para Usar: - Tipo: ${formData.propertyType} - Finalidade: ${formData.purpose === 'RENT' ? 'Aluguel' : 'Venda'} - Localização: ${formData.address}, ${formData.neighborhood}, ${formData.city}, ${formData.state} - Quartos: ${formData.bedrooms || 'Não informado'} - Banheiros: ${formData.bathrooms || 'Não informado'} - Área Construída: ${formData.areaM2 ? formData.areaM2 + ' m²' : 'Não informada'} - Ano de Construção: ${formData.yearBuilt || 'Não informado'} - Qualidade da Manutenção: ${formData.repairQuality} - Comodidades: ${amenitiesString || 'Nenhuma listada'} - Conteúdo Atual (para referência): - Título: ${JSON.stringify(formData.title)} - Descrição: ${JSON.stringify(formData.description)} ## Gere o JSON completo com todas as otimizações e traduções.`;
+    
+            let content: string | null = null;
+            const provider = aiConfig.provider.toLowerCase();
             
-            const configPayload: any = {
-                systemInstruction,
-                responseMimeType: "application/json",
-                responseSchema,
-            };
-
-            if (aiConfig.max_tokens && aiConfig.max_tokens > 0) {
-                configPayload.maxOutputTokens = aiConfig.max_tokens;
-                if (aiConfig.model.includes('flash')) {
-                    configPayload.thinkingConfig = { thinkingBudget: Math.floor(aiConfig.max_tokens / 2) };
+            if (provider === 'gemini') {
+                const ai = new GoogleGenAI({ apiKey: aiConfig.api_key });
+                const langSchema = { type: Type.OBJECT, properties: { title: { type: Type.STRING }, description: { type: Type.STRING } }, required: ['title', 'description'] };
+                const responseSchema = { type: Type.OBJECT, properties: { 'pt-BR': langSchema, 'en-US': langSchema, 'es-ES': langSchema, 'fr-FR': langSchema, 'it-IT': langSchema } };
+                const configPayload: any = { systemInstruction, responseMimeType: "application/json", responseSchema };
+                if (aiConfig.max_tokens) {
+                    configPayload.maxOutputTokens = aiConfig.max_tokens;
+                    if (aiConfig.model.includes('flash')) {
+                        configPayload.thinkingConfig = { thinkingBudget: Math.floor(aiConfig.max_tokens / 2) };
+                    }
                 }
+    
+                const response = await ai.models.generateContent({ model: aiConfig.model, contents: userPrompt, config: configPayload });
+                content = response.text;
+            } else { // OpenAI and compatible providers
+                let baseURL = 'https://api.openai.com/v1'; // Default for OpenAI
+                if (provider === 'openrouter') {
+                    baseURL = 'https://openrouter.ai/api/v1';
+                }
+                
+                const openai = new OpenAI({ 
+                    apiKey: aiConfig.api_key,
+                    baseURL: baseURL,
+                    dangerouslyAllowBrowser: true 
+                });
+    
+                const response = await openai.chat.completions.create({
+                    model: aiConfig.model,
+                    messages: [
+                        { role: "system", content: systemInstruction },
+                        { role: "user", content: userPrompt }
+                    ],
+                    response_format: { type: "json_object" },
+                    max_tokens: aiConfig.max_tokens || 4096,
+                });
+                content = response.choices[0].message.content;
             }
-
-            const response = await ai.models.generateContent({
-                model: aiConfig.model,
-                contents: userPrompt,
-                config: configPayload
-            });
-
-            const content = response.text;
+    
             if (content) {
                 const jsonResponse = JSON.parse(content);
-                
                 const allTranslations: Property['translations'] = {};
                 
                 for (const lang of supportedLanguages) {
@@ -340,14 +300,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                     }
                 }
                 setTranslations(allTranslations);
-
             } else {
                 throw new Error("Resposta da IA vazia.");
             }
-
+    
         } catch (error) {
             console.error("Erro ao gerar conteúdo com IA:", error);
-            alert("Ocorreu um erro durante a geração de conteúdo com IA. Verifique se sua chave de API está configurada corretamente. Detalhes no console.");
+            alert("Ocorreu um erro durante a geração de conteúdo com IA. Verifique se sua chave de API e modelo estão configurados corretamente. Detalhes no console.");
         } finally {
             setIsGeneratingAI(false);
         }
