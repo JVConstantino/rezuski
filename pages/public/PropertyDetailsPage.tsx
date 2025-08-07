@@ -426,14 +426,18 @@ const PropertyDetailsPage: React.FC = () => {
                 <p className="mt-4 text-slate-600 leading-relaxed whitespace-pre-wrap">{property.description}</p>
                 <hr className="my-8"/>
                 <h2 className="text-2xl font-bold text-slate-900">{t('details.features_amenities')}</h2>
-                <ul className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4">
-                    {property.amenities.map((amenity, index) => (
-                        <li key={index} className="flex items-center text-slate-700">
-                            <CheckCircleIcon className="w-5 h-5 text-primary-green mr-3"/>
-                            {amenity.name} {amenity.quantity > 1 ? `(${amenity.quantity})` : ''}
-                        </li>
-                    ))}
-                </ul>
+                {property.amenities && property.amenities.length > 0 ? (
+                    <ul className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4">
+                        {property.amenities.map((amenity, index) => (
+                            <li key={index} className="flex items-center text-slate-700">
+                                <CheckCircleIcon className="w-5 h-5 text-primary-green mr-3"/>
+                                {amenity.name} {amenity.quantity > 1 ? `(${amenity.quantity})` : ''}
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="mt-4 text-slate-500">{t('details.no_amenities')}</p>
+                )}
                 {property.tourUrl && (
                     <>
                         <hr className="my-8"/>
