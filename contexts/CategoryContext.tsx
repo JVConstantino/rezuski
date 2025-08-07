@@ -66,7 +66,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const fetchCategories = useCallback(async () => {
         setLoading(true);
-        const { data, error } = await supabase.from('categories').select('*');
+        const { data, error } = await supabase.from('categories').select('*').order('name', { ascending: true });
         if (error) {
             console.error('Error fetching categories:', error);
             setCategories([]);
@@ -90,7 +90,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (error) {
             console.error('Error adding category:', error);
         } else if (data) {
-            setCategories(prev => [...prev, data]);
+            await fetchCategories();
         }
     };
 
@@ -104,7 +104,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (error) {
             console.error('Error updating category:', error);
         } else {
-            setCategories(prev => prev.map(c => c.id === updatedCategory.id ? updatedCategory : c));
+            await fetchCategories();
         }
     };
 
@@ -117,7 +117,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (error) {
             console.error('Error deleting category:', error);
         } else {
-            setCategories(prev => prev.filter(c => c.id !== categoryId));
+            await fetchCategories();
         }
     };
 
@@ -165,8 +165,16 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     
             if (!content) throw new Error("A resposta da IA estava vazia.");
             
-            const cleanedContent = cleanAIResponse(content);
-            const jsonResponse = JSON.parse(cleanedContent);
+            let jsonResponse;
+            try {
+                const cleanedContent = cleanAIResponse(content);
+                jsonResponse = JSON.parse(cleanedContent);
+            } catch (parseError) {
+                console.error("Falha ao analisar JSON da IA para categorias.");
+                console.error("Conteúdo original da IA:", content);
+                console.error("Erro de parse:", parseError);
+                throw new Error("A IA retornou uma resposta em formato JSON inválido.");
+            }
     
             const updates = categoriesToTranslate.map(category => {
                 const aiTranslations = jsonResponse[category.name];
@@ -192,7 +200,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
         } catch (error: any) {
             console.error("Erro ao traduzir categorias com IA:", error);
             const errorMessage = error.message ? error.message : "Ocorreu um erro desconhecido.";
-            alert(`Ocorreu um erro ao traduzir as categorias. A resposta da IA pode estar em um formato inesperado. Detalhes: ${errorMessage}`);
+            alert(`Ocorreu um erro ao traduzir as categorias. ${errorMessage}`);
         } finally {
             setLoading(false);
         }
