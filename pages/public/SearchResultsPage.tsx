@@ -7,15 +7,17 @@ import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import PropertyListItem from '../../components/PropertyListItem';
 import { useProperties } from '../../contexts/PropertyContext';
+import { useAmenities } from '../../contexts/AmenityContext';
 import { MapPinIcon, DollarSignIcon, ChevronLeftIcon, ChevronRightIcon, LayoutGridIcon, ListIcon, HashIcon, FilterIcon, XIcon, ChevronsLeftIcon, ChevronsRightIcon, ChevronDownIcon, BedIcon, BathIcon, SearchIcon, BuildingIcon } from '../../components/Icons';
 import { PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
-import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS, AVAILABLE_AMENITIES } from '../../constants';
+import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS } from '../../constants';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const FilterPanel = ({ filters, onFilterChange, onApply }) => {
     const { t, propertyTypes, categories } = useLanguage();
     const { properties } = useProperties();
+    const { amenities: availableAmenities } = useAmenities();
 
     const availableCities = useMemo(() => {
         if (!properties) return [];
@@ -176,16 +178,16 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                  <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">{t('search.amenities')}</label>
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                        {AVAILABLE_AMENITIES.map((amenity) => (
-                            <label key={amenity} className="flex items-center space-x-3 cursor-pointer">
+                        {availableAmenities.map((amenity) => (
+                            <label key={amenity.id} className="flex items-center space-x-3 cursor-pointer">
                                 <input
                                     type="checkbox"
-                                    name={amenity}
-                                    checked={filters.amenities.includes(amenity)}
+                                    name={amenity.name}
+                                    checked={filters.amenities.includes(amenity.name)}
                                     onChange={handleAmenityChange}
                                     className="h-4 w-4 rounded border-slate-300 text-primary-blue focus:ring-primary-blue"
                                 />
-                                <span className="text-slate-700">{amenity}</span>
+                                <span className="text-slate-700">{amenity.name}</span>
                             </label>
                         ))}
                     </div>

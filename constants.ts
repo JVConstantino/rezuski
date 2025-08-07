@@ -104,6 +104,23 @@ export const BATHROOM_OPTIONS: Record<string, string> = {
     '4': '4+',
 };
 
+export const AVAILABLE_AMENITIES: string[] = [
+  'Piscina',
+  'Churrasqueira',
+  'Garagem',
+  'Ar Condicionado',
+  'Mobiliado',
+  'Área de Serviço',
+  'Quintal',
+  'Varanda',
+  'Academia',
+  'Playground',
+  'Salão de Festas',
+  'Portão Eletrônico',
+  'Armários na Cozinha',
+  'Armários no Quarto'
+];
+
 
 const dummyPdfUrl = 'data:application/pdf;base64,JVBERi0xLjAKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUiBdCi9Db3VudCAxCi9NZWRpYUJveCBbMCAwIDM1MCAxNDRdCj4+CmVuZG9iagozIDAgb2JqCjw8Ci9UeXBlIC9QYWdlCi9QYXJlbnQgMiAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgPCA8Ci9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBlMQovQmFzZUZvbnQgL0hlbHZldGljYQo+Pgo+PgovUHJvY1NldCBbIC9QREYvIFRleHQgXQo+PgovQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA4NQo+PgpzdHJlYW0KQkQKQlQKL0YxIDEyIFRmCjUwIDcwIFRkCihFbSBicmV2ZSwgbyBkb2N1bWVudG8gZXN0YXLhIGRpc3Bvbml2ZWwuKSBUagpFVApFUAplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDgxMCAwMDAwMCBuIAowMDAwMDAwMDc5IDAwMDAwIG4gCjAwMDAwMDAxNzcgMDAwMDAwIG4gCjAwMDAwMDA1MjMgMDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgNQovUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNTk3CiUlRU9GCg==';
 

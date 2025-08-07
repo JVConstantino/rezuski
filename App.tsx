@@ -12,6 +12,7 @@ import { AmenityProvider } from './contexts/AmenityContext';
 import { UserProvider } from './contexts/UserContext';
 import { ApplicationProvider } from './contexts/ApplicationContext';
 import { TenantProvider } from './contexts/TenantContext';
+import { AIConfigProvider } from './contexts/AIConfigContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginModalController from './components/LoginModalController';
 import ChatWidget from './components/public/ChatWidget';
@@ -67,49 +68,51 @@ const AppContent: React.FC = () => {
                                         <PropertyProvider>
                                             <AmenityProvider>
                                                 <ImageProvider>
-                                                    <LoginModalController />
-                                                    <Routes>
-                                                        {/* Public Routes */}
-                                                        <Route path="/" element={<HomePage />} />
-                                                        <Route path="/search" element={<SearchResultsPage />} />
-                                                        <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
-                                                        <Route path="/resources" element={<ResourcesPage />} />
-                                                        <Route path="/about" element={<AboutPage />} />
-                                                        <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
+                                                    <AIConfigProvider>
+                                                        <LoginModalController />
+                                                        <Routes>
+                                                            {/* Public Routes */}
+                                                            <Route path="/" element={<HomePage />} />
+                                                            <Route path="/search" element={<SearchResultsPage />} />
+                                                            <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
+                                                            <Route path="/resources" element={<ResourcesPage />} />
+                                                            <Route path="/about" element={<AboutPage />} />
+                                                            <Route path="/connection-test" element={<ConnectionTestPage />} /> {/* Add test route */}
 
-                                                        {/* Admin Routes */}
-                                                        <Route element={<ProtectedRoute />}>
-                                                            <Route path="/admin" element={<AdminLayout />}>
-                                                                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                                                                <Route path="dashboard" element={<DashboardPage />} />
-                                                                <Route path="properties" element={<PropertiesPage />} />
-                                                                <Route path="properties/new" element={<AddPropertyPage />} />
-                                                                <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
-                                                                <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                                                <Route path="applications" element={<ApplicationsPage />} />
-                                                                <Route path="application/:applicationId" element={<ApplicationSummaryPage />} />
-                                                                <Route path="tenants" element={<TenantsPage />} />
-                                                                <Route path="brokers" element={<BrokersPage />} />
-                                                                <Route path="brokers/new" element={<AddBrokerPage />} />
-                                                                <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
-                                                                <Route path="categories" element={<CategoriesPage />} />
-                                                                <Route path="categories/new" element={<AddCategoryPage />} />
-                                                                <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
-                                                                <Route path="resources" element={<AdminResourcesPage />} />
-                                                                <Route path="resources/new" element={<AddResourcePage />} />
-                                                                <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
-                                                                <Route path="gallery" element={<GalleryPage />} />
-                                                                <Route path="amenities" element={<AmenitiesPage />} />
-                                                                <Route path="messages" element={<MessagesPage />} />
-                                                                <Route path="reports" element={<ReportsPage />} />
-                                                                <Route path="settings" element={<SettingsPage />} />
+                                                            {/* Admin Routes */}
+                                                            <Route element={<ProtectedRoute />}>
+                                                                <Route path="/admin" element={<AdminLayout />}>
+                                                                    <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                                                                    <Route path="dashboard" element={<DashboardPage />} />
+                                                                    <Route path="properties" element={<PropertiesPage />} />
+                                                                    <Route path="properties/new" element={<AddPropertyPage />} />
+                                                                    <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
+                                                                    <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
+                                                                    <Route path="applications" element={<ApplicationsPage />} />
+                                                                    <Route path="application/:applicationId" element={<ApplicationSummaryPage />} />
+                                                                    <Route path="tenants" element={<TenantsPage />} />
+                                                                    <Route path="brokers" element={<BrokersPage />} />
+                                                                    <Route path="brokers/new" element={<AddBrokerPage />} />
+                                                                    <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
+                                                                    <Route path="categories" element={<CategoriesPage />} />
+                                                                    <Route path="categories/new" element={<AddCategoryPage />} />
+                                                                    <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
+                                                                    <Route path="resources" element={<AdminResourcesPage />} />
+                                                                    <Route path="resources/new" element={<AddResourcePage />} />
+                                                                    <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
+                                                                    <Route path="gallery" element={<GalleryPage />} />
+                                                                    <Route path="amenities" element={<AmenitiesPage />} />
+                                                                    <Route path="messages" element={<MessagesPage />} />
+                                                                    <Route path="reports" element={<ReportsPage />} />
+                                                                    <Route path="settings" element={<SettingsPage />} />
+                                                                </Route>
                                                             </Route>
-                                                        </Route>
 
-                                                        {/* Fallback Route */}
-                                                        <Route path="*" element={<Navigate to="/" replace />} />
-                                                    </Routes>
-                                                    {!isAdminPage && <ChatWidget />}
+                                                            {/* Fallback Route */}
+                                                            <Route path="*" element={<Navigate to="/" replace />} />
+                                                        </Routes>
+                                                        {!isAdminPage && <ChatWidget />}
+                                                    </AIConfigProvider>
                                                 </ImageProvider>
                                             </AmenityProvider>
                                         </PropertyProvider>

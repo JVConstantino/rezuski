@@ -11,6 +11,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_configs: {
+        Row: {
+          id: string
+          created_at: string
+          provider: string
+          api_key: string | null
+          model: string | null
+          max_tokens: number | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          provider: string
+          api_key?: string | null
+          model?: string | null
+          max_tokens?: number | null
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          provider?: string
+          api_key?: string | null
+          model?: string | null
+          max_tokens?: number | null
+          is_active?: boolean
+        }
+        Relationships: []
+      }
       amenities: {
         Row: {
           id: string
@@ -405,6 +435,12 @@ export type Database = {
       increment_view_count: {
         Args: {
           prop_id: string
+        }
+        Returns: undefined
+      },
+      set_active_ai_config: {
+        Args: {
+          config_id: string
         }
         Returns: undefined
       }

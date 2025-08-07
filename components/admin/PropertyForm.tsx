@@ -4,6 +4,7 @@ import { Property, PropertyType, PropertyPurpose, Amenity, PropertyStatus } from
 import { useCategories } from '../../contexts/CategoryContext';
 import { useAmenities } from '../../contexts/AmenityContext';
 import { useImages } from '../../contexts/ImageContext';
+import { useAIConfig } from '../../contexts/AIConfigContext';
 import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
@@ -26,6 +27,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const { amenities: managedAmenities, loading: amenitiesLoading } = useAmenities();
     const { refresh: refreshGallery } = useImages();
     const { t, propertyTypes, supportedLanguages } = useLanguage();
+    const { activeConfig: aiConfig, loading: aiConfigLoading } = useAIConfig();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -208,24 +210,31 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setImages(newImages);
     };
-    
-    const checkApiKey = () => {
-        if (!process.env.API_KEY) {
-            alert('A chave da API do Gemini não está configurada. Por favor, certifique-se de que a variável de ambiente API_KEY está definida.');
-            return false;
-        }
-        return true;
-    };
 
     const handleGenerateContentWithAI = async () => {
-        if (!checkApiKey()) return;
+        if (aiConfigLoading) {
+            alert('Carregando configurações de IA, por favor aguarde.');
+            return;
+        }
+
+        if (!aiConfig?.api_key || !aiConfig?.model) {
+            alert('Nenhum provedor de IA ativo foi configurado. Por favor, configure e ative um provedor no painel de Configurações.');
+            navigate('/admin/settings');
+            return;
+        }
+
+        if (aiConfig.provider.toLowerCase() !== 'gemini') {
+            alert('Esta funcionalidade está atualmente implementada apenas para o provedor Google Gemini.');
+            return;
+        }
+        
         if (!formData.title || !formData.description) {
             alert('Por favor, preencha o título e a descrição em português primeiro para servirem de base para a IA.');
             return;
         }
         setIsGeneratingAI(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: aiConfig.api_key });
             const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
 
@@ -287,15 +296,24 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                     'it-IT': langSchema,
                 },
             };
+            
+            const configPayload: any = {
+                systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema,
+            };
+
+            if (aiConfig.max_tokens && aiConfig.max_tokens > 0) {
+                configPayload.maxOutputTokens = aiConfig.max_tokens;
+                if (aiConfig.model.includes('flash')) {
+                    configPayload.thinkingConfig = { thinkingBudget: Math.floor(aiConfig.max_tokens / 2) };
+                }
+            }
 
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: aiConfig.model,
                 contents: userPrompt,
-                config: {
-                    systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema,
-                }
+                config: configPayload
             });
 
             const content = response.text;
@@ -474,7 +492,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                                         <button
                                             type="button"
                                             onClick={handleGenerateContentWithAI}
-                                            disabled={isGeneratingAI}
+                                            disabled={isGeneratingAI || aiConfigLoading}
                                             className="flex items-center bg-secondary-blue text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-secondary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
                                         >
                                             <SparklesIcon className={`w-5 h-5 mr-2 ${isGeneratingAI ? 'animate-spin' : ''}`} />
