@@ -8,7 +8,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LOGO_URL } from '../../constants';
 
 const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
-    const navLinks = [
+    const { user } = useAuth();
+
+    const allNavLinks = [
         { name: "Painel", path: "/admin/dashboard", icon: <LayoutGridIcon className="w-5 h-5"/> },
         { name: "Propriedades", path: "/admin/properties", icon: <HomeIcon className="w-5 h-5"/> },
         { name: "Aplicações", path: "/admin/applications", icon: <FileTextIcon className="w-5 h-5"/> },
@@ -22,6 +24,16 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
         { name: "Relatórios", path: "/admin/reports", icon: <BarChartIcon className="w-5 h-5"/> },
         { name: "Pré-visualização de Dados", path: "/admin/data-preview", icon: <FileTextIcon className="w-5 h-5"/> },
     ];
+    
+    const navLinks = allNavLinks.filter(link => {
+        if (link.name === 'Aplicações' || link.name === 'Inquilinos') {
+            return false;
+        }
+        if (link.name === 'Pré-visualização de Dados') {
+            return user?.email === 'joaovictor.priv@gmail.com';
+        }
+        return true;
+    });
     
     return (
         <>
