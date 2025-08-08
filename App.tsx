@@ -89,9 +89,6 @@ const AppContent: React.FC = () => {
                                                                     <Route path="properties/new" element={<AddPropertyPage />} />
                                                                     <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
                                                                     <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                                                    <Route path="applications" element={<ApplicationsPage />} />
-                                                                    <Route path="application/:applicationId" element={<ApplicationSummaryPage />} />
-                                                                    <Route path="tenants" element={<TenantsPage />} />
                                                                     <Route path="brokers" element={<BrokersPage />} />
                                                                     <Route path="brokers/new" element={<AddBrokerPage />} />
                                                                     <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
