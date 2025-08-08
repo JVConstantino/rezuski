@@ -343,7 +343,7 @@ const SearchResultsPage: React.FC = () => {
     
     useEffect(() => { setCurrentPage(1); }, [filteredProperties, viewMode]);
 
-    const itemsPerPage = viewMode === 'grid' ? 8 : 5;
+    const itemsPerPage = viewMode === 'grid' ? 9 : 5;
     const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
     const paginatedProperties = filteredProperties.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
