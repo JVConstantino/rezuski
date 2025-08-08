@@ -47,6 +47,7 @@ import AddResourcePage from './pages/admin/AddResourcePage';
 import EditResourcePage from './pages/admin/EditResourcePage';
 import GalleryPage from './pages/admin/GalleryPage';
 import AmenitiesPage from './pages/admin/AmenitiesPage';
+import DataPreviewPage from './pages/admin/DataPreviewPage';
 
 const AppContent: React.FC = () => {
     const location = useLocation();
@@ -104,6 +105,7 @@ const AppContent: React.FC = () => {
                                                                     <Route path="amenities" element={<AmenitiesPage />} />
                                                                     <Route path="messages" element={<MessagesPage />} />
                                                                     <Route path="reports" element={<ReportsPage />} />
+                                                                    <Route path="data-preview" element={<DataPreviewPage />} />
                                                                     <Route path="settings" element={<SettingsPage />} />
                                                                 </Route>
                                                             </Route>

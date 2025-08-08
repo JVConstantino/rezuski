@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { 
@@ -23,6 +20,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
         { name: "Galeria", path: "/admin/gallery", icon: <FolderIcon className="w-5 h-5"/> },
         { name: "Mensagens", path: "/admin/messages", icon: <MessageSquareIcon className="w-5 h-5"/> },
         { name: "Relatórios", path: "/admin/reports", icon: <BarChartIcon className="w-5 h-5"/> },
+        { name: "Pré-visualização de Dados", path: "/admin/data-preview", icon: <FileTextIcon className="w-5 h-5"/> },
     ];
     
     return (
