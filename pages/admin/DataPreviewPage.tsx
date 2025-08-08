@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Import all context hooks
 import { useProperties } from '../../contexts/PropertyContext';
@@ -33,13 +35,19 @@ const DataViewer: React.FC<{ data: any; loading: boolean; error?: string }> = ({
 };
 
 const DataPreviewPage: React.FC = () => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('properties');
+
+    useEffect(() => {
+        if (user && user.email !== 'joaovictor.priv@gmail.com') {
+            navigate('/admin/dashboard', { replace: true });
+        }
+    }, [user, navigate]);
 
     const dataSources: Record<string, { data: any[], loading: boolean }> = {
         properties: { data: useProperties().properties, loading: useProperties().loading },
         users: { data: useUsers().users, loading: useUsers().loading },
-        tenants: { data: useTenants().tenants, loading: useTenants().loading },
-        applications: { data: useApplications().applications, loading: useApplications().loading },
         brokers: { data: useBrokers().brokers, loading: useBrokers().loading },
         categories: { data: useCategories().categories, loading: useCategories().loading },
         amenities: { data: useAmenities().amenities, loading: useAmenities().loading },
@@ -50,8 +58,6 @@ const DataPreviewPage: React.FC = () => {
     const tabs = [
         { id: 'properties', label: 'Imóveis' },
         { id: 'users', label: 'Usuários' },
-        { id: 'tenants', label: 'Inquilinos' },
-        { id: 'applications', label: 'Aplicações' },
         { id: 'brokers', label: 'Corretores' },
         { id: 'categories', label: 'Categorias' },
         { id: 'amenities', label: 'Comodidades' },
@@ -64,6 +70,11 @@ const DataPreviewPage: React.FC = () => {
         if (!source) return null;
         return <DataViewer data={source.data} loading={source.loading} />;
     };
+    
+    // Render nothing until the redirect logic has a chance to run
+    if (user?.email !== 'joaovictor.priv@gmail.com') {
+        return null;
+    }
 
     return (
         <div>
