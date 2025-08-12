@@ -230,12 +230,69 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
         setIsGeneratingAI(true);
         try {
-            const amenitiesString = amenities.map(a => `${a.name}${a.quantity > 1 ? ` (${a.quantity})` : ''}`).join(', ');
             const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR').map(l => `${l.name} (${l.code})`).join(', ');
-    
-            const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é otimizar um anúncio de imóvel em português e depois traduzir o conteúdo otimizado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT). Você DEVE retornar um único objeto JSON válido, sem nenhum texto ou formatação adicional fora dele. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description". Mantenha a estrutura e a formatação (como listas com '▫️') nas descrições traduzidas.`;
+            const purposeMap = {
+                'RENT': 'LOCAÇÃO',
+                'SALE': 'VENDA',
+                'SEASONAL': 'LOCAÇÃO POR TEMPORADA'
+            };
+            const ptPurpose = purposeMap[formData.purpose];
+            const ptPrice = formData.purpose === 'SALE' ? formData.salePrice : formData.rentPrice;
+
+            const systemInstruction = `Você é um especialista em marketing imobiliário e tradutor profissional. Sua tarefa é gerar um título e uma descrição para um anúncio de imóvel em português, seguindo um formato MUITO ESTRITO. Depois, você deve traduzir o conteúdo gerado para inglês (en-US), espanhol (es-ES), francês (fr-FR) e italiano (it-IT), mantendo a estrutura.
+
+Você DEVE retornar um único objeto JSON válido, sem nenhum texto ou formatação adicional fora dele. A estrutura do JSON deve ter chaves para cada código de localidade ('pt-BR', 'en-US', 'es-ES', 'fr-FR', 'it-IT'), e cada valor deve ser um objeto com as chaves "title" e "description".
+
+Para as traduções, traduza as chaves (ex: 'TIPO' para 'TYPE') e os valores. Mantenha o formato de preço como 'R$ 000.000,00'.`;
             
-            const userPrompt = `Otimize o título e a descrição a seguir para o mercado imobiliário brasileiro, seguindo o formato de exemplo para a descrição em português. Depois, traduza o título e a descrição OTIMIZADOS para os seguintes idiomas: ${languagesToTranslate}. ## Detalhes da Propriedade para Usar: - Tipo: ${formData.propertyType} - Finalidade: ${formData.purpose === 'RENT' ? 'Aluguel' : 'Venda'} - Localização: ${formData.address}, ${formData.neighborhood}, ${formData.city}, ${formData.state} - Quartos: ${formData.bedrooms || 'Não informado'} - Banheiros: ${formData.bathrooms || 'Não informado'} - Área Construída: ${formData.areaM2 ? formData.areaM2 + ' m²' : 'Não informada'} - Ano de Construção: ${formData.yearBuilt || 'Não informado'} - Qualidade da Manutenção: ${formData.repairQuality} - Comodidades: ${amenitiesString || 'Nenhuma listada'} - Conteúdo Atual (para referência): - Título: ${JSON.stringify(formData.title)} - Descrição: ${JSON.stringify(formData.description)} ## Gere o JSON completo com todas as otimizações e traduções.`;
+            const userPrompt = `Com base nos dados do imóvel fornecidos, gere o título e a descrição em português seguindo ESTRITAMENTE os formatos abaixo. Depois, traduza-os para os outros idiomas solicitados.
+
+## DADOS DO IMÓVEL:
+- Título Base: ${formData.title}
+- Descrição Base: ${formData.description}
+- Finalidade: ${formData.purpose}
+- Tipo de Imóvel: ${formData.propertyType}
+- Bairro: ${formData.neighborhood}
+- Cidade: ${formData.city}
+- Endereço: ${formData.address}
+- Código: ${formData.code || 'N/A'}
+- Quartos: ${formData.bedrooms || 'Não informado'}
+- Banheiros: ${formData.bathrooms || 'Não informado'}
+- Área: ${formData.areaM2 ? `${formData.areaM2} m²` : 'Não informada'}
+- Comodidades: ${amenities.map(a => a.name).join(', ') || 'Nenhuma'}
+- Preço: ${ptPrice ? `R$ ${parseFloat(ptPrice).toLocaleString('pt-BR')}` : 'Sob Consulta'}
+
+## FORMATO OBRIGATÓRIO (Português):
+
+### Título (Use este formato exato):
+\`${ptPurpose} – ${formData.propertyType.toUpperCase()} NO ${formData.neighborhood.toUpperCase()} – C.M-RJ, COD. ${formData.code || 'N/A'}\`
+
+### Descrição (Use este formato exato, extraindo as características principais da descrição base e das comodidades):
+\`${ptPurpose} – ${formData.propertyType.toUpperCase()} NO ${formData.neighborhood.toUpperCase()} – C.M-RJ, CÓD. ${formData.code || 'N/A'}
+
+TIPO: ${formData.propertyType}
+
+DESCRIÇÃO: 
+▫ [Característica 1. Ex: 02 Dormitórios]
+▫ [Característica 2. Ex: Sala]
+▫ [Característica 3. Ex: Cozinha]
+... (liste as características mais importantes)
+
+ENDEREÇO: ${formData.address}
+
+REFERÊNCIA: [Crie um ponto de referência plausível com base no endereço. Ex: Próximo ao mercado local.]
+
+ÁREA: ${formData.areaM2 ? `${formData.areaM2},00 m²` : 'Não informada'}
+
+DOCUMENTAÇÃO: Escriturada
+
+VALOR: ${ptPrice ? `R$ ${parseFloat(ptPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Sob Consulta'}
+\`
+
+## IDIOMAS PARA TRADUÇÃO:
+${languagesToTranslate}
+
+Agora, gere o objeto JSON completo.`;
     
             let content: string | null = null;
             const provider = aiConfig.provider.toLowerCase();
