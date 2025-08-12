@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Category } from '../../types';
 import Header from '../../components/Header';
@@ -12,14 +12,21 @@ const KeepAliveCard = () => {
     const [pingStatus, setPingStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
     const [pingError, setPingError] = useState<string | null>(null);
     const [pingData, setPingData] = useState<any | null>(null);
+    const [lastPingType, setLastPingType] = useState<'manual' | 'auto' | null>(null);
 
-    const handlePing = async () => {
+    const [autoPingEnabled, setAutoPingEnabled] = useState(false);
+    const [lastAutoPingTime, setLastAutoPingTime] = useState<string | null>(null);
+    const [nextPingTime, setNextPingTime] = useState<string | null>(null);
+    const intervalRef = useRef<number | null>(null);
+    const PING_INTERVAL_MS = 15 * 60 * 1000; // 15 minutos
+
+    const executePing = async (type: 'manual' | 'auto') => {
         setPingStatus('pending');
         setPingError(null);
-        setPingData(null);
+        setLastPingType(type);
 
         try {
-            const message = `Keep-alive ping from web app at ${new Date().toISOString()}`;
+            const message = `${type === 'auto' ? 'Automatic' : 'Manual'} keep-alive ping from web app at ${new Date().toISOString()}`;
             const { data, error } = await supabase
                 .from('logs')
                 .insert([{ message }])
@@ -31,6 +38,9 @@ const KeepAliveCard = () => {
             
             setPingStatus('success');
             setPingData(data);
+            if (type === 'auto') {
+                setLastAutoPingTime(new Date().toLocaleTimeString());
+            }
 
         } catch (err: any) {
             setPingStatus('error');
@@ -38,25 +48,93 @@ const KeepAliveCard = () => {
             console.error("Supabase keep-alive error:", err);
         }
     };
+    
+    useEffect(() => {
+        const cleanup = () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+
+        if (autoPingEnabled) {
+            const scheduleNextPing = () => {
+                const nextTime = new Date(Date.now() + PING_INTERVAL_MS);
+                setNextPingTime(nextTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            };
+            
+            scheduleNextPing();
+            
+            intervalRef.current = window.setInterval(() => {
+                executePing('auto');
+                scheduleNextPing();
+            }, PING_INTERVAL_MS);
+
+        } else {
+            cleanup();
+            setNextPingTime(null);
+            setLastAutoPingTime(null);
+        }
+
+        return cleanup;
+    }, [autoPingEnabled, PING_INTERVAL_MS]);
 
     return (
         <div className="bg-white p-8 rounded-lg shadow-lg mt-8 w-full">
             <h2 className="text-2xl font-bold text-slate-800 text-center">Database Keep-Alive</h2>
-            <p className="text-slate-500 mt-2 text-center">Clique no botão abaixo para enviar um 'ping' (inserir um registro de log) para o banco de dados. Isso pode ser útil para manter ativas as instâncias de banco de dados gratuitas que pausam após inatividade.</p>
-            <div className="mt-6 flex justify-center">
-                <button 
-                    onClick={handlePing} 
-                    disabled={pingStatus === 'pending'}
-                    className="bg-primary-blue text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-primary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
-                >
-                    {pingStatus === 'pending' ? 'Enviando Ping...' : 'Enviar Ping para o Banco de Dados'}
-                </button>
+            <p className="text-slate-500 mt-2 text-center">Use as ferramentas abaixo para manter sua instância gratuita do Supabase ativa.</p>
+            
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                {/* Manual Ping */}
+                <div className="border border-slate-200 rounded-lg p-6 h-full flex flex-col">
+                    <h3 className="font-bold text-lg text-slate-800">Ping Manual</h3>
+                    <p className="text-sm text-slate-500 mt-1 flex-grow">Clique para enviar um ping imediatamente para o banco de dados.</p>
+                    <div className="mt-4 flex justify-center">
+                        <button 
+                            onClick={() => executePing('manual')}
+                            disabled={pingStatus === 'pending'}
+                            className="bg-primary-blue text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-primary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                        >
+                            {pingStatus === 'pending' && lastPingType === 'manual' ? 'Enviando...' : 'Enviar Ping Manual'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Auto Ping */}
+                <div className="border border-slate-200 rounded-lg p-6 h-full flex flex-col">
+                    <h3 className="font-bold text-lg text-slate-800">Ping Automático</h3>
+                    <p className="text-sm text-slate-500 mt-1 flex-grow">Deixe esta página aberta para enviar pings a cada 15 minutos.</p>
+                    <div className="mt-4">
+                        <label className="flex items-center justify-center cursor-pointer">
+                            <span className="mr-3 text-slate-700 font-medium">Desativado</span>
+                            <div className="relative">
+                                <input type="checkbox" checked={autoPingEnabled} onChange={(e) => setAutoPingEnabled(e.target.checked)} className="sr-only peer" />
+                                <div className="block bg-slate-200 w-14 h-8 rounded-full peer-checked:bg-primary-green transition-colors"></div>
+                                <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform peer-checked:translate-x-6"></div>
+                            </div>
+                            <span className="ml-3 text-slate-700 font-medium">Ativado</span>
+                        </label>
+                    </div>
+                     {autoPingEnabled && (
+                        <div className="text-center text-xs text-slate-500 mt-3 space-y-1">
+                            {lastAutoPingTime && <p>Último ping automático: <span className="font-semibold">{lastAutoPingTime}</span></p>}
+                            {nextPingTime && <p>Próximo ping agendado para: <span className="font-semibold">{nextPingTime}</span></p>}
+                        </div>
+                    )}
+                </div>
             </div>
+
             {pingStatus !== 'idle' && (
-                <div className="mt-6">
+                <div className="mt-8">
+                    {pingStatus === 'pending' && (
+                        <div className="bg-blue-50 p-4 rounded-lg text-center flex items-center justify-center">
+                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-blue mr-3"></div>
+                            <p className="font-semibold text-blue-800">Enviando ping {lastPingType === 'auto' ? 'automático' : 'manual'}...</p>
+                        </div>
+                    )}
                     {pingStatus === 'success' && (
                         <div className="bg-green-50 p-4 rounded-lg">
-                            <h3 className="font-semibold text-green-800">Ping enviado com sucesso!</h3>
+                            <h3 className="font-semibold text-green-800">Ping {lastPingType === 'auto' ? 'automático' : 'manual'} enviado com sucesso!</h3>
                             <p className="mt-2 text-sm text-green-700">Resposta do banco de dados:</p>
                             <pre className="mt-2 text-xs bg-green-100 p-2 rounded overflow-auto">
                                 {JSON.stringify(pingData, null, 2)}
@@ -65,7 +143,7 @@ const KeepAliveCard = () => {
                     )}
                     {pingStatus === 'error' && (
                          <div className="bg-red-50 p-4 rounded-lg">
-                            <h3 className="font-semibold text-red-800">Falha ao enviar o ping.</h3>
+                            <h3 className="font-semibold text-red-800">Falha ao enviar o ping {lastPingType === 'auto' ? 'automático' : 'manual'}.</h3>
                             <p className="mt-2 text-sm text-red-700 font-mono break-words">{pingError}</p>
                             {pingError?.includes('relation "public.logs" does not exist') && (
                                 <div className="mt-4 text-sm text-red-700">
@@ -96,7 +174,6 @@ const ConnectionTestPage: React.FC = () => {
     useEffect(() => {
         const testConnection = async () => {
             try {
-                // Tenta buscar dados de uma tabela simples, como 'categories'
                 const { data: categories, error: fetchError } = await supabase
                     .from('categories')
                     .select('*')
@@ -179,7 +256,7 @@ const ConnectionTestPage: React.FC = () => {
         <div className="bg-slate-50 min-h-screen flex flex-col">
             <Header />
             <main className="flex-grow flex flex-col items-center justify-center">
-                <div className="max-w-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="bg-white p-8 rounded-lg shadow-lg">
                         {renderStatus()}
                     </div>
