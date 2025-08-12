@@ -8,6 +8,86 @@ import { CheckCircleIcon, XIcon } from '../../components/Icons';
 
 type Status = 'pending' | 'success' | 'error';
 
+const KeepAliveCard = () => {
+    const [pingStatus, setPingStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+    const [pingError, setPingError] = useState<string | null>(null);
+    const [pingData, setPingData] = useState<any | null>(null);
+
+    const handlePing = async () => {
+        setPingStatus('pending');
+        setPingError(null);
+        setPingData(null);
+
+        try {
+            const message = `Keep-alive ping from web app at ${new Date().toISOString()}`;
+            const { data, error } = await supabase
+                .from('logs')
+                .insert([{ message }])
+                .select();
+
+            if (error) {
+                throw error;
+            }
+            
+            setPingStatus('success');
+            setPingData(data);
+
+        } catch (err: any) {
+            setPingStatus('error');
+            setPingError(err.message || 'Ocorreu um erro desconhecido.');
+            console.error("Supabase keep-alive error:", err);
+        }
+    };
+
+    return (
+        <div className="bg-white p-8 rounded-lg shadow-lg mt-8 w-full">
+            <h2 className="text-2xl font-bold text-slate-800 text-center">Database Keep-Alive</h2>
+            <p className="text-slate-500 mt-2 text-center">Clique no botão abaixo para enviar um 'ping' (inserir um registro de log) para o banco de dados. Isso pode ser útil para manter ativas as instâncias de banco de dados gratuitas que pausam após inatividade.</p>
+            <div className="mt-6 flex justify-center">
+                <button 
+                    onClick={handlePing} 
+                    disabled={pingStatus === 'pending'}
+                    className="bg-primary-blue text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-primary-blue/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-wait"
+                >
+                    {pingStatus === 'pending' ? 'Enviando Ping...' : 'Enviar Ping para o Banco de Dados'}
+                </button>
+            </div>
+            {pingStatus !== 'idle' && (
+                <div className="mt-6">
+                    {pingStatus === 'success' && (
+                        <div className="bg-green-50 p-4 rounded-lg">
+                            <h3 className="font-semibold text-green-800">Ping enviado com sucesso!</h3>
+                            <p className="mt-2 text-sm text-green-700">Resposta do banco de dados:</p>
+                            <pre className="mt-2 text-xs bg-green-100 p-2 rounded overflow-auto">
+                                {JSON.stringify(pingData, null, 2)}
+                            </pre>
+                        </div>
+                    )}
+                    {pingStatus === 'error' && (
+                         <div className="bg-red-50 p-4 rounded-lg">
+                            <h3 className="font-semibold text-red-800">Falha ao enviar o ping.</h3>
+                            <p className="mt-2 text-sm text-red-700 font-mono break-words">{pingError}</p>
+                            {pingError?.includes('relation "public.logs" does not exist') && (
+                                <div className="mt-4 text-sm text-red-700">
+                                    <p className="font-semibold">Ação necessária:</p>
+                                    <p>A tabela 'logs' parece não existir. Execute o seguinte comando SQL no seu editor de SQL do Supabase para criá-la:</p>
+                                    <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto font-mono">
+{`CREATE TABLE logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  message TEXT
+);`}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ConnectionTestPage: React.FC = () => {
     const [status, setStatus] = useState<Status>('pending');
     const [error, setError] = useState<string | null>(null);
@@ -98,11 +178,12 @@ const ConnectionTestPage: React.FC = () => {
     return (
         <div className="bg-slate-50 min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow flex items-center justify-center">
+            <main className="flex-grow flex flex-col items-center justify-center">
                 <div className="max-w-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="bg-white p-8 rounded-lg shadow-lg">
                         {renderStatus()}
                     </div>
+                    <KeepAliveCard />
                 </div>
             </main>
             <Footer />
