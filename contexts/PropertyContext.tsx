@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Property, PropertyStatus, Amenity, PriceHistory } from '../types';
 import { supabase } from '../lib/supabaseClient';
@@ -12,6 +13,8 @@ interface PropertyContextType {
     deleteProperty: (propertyId: string) => Promise<void>;
     incrementViewCount: (propertyId: string) => Promise<void>;
     updatePropertyOrder: (updates: { id: string; display_order: number }[]) => Promise<void>;
+    bulkUpdateProperties: (propertyIds: string[], updates: Partial<Property>) => Promise<void>;
+    bulkDeleteProperties: (propertyIds: string[]) => Promise<void>;
     loading: boolean;
 }
 
@@ -225,9 +228,68 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     };
 
+    const bulkUpdateProperties = async (propertyIds: string[], updates: Partial<Property>) => {
+        const { error } = await supabase
+            .from('properties')
+            .update(updates)
+            .in('id', propertyIds);
+
+        if (error) {
+            console.error('Error in bulk update:', error.message);
+            alert(`Erro na atualização em massa: ${error.message}`);
+        } else {
+            await fetchProperties(); // Refetch to show changes
+            alert(`${propertyIds.length} imóveis atualizados com sucesso.`);
+        }
+    };
+
+    const bulkDeleteProperties = async (propertyIds: string[]) => {
+        setLoading(true);
+        const propertiesToDelete = properties.filter(p => propertyIds.includes(p.id));
+        
+        // 1. Collect all image paths to delete
+        const allImagePaths: string[] = [];
+        const bucketName = 'property-images';
+        propertiesToDelete.forEach(prop => {
+            if (prop.images && prop.images.length > 0) {
+                const filePaths = prop.images.map(url => {
+                    try {
+                        const urlObject = new URL(url);
+                        const pathParts = urlObject.pathname.split(`/${bucketName}/`);
+                        return pathParts.length > 1 ? pathParts[1] : null;
+                    } catch (e) { return null; }
+                }).filter((path): path is string => path !== null);
+                allImagePaths.push(...filePaths);
+            }
+        });
+
+        // 2. Bulk delete images from storage
+        if (allImagePaths.length > 0) {
+            const { error: storageError } = await supabase.storage.from(bucketName).remove(allImagePaths);
+            if (storageError) {
+                console.error('Error during bulk image deletion:', storageError.message);
+                alert(`Erro ao excluir imagens: ${storageError.message}. A exclusão dos imóveis continuará.`);
+            }
+        }
+
+        // 3. Bulk delete from DB
+        const { error: dbError } = await supabase
+            .from('properties')
+            .delete()
+            .in('id', propertyIds);
+
+        if (dbError) {
+            console.error('Error deleting properties:', dbError.message);
+            alert(`Erro ao excluir imóveis: ${dbError.message}`);
+        } else {
+            await fetchProperties();
+            alert(`${propertyIds.length} imóveis excluídos com sucesso.`);
+        }
+        setLoading(false);
+    };
 
     return (
-        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount, updatePropertyOrder }}>
+        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount, updatePropertyOrder, bulkUpdateProperties, bulkDeleteProperties }}>
             {children}
         </PropertyContext.Provider>
     );
