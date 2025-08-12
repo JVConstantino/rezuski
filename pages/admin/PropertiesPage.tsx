@@ -1,28 +1,146 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Property, PropertyStatus } from '../../types';
+import { useCategories } from '../../contexts/CategoryContext';
+import { Property, PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
 import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon, GripVerticalIcon } from '../../components/Icons';
 
+const BulkActionBar: React.FC<{
+    selectedCount: number;
+    onClear: () => void;
+    onAction: (action: 'archive' | 'unarchive' | 'delete' | 'changeStatus' | 'changeCategory' | 'changeType', value?: any) => void;
+}> = ({ selectedCount, onClear, onAction }) => {
+    const { t, propertyTypes } = useLanguage();
+    const { categories } = useCategories();
+    
+    return (
+        <div className="bg-primary-blue/10 p-3 rounded-lg mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center">
+                <span className="font-semibold text-primary-blue">{selectedCount} imóveis selecionados</span>
+                <button onClick={onClear} className="ml-4 text-sm text-primary-blue font-semibold hover:underline">Limpar seleção</button>
+            </div>
+            <div className="flex items-center space-x-2 flex-wrap gap-2">
+                 <select
+                    onChange={(e) => onAction('changeStatus', e.target.value)}
+                    className="text-sm border border-slate-300 rounded-lg px-2 py-1 focus:ring-primary-blue focus:border-primary-blue"
+                >
+                    <option value="">Mudar Status</option>
+                    <option value="AVAILABLE">Disponível</option>
+                    <option value="RENTED">Alugado</option>
+                    <option value="SOLD">Vendido</option>
+                </select>
+                <select
+                    onChange={(e) => onAction('changeCategory', e.target.value)}
+                    className="text-sm border border-slate-300 rounded-lg px-2 py-1 focus:ring-primary-blue focus:border-primary-blue"
+                >
+                    <option value="">Mudar Categoria</option>
+                    {categories.map(cat => <option key={cat.id} value={cat.id}>{t(`category:${cat.id}`)}</option>)}
+                </select>
+                <select
+                    onChange={(e) => onAction('changeType', e.target.value)}
+                    className="text-sm border border-slate-300 rounded-lg px-2 py-1 focus:ring-primary-blue focus:border-primary-blue"
+                >
+                    <option value="">Mudar Tipo</option>
+                    {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
+                </select>
+
+                <button onClick={() => onAction('archive')} className="text-sm p-2 text-slate-600 hover:text-yellow-600 rounded-md hover:bg-slate-200" title="Arquivar"><ArchiveIcon className="w-5 h-5"/></button>
+                <button onClick={() => onAction('delete')} className="text-sm p-2 text-slate-600 hover:text-red-600 rounded-md hover:bg-slate-200" title="Apagar"><TrashIcon className="w-5 h-5"/></button>
+            </div>
+        </div>
+    );
+};
+
+
 const PropertiesPage: React.FC = () => {
-  const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder } = useProperties();
-  const { t } = useLanguage();
+  const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder, bulkUpdateProperties, bulkDeleteProperties } = useProperties();
+  const { t, propertyTypes } = useLanguage();
+  const { categories } = useCategories();
   const [searchTerm, setSearchTerm] = useState('');
   const [localProperties, setLocalProperties] = useState<Property[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [draggedItem, setDraggedItem] = useState<Property | null>(null);
 
-  const filteredProperties = localProperties.filter(prop => 
-    prop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (prop.code && prop.code.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-  
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [purposeFilter, setPurposeFilter] = useState('all');
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
   useEffect(() => {
     setLocalProperties(properties);
   }, [properties]);
 
+  useEffect(() => {
+    setSelectedProperties([]);
+  }, [searchTerm, purposeFilter, propertyTypeFilter, statusFilter]);
+  
+  const filteredProperties = localProperties.filter(prop => {
+      const searchTermMatch = prop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (prop.code && prop.code.toLowerCase().includes(searchTerm.toLowerCase()));
+      const purposeMatch = purposeFilter === 'all' || prop.purpose === purposeFilter;
+      const typeMatch = propertyTypeFilter === 'all' || prop.propertyType === propertyTypeFilter;
+      const statusMatch = statusFilter === 'all' || prop.status === statusFilter;
+      return searchTermMatch && purposeMatch && typeMatch && statusMatch;
+  });
+  
+  const allVisibleSelected = filteredProperties.length > 0 && selectedProperties.length === filteredProperties.length;
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedProperties(prev => 
+        prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.checked) {
+          setSelectedProperties(filteredProperties.map(p => p.id));
+      } else {
+          setSelectedProperties([]);
+      }
+  };
+
+  const handleBulkAction = async (action: 'archive' | 'unarchive' | 'delete' | 'changeStatus' | 'changeCategory' | 'changeType', value?: any) => {
+      if (selectedProperties.length === 0) return;
+
+      switch (action) {
+          case 'delete':
+              if (window.confirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE ${selectedProperties.length} imóveis? Esta ação não pode ser desfeita.`)) {
+                  await bulkDeleteProperties(selectedProperties);
+                  setSelectedProperties([]);
+              }
+              break;
+          case 'archive':
+              await bulkUpdateProperties(selectedProperties, { status: 'ARCHIVED' });
+              setSelectedProperties([]);
+              break;
+          case 'unarchive': // Not a direct action, but good to have
+              await bulkUpdateProperties(selectedProperties, { status: 'AVAILABLE' });
+              setSelectedProperties([]);
+              break;
+          case 'changeStatus':
+              if (value) {
+                  await bulkUpdateProperties(selectedProperties, { status: value as PropertyStatus });
+                  setSelectedProperties([]);
+              }
+              break;
+          case 'changeCategory':
+              if (value) {
+                  await bulkUpdateProperties(selectedProperties, { categoryId: value });
+                  setSelectedProperties([]);
+              }
+              break;
+          case 'changeType':
+              if (value) {
+                  await bulkUpdateProperties(selectedProperties, { propertyType: value as PropertyType });
+                  setSelectedProperties([]);
+              }
+              break;
+      }
+  }
+  
   const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, property: Property) => {
     setDraggedItem(property);
     e.dataTransfer.effectAllowed = 'move';
@@ -70,7 +188,6 @@ const PropertiesPage: React.FC = () => {
       setIsDirty(false);
   };
 
-
   const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE o imóvel "${title}"? Esta ação não pode ser desfeita.`)) {
         await deleteProperty(id);
@@ -110,8 +227,8 @@ const PropertiesPage: React.FC = () => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <div className="relative w-full md:w-1/3">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+          <div className="relative w-full md:w-auto md:flex-grow">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <SearchIcon className="w-5 h-5 text-slate-400" />
             </span>
@@ -123,23 +240,36 @@ const PropertiesPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"
             />
           </div>
-          <div className="hidden md:flex space-x-4">
-            <select className="border border-slate-300 rounded-lg px-3 py-2 focus:ring-primary-blue focus:border-primary-blue">
-              <option>Status: Todos</option>
-              <option>Disponível</option>
-              <option>Alugado</option>
-              <option>Vendido</option>
-              <option>Arquivado</option>
+          <div className="w-full md:w-auto flex space-x-2">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-primary-blue focus:border-primary-blue">
+                <option value="all">Status: Todos</option>
+                <option value="AVAILABLE">Disponível</option>
+                <option value="RENTED">Alugado</option>
+                <option value="SOLD">Vendido</option>
+                <option value="ARCHIVED">Arquivado</option>
+            </select>
+            <select value={purposeFilter} onChange={e => setPurposeFilter(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-primary-blue focus:border-primary-blue">
+                <option value="all">Finalidade: Todas</option>
+                <option value="RENT">Aluguel</option>
+                <option value="SALE">Venda</option>
+                <option value="SEASONAL">Temporada</option>
+            </select>
+            <select value={propertyTypeFilter} onChange={e => setPropertyTypeFilter(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-primary-blue focus:border-primary-blue">
+                <option value="all">Tipo: Todos</option>
+                {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
             </select>
           </div>
         </div>
+
+        {selectedProperties.length > 0 && <BulkActionBar selectedCount={selectedProperties.length} onClear={() => setSelectedProperties([])} onAction={handleBulkAction} />}
 
         {/* Mobile View */}
         <div className="md:hidden space-y-4">
             {filteredProperties.map(prop => (
                 <div key={prop.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-3">
                     <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-start space-x-3">
+                            <input type="checkbox" checked={selectedProperties.includes(prop.id)} onChange={() => handleToggleSelect(prop.id)} className="mt-1 h-5 w-5 rounded text-primary-blue focus:ring-primary-blue border-slate-300"/>
                             <img src={prop.images[0]} alt={prop.title} className="w-16 h-12 rounded-md object-cover flex-shrink-0" />
                             <div className="flex-grow">
                                 <p className="font-semibold text-slate-800 line-clamp-2">{prop.title}</p>
@@ -169,6 +299,7 @@ const PropertiesPage: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="p-4 w-12"><input type="checkbox" checked={allVisibleSelected} onChange={handleSelectAll} className="h-5 w-5 rounded text-primary-blue focus:ring-primary-blue border-slate-300"/></th>
                 <th className="p-4 font-semibold text-slate-600 w-12"></th>
                 <th className="p-4 font-semibold text-slate-600">Propriedade</th>
                 <th className="p-4 font-semibold text-slate-600">Código</th>
@@ -189,8 +320,9 @@ const PropertiesPage: React.FC = () => {
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, prop)}
                   onDragEnd={handleDragEnd}
-                  className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+                  className={`border-b border-slate-200 transition-colors ${selectedProperties.includes(prop.id) ? 'bg-primary-blue/5' : 'hover:bg-slate-50'}`}
                 >
+                  <td className="p-4"><input type="checkbox" checked={selectedProperties.includes(prop.id)} onChange={() => handleToggleSelect(prop.id)} className="h-5 w-5 rounded text-primary-blue focus:ring-primary-blue border-slate-300"/></td>
                   <td className="p-4 text-center text-slate-400">
                     <GripVerticalIcon className="cursor-move mx-auto" />
                   </td>
