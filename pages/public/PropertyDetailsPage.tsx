@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -91,8 +90,8 @@ const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (
     return (
         <div className="w-full">
             {/* Main Image */}
-            <div className="relative w-full aspect-[16/9] bg-black rounded-lg overflow-hidden shadow-lg cursor-pointer group" onClick={() => onImageClick(currentIndex)}>
-                <img src={images[currentIndex]} alt={`${title} - Imagem ${currentIndex + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <div className="relative w-full aspect-[16/9] max-h-[75vh] mx-auto bg-black rounded-lg overflow-hidden shadow-lg cursor-pointer group" onClick={() => onImageClick(currentIndex)}>
+                <img src={images[currentIndex]} alt={`${title} - Imagem ${currentIndex + 1}`} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
 
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                     <p className="text-white text-lg font-bold">Clique para ampliar</p>

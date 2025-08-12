@@ -82,10 +82,16 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, [fetchProperties]);
     
     const updatePropertyOrder = async (updates: { id: string; display_order: number }[]) => {
-        const { error } = await supabase.from('properties').upsert(updates);
-        if (error) {
-            console.error('Error updating property order:', error.message);
-            alert(`Erro ao salvar a ordem: ${error.message}`);
+        const updatePromises = updates.map(u => 
+            supabase.from('properties').update({ display_order: u.display_order }).eq('id', u.id)
+        );
+    
+        const results = await Promise.all(updatePromises);
+        const firstError = results.find(res => res.error);
+    
+        if (firstError) {
+            console.error('Error updating property order:', firstError.error.message);
+            alert(`Erro ao salvar a ordem: ${firstError.error.message}`);
         } else {
             // Refetch to get the correctly ordered list from the DB
             await fetchProperties();

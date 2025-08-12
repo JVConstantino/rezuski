@@ -96,19 +96,19 @@ const HeroSection = () => {
                 <div className="flex border-b border-slate-200">
                     <button
                         onClick={() => handlePurposeChange('RENT')}
-                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tl-lg ${searchPurpose === 'RENT' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tl-lg ${searchPurpose === 'RENT' ? 'bg-primary-green text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                         {t('search.rent')}
                     </button>
                     <button
                         onClick={() => handlePurposeChange('SALE')}
-                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 border-x border-slate-200 ${searchPurpose === 'SALE' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 border-x border-slate-200 ${searchPurpose === 'SALE' ? 'bg-primary-green text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                         {t('search.buy')}
                     </button>
                     <button
                         onClick={() => handlePurposeChange('SEASONAL')}
-                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tr-lg ${searchPurpose === 'SEASONAL' ? 'bg-white text-primary-blue' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                        className={`px-6 py-4 font-semibold text-sm transition-colors w-1/3 rounded-tr-lg ${searchPurpose === 'SEASONAL' ? 'bg-primary-green text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                         {t('search.seasonal')}
                     </button>
