@@ -77,7 +77,7 @@ const HeroSection = () => {
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
             <AnimateOnScroll>
-                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-40 mx-auto mb-6 object-contain" />
+                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-32 mx-auto mb-6 object-contain" />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">
@@ -573,7 +573,7 @@ const ContactSection: React.FC = () => {
 const HomePage: React.FC = () => {
   const { t } = useLanguage();
   return (
-    <div className="bg-white pb-16 md:pb-0">
+    <div className="bg-white pb-24 md:pb-0">
       <Header />
       <main>
         <HeroSection />
