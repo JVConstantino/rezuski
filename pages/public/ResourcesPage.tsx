@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -12,7 +13,7 @@ const ResourcesPage: React.FC = () => {
     return (
         <div className="bg-slate-50 min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow">
+            <main className="flex-grow pb-24 md:pb-8">
                 <div className="bg-white">
                     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
                         <AnimateOnScroll>
