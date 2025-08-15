@@ -39,12 +39,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty 
 
   const { text: displayPrice, suffix: priceSuffix } = getPriceDisplay(property);
   const locationDisplay = [property.neighborhood, property.city].filter(Boolean).join(', ');
-  const optimizedImageUrl = getOptimizedImageUrl(property.images[0], { width: 500, height: 208 });
+  const optimizedImageUrl = getOptimizedImageUrl(property.images[0], { width: 500, height: 281 });
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-lg">
       <div className="relative">
-        <img src={optimizedImageUrl} alt={property.title} className="w-full h-52 object-cover" />
+        <img src={optimizedImageUrl} alt={property.title} className="w-full aspect-video object-cover" />
         {property.isPopular && (
           <div className="absolute top-3 left-3 bg-primary-blue text-white text-xs font-bold px-2 py-1 rounded">
             POPULAR
