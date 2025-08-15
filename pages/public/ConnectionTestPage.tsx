@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Category } from '../../types';
@@ -255,7 +256,7 @@ const ConnectionTestPage: React.FC = () => {
     return (
         <div className="bg-slate-50 min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow flex flex-col items-center justify-center">
+            <main className="flex-grow flex flex-col items-center justify-center pb-24 md:pb-8">
                 <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="bg-white p-8 rounded-lg shadow-lg">
                         {renderStatus()}
