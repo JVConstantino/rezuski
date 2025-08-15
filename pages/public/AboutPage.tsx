@@ -21,7 +21,7 @@ const AboutPage: React.FC = () => {
     return (
         <div className="bg-white min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow">
+            <main className="flex-grow pb-24 md:pb-8">
                 {/* Hero Section */}
                 <div className="bg-slate-100">
                     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
