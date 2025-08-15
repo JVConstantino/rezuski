@@ -292,7 +292,15 @@ const SearchResultsPage: React.FC = () => {
         const amenities = searchParams.getAll('amenities');
 
         if (purpose) { results = results.filter(p => p.purpose === purpose); }
-        if (searchTerm) { results = results.filter(p => p.title.toLowerCase().includes(searchTerm)); }
+        if (searchTerm) {
+            results = results.filter(p => 
+                p.title.toLowerCase().includes(searchTerm) ||
+                p.description.toLowerCase().includes(searchTerm) ||
+                p.neighborhood.toLowerCase().includes(searchTerm) ||
+                p.city.toLowerCase().includes(searchTerm) ||
+                p.address.toLowerCase().includes(searchTerm)
+            );
+        }
         if (city && city !== 'any') { results = results.filter(p => p.city === city); }
         if (neighborhood && neighborhood !== 'any') { results = results.filter(p => p.neighborhood === neighborhood); }
         if (code) { results = results.filter(p => p.code?.toLowerCase().includes(code)); }
