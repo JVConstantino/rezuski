@@ -409,7 +409,7 @@ const PropertyDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-white pb-16 md:pb-0">
+    <div className="bg-white pb-24 md:pb-0">
       <Header />
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <PropertyHeader property={property} onShare={handleShare} />
