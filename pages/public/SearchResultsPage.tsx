@@ -400,7 +400,7 @@ const SearchResultsPage: React.FC = () => {
                         ) : (
                             <>
                                 {viewMode === 'grid' ? (
-                                    <div className="grid grid-cols-2 gap-6 lg:grid-cols-3"><>{paginatedProperties.map(p => <PropertyCard key={p.id} property={p} />)}</></div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:grid-cols-3"><>{paginatedProperties.map(p => <PropertyCard key={p.id} property={p} />)}</></div>
                                 ) : (
                                     <div className="space-y-4"><>{paginatedProperties.map(p => <PropertyListItem key={p.id} property={p} />)}</></div>
                                 )}
