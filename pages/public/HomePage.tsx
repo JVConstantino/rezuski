@@ -15,6 +15,7 @@ import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
 import { getOptimizedImageUrl } from '../../lib/localize';
 
+
 const HeroSection = () => {
     const navigate = useNavigate();
     const { t, propertyTypes } = useLanguage();

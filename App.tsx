@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 import { AuthProvider } from './contexts/AuthContext';
@@ -49,6 +50,7 @@ import EditResourcePage from './pages/admin/EditResourcePage';
 import GalleryPage from './pages/admin/GalleryPage';
 import AmenitiesPage from './pages/admin/AmenitiesPage';
 import DataPreviewPage from './pages/admin/DataPreviewPage';
+import StorageTestPage from './pages/admin/StorageTestPage';
 
 const AppContent: React.FC = () => {
     const location = useLocation();
@@ -101,6 +103,7 @@ const AppContent: React.FC = () => {
                                                                     <Route path="resources/new" element={<AddResourcePage />} />
                                                                     <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
                                                                     <Route path="gallery" element={<GalleryPage />} />
+                                                                    <Route path="storage-test" element={<StorageTestPage />} />
                                                                     <Route path="amenities" element={<AmenitiesPage />} />
                                                                     <Route path="messages" element={<MessagesPage />} />
                                                                     <Route path="reports" element={<ReportsPage />} />

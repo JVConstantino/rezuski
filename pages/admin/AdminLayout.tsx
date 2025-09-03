@@ -20,6 +20,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
         { name: "Recursos", path: "/admin/resources", icon: <FileTextIcon className="w-5 h-5"/> },
         { name: "Comodidades", path: "/admin/amenities", icon: <CheckCircleIcon className="w-5 h-5"/> },
         { name: "Galeria", path: "/admin/gallery", icon: <FolderIcon className="w-5 h-5"/> },
+        { name: "Teste Storage", path: "/admin/storage-test", icon: <SettingsIcon className="w-5 h-5"/> },
         { name: "Mensagens", path: "/admin/messages", icon: <MessageSquareIcon className="w-5 h-5"/> },
         { name: "Relatórios", path: "/admin/reports", icon: <BarChartIcon className="w-5 h-5"/> },
         { name: "Pré-visualização de Dados", path: "/admin/data-preview", icon: <FileTextIcon className="w-5 h-5"/> },

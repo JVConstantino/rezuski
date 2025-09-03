@@ -147,16 +147,58 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!files.length) return;
 
         setLoading(true);
-        await removePlaceholderIfNeeded(path);
-        
-        const client = getStorageClientInstance();
-        const uploadPromises = Array.from(files).map(file => {
-            const filePath = `${path}/${file.name}`;
-            return client.storage.from(BUCKET_NAME).upload(filePath, file);
-        });
+        try {
+            console.log('Starting file upload...', {
+                fileCount: files.length,
+                path,
+                bucketName: BUCKET_NAME,
+                activeConfig: activeConfig
+            });
 
-        await Promise.all(uploadPromises);
-        refresh();
+            await removePlaceholderIfNeeded(path);
+            
+            const client = getStorageClientInstance();
+            
+            // Test bucket accessibility first
+            const { data: bucketData, error: bucketError } = await client.storage
+                .from(BUCKET_NAME)
+                .list('', { limit: 1 });
+            
+            if (bucketError) {
+                console.error('Bucket access error:', bucketError);
+                alert(`Erro ao acessar o bucket: ${bucketError.message}. Verifique se o bucket '${BUCKET_NAME}' existe e está configurado como público.`);
+                return;
+            }
+            
+            console.log('Bucket accessible, proceeding with uploads...');
+            
+            const uploadPromises = Array.from(files).map(async (file, index) => {
+                const filePath = `${path}/${file.name}`;
+                console.log(`Uploading file ${index + 1}/${files.length}: ${filePath}`);
+                
+                const { data, error } = await client.storage.from(BUCKET_NAME).upload(filePath, file);
+                
+                if (error) {
+                    console.error(`Upload error for ${filePath}:`, error);
+                    throw new Error(`Erro ao fazer upload de ${file.name}: ${error.message}`);
+                }
+                
+                console.log(`Successfully uploaded: ${filePath}`);
+                return data;
+            });
+
+            await Promise.all(uploadPromises);
+            console.log('All files uploaded successfully!');
+            alert('Arquivos enviados com sucesso!');
+            
+        } catch (error) {
+            console.error('Upload failed:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido durante o upload';
+            alert(`Falha no upload: ${errorMessage}`);
+        } finally {
+            setLoading(false);
+            refresh();
+        }
     };
 
     const createFolder = async (folderName: string) => {
