@@ -6,10 +6,12 @@ import BottomNavBar from '../../components/BottomNavBar';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import { MapPinIcon, PhoneIcon, MailIcon } from '../../components/Icons';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { getOptimizedImageUrl } from '../../lib/localize';
 
 const AboutPage: React.FC = () => {
     const { t } = useLanguage();
+    const { activeConfig } = useStorageConfig();
     const address1 = "Rua Romeu Caetano Guida, n0140, salas 02 e 03, Campo do Prado, Cachoeiras de Macacu. RJ - CEP: 28681-320";
     const address2 = "Rua Osvaldir Vicente Siqueira, n° 134, Centro, Papucaia - Cachoeiras de Macacu - RJ";
     const phone = "(021) 96756-7178";
@@ -40,7 +42,7 @@ const AboutPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
                             <AnimateOnScroll>
                                 <img 
-                                    src={getOptimizedImageUrl(facadeImageUrl, { width: 800, height: 600 })}
+                                    src={getOptimizedImageUrl(facadeImageUrl, { width: 800, height: 600 }, activeConfig)}
                                     alt="Fachada da Rezuski Imóveis" 
                                     className="rounded-lg shadow-lg object-cover"
                                 />

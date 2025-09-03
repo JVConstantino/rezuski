@@ -5,6 +5,8 @@ import { useCategories } from '../../contexts/CategoryContext';
 import { useAmenities } from '../../contexts/AmenityContext';
 import { useImages } from '../../contexts/ImageContext';
 import { useAIConfig } from '../../contexts/AIConfigContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
+import { getStorageClient, getRelativePath } from '../../lib/storageClient';
 import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
@@ -29,6 +31,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const { refresh: refreshGallery } = useImages();
     const { t, propertyTypes, supportedLanguages } = useLanguage();
     const { activeConfig: aiConfig, loading: aiConfigLoading } = useAIConfig();
+    const { activeConfig: storageConfig } = useStorageConfig();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -142,21 +145,24 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         if (totalFiles === 0) return;
 
         setUploadProgress({ current: 0, total: totalFiles });
-        const uploadedUrls: string[] = [];
+        const uploadedPaths: string[] = [];
+        const client = getStorageClient(storageConfig?.storage_url, storageConfig?.storage_key);
+        const bucketName = storageConfig?.bucket_name || 'property-images';
 
         for (let i = 0; i < totalFiles; i++) {
             const file = files[i];
-            const filePath = `public/${Date.now()}-${file.name}`;
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
+            const filePath = `public/properties/${fileName}`;
 
             try {
-                const { error: uploadError } = await supabase.storage
-                    .from('property-images')
+                const { error: uploadError } = await client.storage
+                    .from(bucketName)
                     .upload(filePath, file);
 
                 if (uploadError) throw uploadError;
 
-                const { data } = supabase.storage.from('property-images').getPublicUrl(filePath);
-                uploadedUrls.push(data.publicUrl);
+                // Armazena apenas o caminho relativo
+                uploadedPaths.push(filePath);
             } catch (error) {
                 console.error(`Error uploading file ${file.name}:`, error);
                 alert(`Erro ao enviar o arquivo: ${file.name}`);
@@ -165,8 +171,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             setUploadProgress({ current: i + 1, total: totalFiles });
         }
 
-        if (uploadedUrls.length > 0) {
-            const newImageStates = uploadedUrls.map(url => ({ preview: url, isPrimary: false }));
+        if (uploadedPaths.length > 0) {
+            const newImageStates = uploadedPaths.map(path => ({ preview: path, isPrimary: false }));
             setImages(prev => {
                 const updatedImages = [...prev, ...newImageStates];
                 if (prev.length === 0 && updatedImages.length > 0) {
@@ -183,7 +189,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     };
 
     const handleSelectFromGallery = (selectedImages: string[]) => {
-        const newImageStates = selectedImages.map(img => ({
+        // Converte URLs completas para caminhos relativos se necessário
+        const bucketName = storageConfig?.bucket_name || 'property-images';
+        const relativePaths = selectedImages.map(img => {
+            const relativePath = getRelativePath(img, bucketName);
+            return relativePath || img;
+        });
+        
+        const newImageStates = relativePaths.map(img => ({
             preview: img,
             isPrimary: false
         }));

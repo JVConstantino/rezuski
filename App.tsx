@@ -13,6 +13,7 @@ import { UserProvider } from './contexts/UserContext';
 import { ApplicationProvider } from './contexts/ApplicationContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { AIConfigProvider } from './contexts/AIConfigContext';
+import { StorageConfigProvider } from './contexts/StorageConfigContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginModalController from './components/LoginModalController';
 import ChatWidget from './components/public/ChatWidget';
@@ -68,8 +69,9 @@ const AppContent: React.FC = () => {
                                     <BrokerProvider>
                                         <PropertyProvider>
                                             <AmenityProvider>
-                                                <ImageProvider>
-                                                    <AIConfigProvider>
+                                                <StorageConfigProvider>
+                                                    <ImageProvider>
+                                                        <AIConfigProvider>
                                                         <LoginModalController />
                                                         <Routes>
                                                             {/* Public Routes */}
@@ -111,8 +113,9 @@ const AppContent: React.FC = () => {
                                                             <Route path="*" element={<Navigate to="/" replace />} />
                                                         </Routes>
                                                         {!isAdminPage && <ChatWidget />}
-                                                    </AIConfigProvider>
-                                                </ImageProvider>
+                                                        </AIConfigProvider>
+                                                    </ImageProvider>
+                                                </StorageConfigProvider>
                                             </AmenityProvider>
                                         </PropertyProvider>
                                     </BrokerProvider>

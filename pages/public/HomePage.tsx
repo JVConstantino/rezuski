@@ -7,6 +7,7 @@ import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
 import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon, StarIcon, UserCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { PropertyPurpose, PropertyType } from '../../types';
@@ -378,13 +379,14 @@ const RecentProperties: React.FC = () => {
 const Categories: React.FC = () => {
     const { categories } = useLanguage();
     const { t } = useLanguage();
+    const { activeConfig } = useStorageConfig();
     return (
         <Section title={t('section.categories')} isGray={false}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8">
                 {categories.map((cat, index) => (
                     <AnimateOnScroll key={cat.id} delay={100 * (index + 1)}>
                         <Link to={`/search?categoryId=${cat.id}`} className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
-                            <img src={getOptimizedImageUrl(cat.iconUrl, { width: 64, height: 64 })} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
+                            <img src={getOptimizedImageUrl(cat.iconUrl, { width: 64, height: 64 }, activeConfig)} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
                             <p className="mt-4 font-semibold text-slate-700 text-center">{t(`category:${cat.id}`)}</p>
                         </Link>
                     </AnimateOnScroll>
@@ -453,13 +455,14 @@ const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; 
 const MeetTheBrokers: React.FC = () => {
     const { brokers } = useBrokers();
     const { t } = useLanguage();
+    const { activeConfig } = useStorageConfig();
     return (
     <Section title={t('section.brokers')} subtitle={t('section.brokers.subtitle')} isGray={true}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {brokers.map((broker, index) => (
                 <AnimateOnScroll key={broker.id} delay={100 * (index + 1)}>
                     <div className="bg-white p-6 rounded-lg shadow-sm text-center hover:shadow-lg transition-shadow h-full border border-slate-100">
-                        <img src={getOptimizedImageUrl(broker.avatarUrl, { width: 96, height: 96 })} alt={broker.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
+                        <img src={getOptimizedImageUrl(broker.avatarUrl, { width: 96, height: 96 }, activeConfig)} alt={broker.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
                         <h3 className="mt-4 text-lg font-semibold text-slate-800">{broker.name}</h3>
                         <p className="text-sm text-primary-blue font-medium">{broker.title}</p>
                         <div className="mt-4 flex justify-center space-x-3">

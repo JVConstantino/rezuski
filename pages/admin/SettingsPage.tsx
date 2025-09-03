@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircleIcon, BellIcon, ShieldIcon, SparklesIcon, EyeIcon, EyeOffIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from '../../components/Icons';
+import { UserCircleIcon, BellIcon, ShieldIcon, SparklesIcon, EyeIcon, EyeOffIcon, PlusIcon, EditIcon, TrashIcon, XIcon, CloudIcon } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAIConfig, AIConfig } from '../../contexts/AIConfigContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
 
 const ProfileSettings: React.FC = () => {
     const { user, updateProfile } = useAuth();
@@ -276,6 +277,344 @@ const AISettings: React.FC = () => {
     );
 };
 
+const StorageConfigForm: React.FC<{
+    config: {
+        storage_url: string;
+        storage_key: string;
+        bucket_name: string;
+    };
+    onConfigChange: (field: string, value: string) => void;
+    showApiKey: boolean;
+    onToggleShowApiKey: () => void;
+}> = ({ config, onConfigChange, showApiKey, onToggleShowApiKey }) => {
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        onConfigChange(name, value);
+    };
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <label htmlFor="storage_url" className="block text-sm font-medium text-slate-700">URL do Supabase</label>
+                <input
+                    id="storage_url"
+                    name="storage_url"
+                    type="url"
+                    value={config.storage_url || ''}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                    placeholder="https://seu-projeto.supabase.co"
+                />
+            </div>
+            <div>
+                <label htmlFor="storage_key" className="block text-sm font-medium text-slate-700">Chave Anônima (anon key)</label>
+                <div className="relative mt-1">
+                    <input
+                        id="storage_key"
+                        name="storage_key"
+                        type={showApiKey ? 'text' : 'password'}
+                        value={config.storage_key || ''}
+                        onChange={handleInputChange}
+                        required
+                        className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                        placeholder="Cole sua chave anônima aqui"
+                    />
+                    <button
+                        type="button"
+                        onClick={onToggleShowApiKey}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500"
+                    >
+                        {showApiKey ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label htmlFor="bucket_name" className="block text-sm font-medium text-slate-700">Nome do Bucket</label>
+                <input
+                    id="bucket_name"
+                    name="bucket_name"
+                    type="text"
+                    value={config.bucket_name || ''}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
+                    placeholder="Ex: property-images"
+                />
+            </div>
+        </div>
+    );
+};
+
+const StorageSettings: React.FC = () => {
+    const { configs, activeConfig, addConfig, updateConfig, deleteConfig, setActiveConfig, loading } = useStorageConfig();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingConfig, setEditingConfig] = useState<any>(null);
+    const [formData, setFormData] = useState({
+        storage_url: '', 
+        storage_key: '', 
+        bucket_name: ''
+    });
+    const [showApiKey, setShowApiKey] = useState(false);
+    const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+    // Auto-hide notification after 3 seconds
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => setNotification(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
+    const handleStorageConfigChange = async (id: string) => {
+        try {
+            await setActiveConfig(id);
+            const config = configs.find(c => c.id === id);
+            if (config) {
+                setNotification({
+                    type: 'success',
+                    message: `Armazenamento alterado para: ${new URL(config.storage_url).hostname}`
+                });
+            }
+        } catch (error) {
+            setNotification({
+                type: 'error',
+                message: 'Erro ao alterar configuração de armazenamento'
+            });
+        }
+    };
+
+    const testStorageConnection = async (config: any) => {
+        try {
+            setNotification({ type: 'success', message: 'Testando conexão e bucket...' });
+            
+            const { getStorageClient } = await import('../../lib/storageClient');
+            const client = getStorageClient(config.storage_url, config.storage_key);
+            
+            // Test bucket access - this confirms the bucket exists and is accessible
+            const { data: files, error: filesError } = await client.storage
+                .from(config.bucket_name)
+                .list('', { limit: 10 });
+                
+            if (filesError) {
+                setNotification({
+                    type: 'error',
+                    message: `❌ Bucket inacessível: ${filesError.message}`
+                });
+                return;
+            }
+            
+            // Test URL generation
+            const { data: urlData } = client.storage
+                .from(config.bucket_name)
+                .getPublicUrl('test-image.jpg');
+            
+            // Test URL accessibility by making a HEAD request
+            let urlStatus = 'Unknown';
+            try {
+                const response = await fetch(urlData.publicUrl, { method: 'HEAD' });
+                urlStatus = response.status === 404 ? 'Accessible' : `Status: ${response.status}`;
+            } catch (fetchError) {
+                urlStatus = 'Connection Error';
+            }
+            
+            setNotification({
+                type: 'success',
+                message: `✅ Teste completo! Bucket "${config.bucket_name}" acessível com ${files?.length || 0} arquivos. URLs funcionando (${urlStatus}).`
+            });
+            
+        } catch (error: any) {
+            setNotification({
+                type: 'error',
+                message: `❌ Erro de conexão: ${error.message || 'Erro desconhecido'}`
+            });
+        }
+    };
+
+    const openModalForNew = () => {
+        setEditingConfig(null);
+        setFormData({ storage_url: '', storage_key: '', bucket_name: '' });
+        setShowApiKey(false);
+        setIsModalOpen(true);
+    };
+
+    const openModalForEdit = (config: any) => {
+        setEditingConfig(config);
+        setFormData({
+            storage_url: config.storage_url,
+            storage_key: config.storage_key,
+            bucket_name: config.bucket_name
+        });
+        setShowApiKey(false);
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingConfig) {
+                await updateConfig(editingConfig.id, formData);
+            } else {
+                await addConfig(formData);
+            }
+            setIsModalOpen(false);
+        } catch (error: any) {
+            console.error('Storage config save error:', error);
+            if (error.message?.includes('tabela storage_configs não existe')) {
+                alert('Erro: A tabela storage_configs não existe no banco de dados.\n\nPara resolver, execute este SQL no Supabase:\n\nCREATE TABLE storage_configs (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  storage_url TEXT NOT NULL,\n  storage_key TEXT NOT NULL,\n  bucket_name TEXT NOT NULL,\n  is_active BOOLEAN DEFAULT false,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);');
+            } else {
+                alert(`Erro ao salvar configuração de storage: ${error.message || 'Erro desconhecido'}`);
+            }
+        }
+    };
+    
+    const handleFormChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800">Armazenamento de Imagens</h2>
+                    <p className="text-slate-500 mt-1">Configure um Supabase separado para armazenar as imagens do sistema.</p>
+                </div>
+                <button onClick={openModalForNew} className="flex items-center bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95">
+                    <PlusIcon className="w-5 h-5 mr-2" /> Adicionar Storage
+                </button>
+            </div>
+
+            {/* Notification */}
+            {notification && (
+                <div className={`mt-4 p-4 rounded-lg ${
+                    notification.type === 'success' 
+                        ? 'bg-green-50 border border-green-200 text-green-700'
+                        : 'bg-red-50 border border-red-200 text-red-700'
+                }`}>
+                    <p className="text-sm font-medium">{notification.message}</p>
+                </div>
+            )}
+
+            {/* Active Storage Indicator */}
+            {activeConfig && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        </div>
+                        <div className="ml-3">
+                            <p className="text-sm font-medium text-blue-900">
+                                Armazenamento Ativo: <span className="font-bold">{new URL(activeConfig.storage_url).hostname}</span>
+                            </p>
+                            <p className="text-sm text-blue-700">
+                                Bucket: {activeConfig.bucket_name} | Todas as novas imagens serão armazenadas neste local
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-6 space-y-4">
+                {loading ? <p>Carregando...</p> : configs.map(config => (
+                    <div 
+                        key={config.id} 
+                        className={`p-4 border rounded-lg flex items-center justify-between cursor-pointer transition-all ${
+                            config.is_active 
+                                ? 'border-blue-300 bg-blue-50 shadow-sm' 
+                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                        onClick={() => handleStorageConfigChange(config.id)}
+                    >
+                        <div className="flex items-center">
+                             <input
+                                type="radio"
+                                name="active_storage_config"
+                                id={`storage-config-${config.id}`}
+                                checked={config.is_active}
+                                onChange={() => handleStorageConfigChange(config.id)}
+                                className="h-5 w-5 text-primary-blue focus:ring-primary-blue border-slate-300"
+                            />
+                            <label htmlFor={`storage-config-${config.id}`} className="ml-3 cursor-pointer">
+                                <div className="flex items-center">
+                                    <p className="font-bold text-slate-800">{new URL(config.storage_url).hostname}</p>
+                                    {config.is_active && (
+                                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Ativo
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-sm text-slate-500">Bucket: {config.bucket_name}</p>
+                                {config.id === 'constantino' && (
+                                    <p className="text-xs text-blue-600">Constantino Supabase</p>
+                                )}
+                                {config.id === 'default' && (
+                                    <p className="text-xs text-slate-400">Supabase Principal</p>
+                                )}
+                            </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); testStorageConnection(config); }} 
+                                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors" 
+                                title="Testar conexão"
+                            >
+                                Testar
+                            </button>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); openModalForEdit(config); }} 
+                                className="p-2 text-slate-500 hover:text-primary-blue rounded-md hover:bg-slate-100" 
+                                title="Editar"
+                            >
+                                <EditIcon className="w-5 h-5"/>
+                            </button>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); deleteConfig(config.id); }} 
+                                className="p-2 text-slate-500 hover:text-red-600 rounded-md hover:bg-slate-100" 
+                                title="Excluir"
+                            >
+                                <TrashIcon className="w-5 h-5"/>
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {!loading && configs.length === 0 && (
+                    <div className="text-center py-8 text-slate-500">
+                        <CloudIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>Nenhuma configuração de storage encontrada.</p>
+                        <p className="text-sm">Adicione uma configuração para usar um Supabase separado para imagens.</p>
+                    </div>
+                )}
+            </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={() => setIsModalOpen(false)}>
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+                        <form onSubmit={handleSave}>
+                            <header className="p-4 border-b border-slate-200 flex justify-between items-center">
+                                <h3 className="text-lg font-bold">{editingConfig ? 'Editar' : 'Adicionar'} Configuração de Storage</h3>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-700"><XIcon className="w-6 h-6"/></button>
+                            </header>
+                            <main className="p-6">
+                                <StorageConfigForm
+                                    config={formData}
+                                    onConfigChange={handleFormChange}
+                                    showApiKey={showApiKey}
+                                    onToggleShowApiKey={() => setShowApiKey(prev => !prev)}
+                                />
+                            </main>
+                            <footer className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-100">Cancelar</button>
+                                <button type="submit" className="px-4 py-2 bg-primary-green text-white font-semibold rounded-lg shadow-md hover:opacity-95">Salvar</button>
+                            </footer>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState('profile');
@@ -284,6 +623,7 @@ const SettingsPage: React.FC = () => {
         { id: 'profile', name: 'Perfil', icon: <UserCircleIcon className="w-5 h-5 mr-2" /> },
         { id: 'notifications', name: 'Notificações', icon: <BellIcon className="w-5 h-5 mr-2" /> },
         { id: 'security', name: 'Segurança', icon: <ShieldIcon className="w-5 h-5 mr-2" /> },
+        { id: 'storage', name: 'Armazenamento', icon: <CloudIcon className="w-5 h-5 mr-2" /> },
         { id: 'ai', name: 'Inteligência Artificial', icon: <SparklesIcon className="w-5 h-5 mr-2" /> },
     ];
 
@@ -292,6 +632,7 @@ const SettingsPage: React.FC = () => {
             case 'profile': return <ProfileSettings />;
             case 'notifications': return <NotificationSettings />;
             case 'security': return <SecuritySettings />;
+            case 'storage': return <StorageSettings />;
             case 'ai': return <AISettings />;
             default: return <ProfileSettings />;
         }

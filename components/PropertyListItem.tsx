@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Property } from '../types';
 import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useStorageConfig } from '../contexts/StorageConfigContext';
 import { localizeProperty, getOptimizedImageUrl } from '../lib/localize';
 
 interface PropertyListItemProps {
@@ -11,6 +12,7 @@ interface PropertyListItemProps {
 
 const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalProperty }) => {
   const { locale, t } = useLanguage();
+  const { activeConfig } = useStorageConfig();
   const property = localizeProperty(originalProperty, locale);
 
   const getPriceDisplay = (p: Property) => {
@@ -37,7 +39,7 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
 
   const { text: displayPrice, suffix: priceSuffix } = getPriceDisplay(property);
   const locationDisplay = [property.neighborhood, property.city].filter(Boolean).join(', ');
-  const optimizedImageUrl = getOptimizedImageUrl(property.images[0], { width: 400, height: 400 });
+  const optimizedImageUrl = getOptimizedImageUrl(property.images[0], { width: 400, height: 400 }, activeConfig);
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col md:flex-row transition-shadow hover:shadow-md">

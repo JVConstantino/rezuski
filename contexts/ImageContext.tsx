@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { getStorageClient, getImageUrl, getRelativePath } from '../lib/storageClient';
+import { useStorageConfig } from './StorageConfigContext';
 
 interface ItemToMove {
     name: string;
@@ -23,13 +25,19 @@ const ImageContext = createContext<ImageContextType | undefined>(undefined);
 const PLACEHOLDER_FILE = '.emptyFolder';
 
 export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const BUCKET_NAME = 'property-images';
+    const { activeConfig } = useStorageConfig();
+    const BUCKET_NAME = activeConfig?.bucket_name || 'property-images';
     const [galleryItems, setGalleryItems] = useState<any[]>([]);
     const [currentPath, setCurrentPath] = useState('public');
     const [loading, setLoading] = useState(true);
 
+    const getStorageClientInstance = () => {
+        return getStorageClient(activeConfig?.storage_url, activeConfig?.storage_key);
+    };
+
     const listAllFiles = async (path: string): Promise<string[]> => {
-        const { data, error } = await supabase.storage.from(BUCKET_NAME).list(path);
+        const client = getStorageClientInstance();
+        const { data, error } = await client.storage.from(BUCKET_NAME).list(path);
         if (error) {
             console.error(`Error listing files for deletion in ${path}:`, error);
             return [];
@@ -51,7 +59,8 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const fetchItemsForPath = async (path: string) => {
         setLoading(true);
         try {
-            const { data: listData, error } = await supabase.storage.from(BUCKET_NAME).list(path, {
+            const client = getStorageClientInstance();
+            const { data: listData, error } = await client.storage.from(BUCKET_NAME).list(path, {
                 limit: 200,
                 offset: 0,
                 sortBy: { column: 'name', order: 'asc' },
@@ -74,17 +83,9 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .map(item => {
                     if (item.id !== null) { // It's a file
                         const fullPath = `${path}/${item.name}`;
-                        const { data: urlData } = supabase.storage
-                            .from(BUCKET_NAME)
-                            .getPublicUrl(fullPath);
-                        
-                        // The safest check for publicUrl
-                        if (urlData && typeof urlData.publicUrl === 'string') {
-                            return { ...item, publicUrl: urlData.publicUrl };
-                        }
-                        // If we can't get a URL, we can't use the image.
-                        // We return null and filter it out later.
-                        return null;
+                        // Generate proper URL using active storage configuration
+                        const properUrl = getImageUrl(fullPath, activeConfig?.storage_url, activeConfig?.bucket_name);
+                        return { ...item, publicUrl: properUrl, relativePath: fullPath };
                     }
                     return item; // It's a folder
                 });
@@ -116,7 +117,8 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const ensureFolderExists = async (folderPath: string) => {
         if (folderPath === 'public' || folderPath === '') return;
 
-        const { data: remainingItems, error: listError } = await supabase.storage
+        const client = getStorageClientInstance();
+        const { data: remainingItems, error: listError } = await client.storage
             .from(BUCKET_NAME)
             .list(folderPath);
 
@@ -128,14 +130,15 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const hasFiles = remainingItems.some(item => item.id !== null && item.name !== PLACEHOLDER_FILE);
 
         if (!hasFiles) {
-            await supabase.storage
+            await client.storage
                 .from(BUCKET_NAME)
                 .upload(`${folderPath}/${PLACEHOLDER_FILE}`, new Blob(['']), { upsert: true });
         }
     };
 
     const removePlaceholderIfNeeded = async (folderPath: string) => {
-         await supabase.storage
+        const client = getStorageClientInstance();
+        await client.storage
             .from(BUCKET_NAME)
             .remove([`${folderPath}/${PLACEHOLDER_FILE}`]);
     };
@@ -146,9 +149,10 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLoading(true);
         await removePlaceholderIfNeeded(path);
         
+        const client = getStorageClientInstance();
         const uploadPromises = Array.from(files).map(file => {
             const filePath = `${path}/${file.name}`;
-            return supabase.storage.from(BUCKET_NAME).upload(filePath, file);
+            return client.storage.from(BUCKET_NAME).upload(filePath, file);
         });
 
         await Promise.all(uploadPromises);
@@ -164,7 +168,8 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const filePath = `${currentPath}/${cleanFolderName}/${PLACEHOLDER_FILE}`;
         
         setLoading(true);
-        await supabase.storage
+        const client = getStorageClientInstance();
+        await client.storage
             .from(BUCKET_NAME)
             .upload(filePath, new Blob(['']));
         refresh();
@@ -172,7 +177,8 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     const deleteFile = async (filePath: string) => {
         setLoading(true);
-        const { error } = await supabase.storage
+        const client = getStorageClientInstance();
+        const { error } = await client.storage
             .from(BUCKET_NAME)
             .remove([filePath]);
 
@@ -194,7 +200,8 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             filesToDelete.push(`${folderPath}/${PLACEHOLDER_FILE}`);
         }
         
-        await supabase.storage
+        const client = getStorageClientInstance();
+        await client.storage
             .from(BUCKET_NAME)
             .remove(filesToDelete);
         
@@ -206,6 +213,7 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
         await removePlaceholderIfNeeded(destinationPath);
 
+        const client = getStorageClientInstance();
         for (const item of items) {
             const fromPath = `${currentPath}/${item.name}`;
             
@@ -223,11 +231,11 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 for (const oldFilePath of filesToMove) {
                     const relativePath = oldFilePath.substring(fromPath.length);
                     const newFilePath = `${destinationPath}/${item.name}${relativePath}`;
-                    await supabase.storage.from(BUCKET_NAME).move(oldFilePath, newFilePath);
+                    await client.storage.from(BUCKET_NAME).move(oldFilePath, newFilePath);
                 }
             } else { // It's a file
                 const newFilePath = `${destinationPath}/${item.name}`;
-                await supabase.storage.from(BUCKET_NAME).move(fromPath, newFilePath);
+                await client.storage.from(BUCKET_NAME).move(fromPath, newFilePath);
             }
         }
         
@@ -238,7 +246,7 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     useEffect(() => {
         fetchItemsForPath(currentPath);
-    }, [currentPath]);
+    }, [currentPath, activeConfig]); // Re-fetch when active config changes
 
     const setPath = (newPath: string) => {
         if (newPath.startsWith('public')) {

@@ -1,6 +1,7 @@
 import { Property } from '../types';
 import { translations } from '../translations';
 import { supabase } from './supabaseClient';
+import { getStorageClient, getImageUrl, getRelativePath } from './storageClient';
 
 const BUCKET_NAME = 'property-images';
 
@@ -20,23 +21,37 @@ function getPathFromUrl(fullUrl: string): string | null {
     }
 }
 
-export function getOptimizedImageUrl(fullUrl: string, options: { width: number; height: number; }): string {
-    const filePath = getPathFromUrl(fullUrl);
+export function getOptimizedImageUrl(relativePath: string, options: { width: number; height: number; }, activeStorageConfig?: { storage_url?: string, storage_key?: string, bucket_name?: string }): string {
+    if (!relativePath) return '';
+    
+    // Se já é uma URL completa, extrai o caminho relativo primeiro
+    const filePath = relativePath.startsWith('http') ? 
+        getRelativePath(relativePath, activeStorageConfig?.bucket_name) : relativePath;
+        
     if (!filePath) {
-        return fullUrl; // Fallback to original if path extraction fails
+        return relativePath; // Fallback to original if path extraction fails
     }
 
-    const { data } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(filePath, {
-            transform: {
-                width: options.width,
-                height: options.height,
-                resize: 'cover',
-            },
-        });
-    
-    return data.publicUrl;
+    // Use the active storage configuration or fallback to getImageUrl for basic URL construction
+    if (activeStorageConfig?.storage_url && activeStorageConfig?.storage_key) {
+        const client = getStorageClient(activeStorageConfig.storage_url, activeStorageConfig.storage_key);
+        const bucketName = activeStorageConfig.bucket_name || 'property-images';
+        
+        const { data } = client.storage
+            .from(bucketName)
+            .getPublicUrl(filePath, {
+                transform: {
+                    width: options.width,
+                    height: options.height,
+                    resize: 'cover',
+                },
+            });
+        
+        return data.publicUrl;
+    } else {
+        // Fallback: construct URL using getImageUrl without transform
+        return getImageUrl(filePath, activeStorageConfig?.storage_url, activeStorageConfig?.bucket_name);
+    }
 }
 
 

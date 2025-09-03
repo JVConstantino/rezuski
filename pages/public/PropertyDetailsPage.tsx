@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import PropertyCard from '../../components/PropertyCard';
 import { useProperties } from '../../contexts/PropertyContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { Share2Icon, MapIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon, DollarSignIcon } from '../../components/Icons';
 import { Property, PriceHistory } from '../../types';
 import BottomNavBar from '../../components/BottomNavBar';
@@ -66,7 +67,7 @@ const Lightbox: React.FC<{
     );
 };
 
-const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (index: number) => void }> = ({ images, title, onImageClick }) => {
+const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (index: number) => void; activeConfig?: any }> = ({ images, title, onImageClick, activeConfig }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!images || images.length === 0) {
@@ -119,7 +120,7 @@ const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (
                                 onClick={() => selectImage(index)} 
                                 className={`flex-shrink-0 w-32 aspect-[16/9] rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue transition-all ${currentIndex === index ? 'ring-2 ring-primary-blue' : 'opacity-70 hover:opacity-100'}`}
                             >
-                                <img src={getOptimizedImageUrl(img, { width: 128, height: 72 })} alt={`Miniatura ${index + 1}`} className="w-full h-full object-cover" />
+                                <img src={getOptimizedImageUrl(img, { width: 128, height: 72 }, activeConfig)} alt={`Miniatura ${index + 1}`} className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>
@@ -285,6 +286,7 @@ const PropertyDetailsPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
   const { properties, incrementViewCount } = useProperties();
   const { locale, t } = useLanguage();
+  const { activeConfig } = useStorageConfig();
   
   const originalProperty = properties.find(p => p.id === propertyId);
   const property = originalProperty ? localizeProperty(originalProperty, locale) : undefined;
@@ -414,7 +416,7 @@ const PropertyDetailsPage: React.FC = () => {
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <PropertyHeader property={property} onShare={handleShare} />
         <div className="mt-8">
-            <ImageCarousel images={property.images} title={property.title} onImageClick={openLightbox} />
+            <ImageCarousel images={property.images} title={property.title} onImageClick={openLightbox} activeConfig={activeConfig} />
         </div>
 
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
