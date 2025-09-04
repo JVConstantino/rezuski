@@ -5,7 +5,7 @@ interface StorageConfig {
     id: string;
     storage_url: string;
     storage_key: string;
-    bucket_name: string;
+    bucket_name?: string;  // Make bucket_name optional
     created_at: string;
     is_active: boolean;
 }
@@ -40,12 +40,20 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
                 // Se a tabela não existe, vamos usar configurações padrão
                 const defaultConfigs: StorageConfig[] = [
                     {
+                        id: 'constantino-new',
+                        storage_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
+                        storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
+                        bucket_name: 'property-images',
+                        created_at: new Date().toISOString(),
+                        is_active: true
+                    },
+                    {
                         id: 'constantino',
                         storage_url: 'https://constantino-supabase.62mil3.easypanel.host',
                         storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
                         bucket_name: 'property-images',
                         created_at: new Date().toISOString(),
-                        is_active: true
+                        is_active: false
                     },
                     {
                         id: 'default',
@@ -57,7 +65,7 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
                     }
                 ];
                 setConfigs(defaultConfigs);
-                setActiveConfigState(defaultConfigs[0]); // Constantino config is active by default
+                setActiveConfigState(defaultConfigs[0]); // New Constantino config is active by default
                 return;
             }
 

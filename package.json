@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate-help": "node scripts/migrate-help.mjs",
+    "test-migration": "node test/migration-test.js"
   },
   "dependencies": {
     "react": "19.1.0",

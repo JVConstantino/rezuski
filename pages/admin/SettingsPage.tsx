@@ -281,7 +281,7 @@ const StorageConfigForm: React.FC<{
     config: {
         storage_url: string;
         storage_key: string;
-        bucket_name: string;
+        bucket_name?: string;  // Make bucket_name optional
     };
     onConfigChange: (field: string, value: string) => void;
     showApiKey: boolean;
@@ -331,16 +331,15 @@ const StorageConfigForm: React.FC<{
                 </div>
             </div>
             <div>
-                <label htmlFor="bucket_name" className="block text-sm font-medium text-slate-700">Nome do Bucket</label>
+                <label htmlFor="bucket_name" className="block text-sm font-medium text-slate-700">Nome do Bucket (Opcional)</label>
                 <input
                     id="bucket_name"
                     name="bucket_name"
                     type="text"
                     value={config.bucket_name || ''}
                     onChange={handleInputChange}
-                    required
                     className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
-                    placeholder="Ex: property-images"
+                    placeholder="Ex: property-images (deixe em branco se não necessário)"
                 />
             </div>
         </div>
@@ -354,7 +353,7 @@ const StorageSettings: React.FC = () => {
     const [formData, setFormData] = useState({
         storage_url: '', 
         storage_key: '', 
-        bucket_name: ''
+        bucket_name: ''  // Initialize as empty string, which is valid for optional field
     });
     const [showApiKey, setShowApiKey] = useState(false);
     const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
@@ -387,10 +386,32 @@ const StorageSettings: React.FC = () => {
 
     const testStorageConnection = async (config: any) => {
         try {
-            setNotification({ type: 'success', message: 'Testando conexão e bucket...' });
+            setNotification({ type: 'success', message: 'Testando conexão...' });
             
             const { getStorageClient } = await import('../../lib/storageClient');
             const client = getStorageClient(config.storage_url, config.storage_key);
+            
+            // If no bucket is specified, just test the basic connection
+            if (!config.bucket_name || config.bucket_name.trim() === '') {
+                // Test basic connection by trying to list buckets
+                const { data: buckets, error: bucketsError } = await client.storage.listBuckets();
+                
+                if (bucketsError) {
+                    setNotification({
+                        type: 'error',
+                        message: `❌ Erro de conexão: ${bucketsError.message}`
+                    });
+                    return;
+                }
+                
+                setNotification({
+                    type: 'success',
+                    message: `✅ Conexão testada com sucesso! ${buckets?.length || 0} buckets disponíveis.`
+                });
+                return;
+            }
+            
+            setNotification({ type: 'success', message: 'Testando conexão e bucket...' });
             
             // Test bucket access - this confirms the bucket exists and is accessible
             const { data: files, error: filesError } = await client.storage
@@ -508,7 +529,7 @@ const StorageSettings: React.FC = () => {
                                 Armazenamento Ativo: <span className="font-bold">{new URL(activeConfig.storage_url).hostname}</span>
                             </p>
                             <p className="text-sm text-blue-700">
-                                Bucket: {activeConfig.bucket_name} | Todas as novas imagens serão armazenadas neste local
+                                Bucket: {activeConfig.bucket_name || 'Não especificado'} | Todas as novas imagens serão armazenadas neste local
                             </p>
                         </div>
                     </div>
@@ -544,7 +565,10 @@ const StorageSettings: React.FC = () => {
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-sm text-slate-500">Bucket: {config.bucket_name}</p>
+                                <p className="text-sm text-slate-500">Bucket: {config.bucket_name || 'Não especificado'}</p>
+                                {config.id === 'constantino-new' && (
+                                    <p className="text-xs text-blue-600">Constantino Rezuski DB</p>
+                                )}
                                 {config.id === 'constantino' && (
                                     <p className="text-xs text-blue-600">Constantino Supabase</p>
                                 )}

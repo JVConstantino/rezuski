@@ -50,6 +50,7 @@ import GalleryPage from './pages/admin/GalleryPage';
 import AmenitiesPage from './pages/admin/AmenitiesPage';
 import DataPreviewPage from './pages/admin/DataPreviewPage';
 import StorageTestPage from './pages/admin/StorageTestPage';
+import DatabaseMigrationPage from './pages/admin/DatabaseMigrationPage';
 
 const AppContent: React.FC = () => {
     const location = useLocation();
@@ -107,6 +108,7 @@ const AppContent: React.FC = () => {
                                                                     <Route path="messages" element={<MessagesPage />} />
                                                                     <Route path="reports" element={<ReportsPage />} />
                                                                     <Route path="data-preview" element={<DataPreviewPage />} />
+                                                                    <Route path="database-migration" element={<DatabaseMigrationPage />} />
                                                                     <Route path="settings" element={<SettingsPage />} />
                                                                 </Route>
                                                             </Route>
