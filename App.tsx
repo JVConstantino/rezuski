@@ -14,6 +14,7 @@ import { ApplicationProvider } from './contexts/ApplicationContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { AIConfigProvider } from './contexts/AIConfigContext';
 import { StorageConfigProvider } from './contexts/StorageConfigContext';
+import { DatabaseConfigProvider } from './contexts/DatabaseConfigContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginModalController from './components/LoginModalController';
 import ChatWidget from './components/public/ChatWidget';
@@ -72,8 +73,9 @@ const AppContent: React.FC = () => {
                                         <PropertyProvider>
                                             <AmenityProvider>
                                                 <StorageConfigProvider>
-                                                    <ImageProvider>
-                                                        <AIConfigProvider>
+                                                    <DatabaseConfigProvider>
+                                                        <ImageProvider>
+                                                            <AIConfigProvider>
                                                         <LoginModalController />
                                                         <Routes>
                                                             {/* Public Routes */}
@@ -119,7 +121,8 @@ const AppContent: React.FC = () => {
                                                         {!isAdminPage && <ChatWidget />}
                                                         </AIConfigProvider>
                                                     </ImageProvider>
-                                                </StorageConfigProvider>
+                                                </DatabaseConfigProvider>
+                                            </StorageConfigProvider>
                                             </AmenityProvider>
                                         </PropertyProvider>
                                     </BrokerProvider>
