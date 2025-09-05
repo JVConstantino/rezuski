@@ -12,22 +12,23 @@
     "test-migration": "node test/migration-test.js"
   },
   "dependencies": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "recharts": "3.1.0",
-    "react-router-dom": "7.6.3",
-    "react-intersection-observer": "9.13.0",
-    "@supabase/supabase-js": "2.44.4",
+    "@clerk/nextjs": "^6.31.9",
+    "@google/genai": "^1.10.0",
+    "@peculiar/webcrypto": "1.4.3",
     "@supabase/functions-js": "2.4.1",
     "@supabase/gotrue-js": "2.6.2",
     "@supabase/postgrest-js": "1.15.5",
     "@supabase/realtime-js": "2.9.0",
     "@supabase/storage-js": "2.5.5",
+    "@supabase/supabase-js": "2.44.4",
     "cross-fetch": "3.1.5",
-    "@peculiar/webcrypto": "1.4.3",
     "isomorphic-ws": "5.0.0",
     "openai": "4.52.7",
-    "@google/genai": "^1.10.0"
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-intersection-observer": "9.13.0",
+    "react-router-dom": "7.6.3",
+    "recharts": "3.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
