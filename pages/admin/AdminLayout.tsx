@@ -31,7 +31,10 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
         if (link.name === 'Aplicações' || link.name === 'Inquilinos') {
             return false;
         }
-        if (link.name === 'Pré-visualização de Dados' || link.name === 'Migração de BD') {
+        // Restrict access to these tools to only joaovictor.priv@gmail.com
+        if (link.name === 'Pré-visualização de Dados' || 
+            link.name === 'Migração de BD' || 
+            link.name === 'Teste Storage') {
             return user?.email === 'joaovictor.priv@gmail.com';
         }
         return true;

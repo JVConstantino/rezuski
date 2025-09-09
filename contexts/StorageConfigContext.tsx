@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '../types/supabase';
 
 interface StorageConfig {
     id: string;
@@ -22,27 +24,38 @@ interface StorageConfigContextType {
 
 const StorageConfigContext = createContext<StorageConfigContextType | undefined>(undefined);
 
-export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const StorageConfigProvider: React.FC<{ children: ReactNode; activeDatabase?: { database_url: string; database_key: string } }> = ({ children, activeDatabase }) => {
     const [configs, setConfigs] = useState<StorageConfig[]>([]);
     const [activeConfig, setActiveConfigState] = useState<StorageConfig | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Create dynamic supabase client based on active database
+    const getDatabaseClient = () => {
+        if (activeDatabase) {
+            return createClient<Database>(activeDatabase.database_url, activeDatabase.database_key);
+        }
+        return supabase; // fallback to default
+    };
+
     const fetchConfigs = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            console.log('StorageConfigContext: Fetching configs with database:', activeDatabase);
+            const dbClient = getDatabaseClient();
+            const { data, error } = await dbClient
                 .from('storage_configs')
                 .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error fetching storage configs:', error);
+                console.log('StorageConfigContext: Using fallback configs');
                 // Se a tabela não existe, vamos usar configurações padrão
                 const defaultConfigs: StorageConfig[] = [
                     {
                         id: 'constantino-new',
                         storage_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
-                        storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
+                        storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q',
                         bucket_name: 'property-images',
                         created_at: new Date().toISOString(),
                         is_active: true
@@ -66,11 +79,14 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
                 ];
                 setConfigs(defaultConfigs);
                 setActiveConfigState(defaultConfigs[0]); // New Constantino config is active by default
+                console.log('StorageConfigContext: Set fallback configs, active:', defaultConfigs[0]);
                 return;
             }
 
+            console.log('StorageConfigContext: Fetched configs from database:', data);
             setConfigs(data || []);
             const active = data?.find(config => config.is_active);
+            console.log('StorageConfigContext: Active config from database:', active);
             setActiveConfigState(active || null);
         } catch (error) {
             console.error('Error fetching storage configs:', error);
@@ -81,7 +97,8 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
 
     const addConfig = async (configData: Omit<StorageConfig, 'id' | 'created_at' | 'is_active'>) => {
         try {
-            const { data, error } = await supabase
+            const dbClient = getDatabaseClient();
+            const { data, error } = await dbClient
                 .from('storage_configs')
                 .insert([{ ...configData, is_active: false }])
                 .select()
@@ -91,6 +108,9 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
                 console.error('Error adding storage config:', error);
                 if (error.code === 'PGRST116' || error.message.includes('relation "public.storage_configs" does not exist')) {
                     throw new Error('A tabela storage_configs não existe no banco de dados. Por favor, crie a tabela primeiro.');
+                }
+                if (error.code === '42501' || error.message.includes('row-level security policy')) {
+                    throw new Error('Erro de permissão RLS: Você não tem permissão para adicionar configurações de storage. Execute o SQL de correção RLS ou faça login como usuário autenticado.');
                 }
                 throw error;
             }
@@ -104,7 +124,8 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
 
     const updateConfig = async (id: string, configData: Partial<Omit<StorageConfig, 'id' | 'created_at'>>) => {
         try {
-            const { data, error } = await supabase
+            const dbClient = getDatabaseClient();
+            const { data, error } = await dbClient
                 .from('storage_configs')
                 .update(configData)
                 .eq('id', id)
@@ -125,7 +146,8 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
 
     const deleteConfig = async (id: string) => {
         try {
-            const { error } = await supabase
+            const dbClient = getDatabaseClient();
+            const { error } = await dbClient
                 .from('storage_configs')
                 .delete()
                 .eq('id', id);
@@ -152,7 +174,8 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
             }
 
             // If we have database connectivity, try to update the database
-            const { data: testData, error: testError } = await supabase
+            const dbClient = getDatabaseClient();
+            const { data: testData, error: testError } = await dbClient
                 .from('storage_configs')
                 .select('id')
                 .limit(1);
@@ -160,13 +183,13 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
             if (!testError) {
                 // Database table exists, update normally
                 // First, deactivate all configs
-                await supabase
+                await dbClient
                     .from('storage_configs')
                     .update({ is_active: false })
                     .neq('id', '');
 
                 // Then activate the selected one
-                const { data, error } = await supabase
+                const { data, error } = await dbClient
                     .from('storage_configs')
                     .update({ is_active: true })
                     .eq('id', id)
@@ -204,8 +227,13 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode }> = ({ child
     };
 
     useEffect(() => {
-        fetchConfigs();
-    }, []);
+        // Add a small delay to ensure database context is fully updated
+        const timeoutId = setTimeout(() => {
+            fetchConfigs();
+        }, 100);
+        
+        return () => clearTimeout(timeoutId);
+    }, [activeDatabase?.database_url, activeDatabase?.database_key]); // Use specific properties for more precise dependency tracking
 
     return (
         <StorageConfigContext.Provider value={{

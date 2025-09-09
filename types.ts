@@ -107,6 +107,7 @@ export interface Property {
   priceHistory: PriceHistory[];
   isPopular?: boolean;
   tourUrl?: string;
+  youtubeUrl?: string;
   viewCount?: number;
   display_order?: number;
   translations?: {

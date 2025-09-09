@@ -3,12 +3,15 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { PropertyStatus } from '../../types';
 import { ChevronLeftIcon, EditIcon, ArchiveIcon, MapPinIcon, DollarSignIcon, BedIcon, BathIcon, MaximizeIcon, CheckCircleIcon, CalendarIcon } from '../../components/Icons';
+import { getOptimizedImageUrl } from '../../lib/localize';
 
 const PropertyDetailPage: React.FC = () => {
     const { propertyId } = useParams<{ propertyId: string }>();
     const { properties, toggleArchiveProperty } = useProperties();
+    const { activeConfig } = useStorageConfig();
     const property = properties.find(p => p.id === propertyId);
 
     if (!property) {
@@ -64,7 +67,7 @@ const PropertyDetailPage: React.FC = () => {
                         <h2 className="text-xl font-bold text-slate-800 mb-4">Galeria de Fotos</h2>
                         <div className="grid grid-cols-3 gap-4">
                             {property.images.slice(0, 3).map((img, index) => (
-                                <img key={index} src={img} alt={`${property.title} ${index + 1}`} className="w-full h-40 object-cover rounded-lg" />
+                                <img key={index} src={getOptimizedImageUrl(img, { width: 200, height: 160 }, activeConfig)} alt={`${property.title} ${index + 1}`} className="w-full h-40 object-cover rounded-lg" />
                             ))}
                         </div>
                     </div>

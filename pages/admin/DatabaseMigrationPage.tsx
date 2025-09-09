@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DatabaseMigration, migrationUtils } from '../../lib/databaseMigration';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { CheckCircleIcon, XIcon, ExclamationTriangleIcon, DocumentArrowDownIcon, DocumentArrowUpIcon, EyeIcon } from '../../components/Icons';
+import { useUserPermissions } from '../../hooks/useUserPermissions';
 
 interface MigrationStep {
   id: string;
@@ -13,6 +15,8 @@ interface MigrationStep {
 
 const DatabaseMigrationPage: React.FC = () => {
   const { configs } = useStorageConfig();
+  const { user, canAccessAdvancedTools } = useUserPermissions();
+  const navigate = useNavigate();
   const [sourceConfigId, setSourceConfigId] = useState<string>('');
   const [targetConfigId, setTargetConfigId] = useState<string>('');
   const [sourceServiceKey, setSourceServiceKey] = useState<string>('');
@@ -57,6 +61,13 @@ const DatabaseMigrationPage: React.FC = () => {
   const [showSchemaModal, setShowSchemaModal] = useState<boolean>(false);
   const [storageStats, setStorageStats] = useState<{ buckets: number; totalFiles: number; totalSize: number } | null>(null);
   const [migratedFiles, setMigratedFiles] = useState<number>(0);
+
+  useEffect(() => {
+    // Redirect if user doesn't have permission
+    if (user && !canAccessAdvancedTools()) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [user, canAccessAdvancedTools, navigate]);
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();

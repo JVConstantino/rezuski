@@ -5,8 +5,10 @@ import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCategories } from '../../contexts/CategoryContext';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { Property, PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
 import { SearchIcon, PlusIcon, EyeIcon, EditIcon, ArchiveIcon, TrashIcon, GripVerticalIcon } from '../../components/Icons';
+import { getOptimizedImageUrl } from '../../lib/localize';
 
 const BulkActionBar: React.FC<{
     selectedCount: number;
@@ -59,6 +61,7 @@ const PropertiesPage: React.FC = () => {
   const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder, bulkUpdateProperties, bulkDeleteProperties } = useProperties();
   const { t, propertyTypes } = useLanguage();
   const { categories } = useCategories();
+  const { activeConfig } = useStorageConfig();
   const [searchTerm, setSearchTerm] = useState('');
   const [localProperties, setLocalProperties] = useState<Property[]>([]);
   const [isDirty, setIsDirty] = useState(false);
@@ -270,7 +273,7 @@ const PropertiesPage: React.FC = () => {
                     <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-3">
                             <input type="checkbox" checked={selectedProperties.includes(prop.id)} onChange={() => handleToggleSelect(prop.id)} className="mt-1 h-5 w-5 rounded text-primary-blue focus:ring-primary-blue border-slate-300"/>
-                            <img src={prop.images[0]} alt={prop.title} className="w-16 h-12 rounded-md object-cover flex-shrink-0" />
+                            <img src={getOptimizedImageUrl(prop.images[0], { width: 64, height: 48 }, activeConfig)} alt={prop.title} className="w-16 h-12 rounded-md object-cover flex-shrink-0" />
                             <div className="flex-grow">
                                 <p className="font-semibold text-slate-800 line-clamp-2">{prop.title}</p>
                                 <p className="text-sm text-slate-500 font-mono">{prop.code || '-'}</p>
@@ -328,7 +331,7 @@ const PropertiesPage: React.FC = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center space-x-3">
-                      <img src={prop.images[0]} alt={prop.title} className="w-16 h-12 rounded-md object-cover" />
+                      <img src={getOptimizedImageUrl(prop.images[0], { width: 64, height: 48 }, activeConfig)} alt={prop.title} className="w-16 h-12 rounded-md object-cover" />
                       <div>
                         <p className="font-semibold text-slate-800">{prop.title}</p>
                         <p className="text-sm text-slate-500">{prop.address}</p>

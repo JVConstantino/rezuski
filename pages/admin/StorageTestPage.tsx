@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { getStorageClient } from '../../lib/storageClient';
+import { useUserPermissions } from '../../hooks/useUserPermissions';
 
 const StorageTestPage: React.FC = () => {
     const { activeConfig } = useStorageConfig();
+    const { user, canAccessAdvancedTools } = useUserPermissions();
+    const navigate = useNavigate();
     const [testResult, setTestResult] = useState<string>('');
     const [testing, setTesting] = useState(false);
+
+    useEffect(() => {
+        // Redirect if user doesn't have permission
+        if (user && !canAccessAdvancedTools()) {
+            navigate('/admin/dashboard', { replace: true });
+        }
+    }, [user, canAccessAdvancedTools, navigate]);
 
     const runStorageTest = async () => {
         setTesting(true);
@@ -106,6 +117,11 @@ const StorageTestPage: React.FC = () => {
             setTesting(false);
         }
     };
+
+    // Render nothing until the redirect logic has a chance to run
+    if (user && !canAccessAdvancedTools()) {
+        return null;
+    }
 
     return (
         <div className="p-6 max-w-4xl mx-auto">

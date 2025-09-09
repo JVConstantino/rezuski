@@ -7,6 +7,7 @@ import { useImages } from '../../contexts/ImageContext';
 import { useAIConfig } from '../../contexts/AIConfigContext';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { getStorageClient, getRelativePath } from '../../lib/storageClient';
+import { getOptimizedImageUrl } from '../../lib/localize';
 import ImageGalleryModal from './ImageGalleryModal';
 import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
@@ -60,6 +61,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         availableDate: new Date().toISOString().split('T')[0],
         isPopular: false,
         tourUrl: '',
+        youtubeUrl: '',
     });
     
     const [amenities, setAmenities] = useState<Amenity[]>([]);
@@ -91,6 +93,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 availableDate: initialData.availableDate ? new Date(initialData.availableDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                 isPopular: initialData.isPopular || false,
                 tourUrl: initialData.tourUrl || '',
+                youtubeUrl: initialData.youtubeUrl || '',
             });
             setAmenities(initialData.amenities);
             const initialImages = initialData.images.map((img, index) => ({
@@ -610,6 +613,11 @@ Agora, gere o objeto JSON completo.`;
                                 <label className="block text-sm font-medium text-slate-700">URL do Tour Virtual 3D</label>
                                 <input type="url" name="tourUrl" value={formData.tourUrl} onChange={handleInputChange} placeholder="https://..." className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
                             </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-slate-700">URL do Vídeo do YouTube</label>
+                                <input type="url" name="youtubeUrl" value={formData.youtubeUrl} onChange={handleInputChange} placeholder="https://www.youtube.com/watch?v=..." className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"/>
+                                <p className="mt-1 text-sm text-slate-500">Cole o link completo do vídeo do YouTube para ser exibido na página do imóvel</p>
+                            </div>
                             <div className="flex items-center pt-6">
                                 <input id="isPopular" name="isPopular" type="checkbox" checked={formData.isPopular} onChange={handleInputChange} className="h-4 w-4 text-primary-blue focus:ring-primary-blue border-slate-300 rounded" />
                                 <label htmlFor="isPopular" className="ml-2 block text-sm text-slate-900">Marcar como popular</label>
@@ -660,7 +668,7 @@ Agora, gere o objeto JSON completo.`;
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                             {images.map((image, index) => (
                                 <div key={index} className="relative group">
-                                    <img src={image.preview} alt={`Preview ${index}`} className="w-full h-32 object-cover rounded-lg" />
+                                    <img src={getOptimizedImageUrl(image.preview, { width: 200, height: 128 }, storageConfig)} alt={`Preview ${index}`} className="w-full h-32 object-cover rounded-lg" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
                                         <button type="button" onClick={() => handleSetPrimary(index)} disabled={index === 0} className="text-white disabled:opacity-50">
                                             <StarIcon className={`w-6 h-6 ${index === 0 ? 'text-yellow-400 fill-current' : ''}`} />

@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAIConfig, AIConfig } from '../../contexts/AIConfigContext';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { useDatabaseConfig } from '../../contexts/DatabaseConfigContext';
+import { useUserPermissions } from '../../hooks/useUserPermissions';
 
 const ProfileSettings: React.FC = () => {
     const { user, updateProfile } = useAuth();
@@ -310,7 +311,7 @@ const StorageConfigForm: React.FC<{
                 />
             </div>
             <div>
-                <label htmlFor="storage_key" className="block text-sm font-medium text-slate-700">Chave Anônima (anon key)</label>
+                <label htmlFor="storage_key" className="block text-sm font-medium text-slate-700">Chave de API (anon/service_role)</label>
                 <div className="relative mt-1">
                     <input
                         id="storage_key"
@@ -320,7 +321,7 @@ const StorageConfigForm: React.FC<{
                         onChange={handleInputChange}
                         required
                         className="block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-blue focus:border-primary-blue sm:text-sm"
-                        placeholder="Cole sua chave anônima aqui"
+                        placeholder="Cole sua chave de API aqui (anon ou service_role)"
                     />
                     <button
                         type="button"
@@ -418,6 +419,7 @@ const DatabaseConfigForm: React.FC<{
 
 const DatabaseSettings: React.FC = () => {
     const { configs, activeConfig, addConfig, updateConfig, deleteConfig, setActiveConfig, loading } = useDatabaseConfig();
+    const { canAccessDatabaseConfig } = useUserPermissions();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingConfig, setEditingConfig] = useState<any>(null);
     const [formData, setFormData] = useState({
@@ -435,6 +437,16 @@ const DatabaseSettings: React.FC = () => {
             return () => clearTimeout(timer);
         }
     }, [notification]);
+
+    // Check permissions
+    if (!canAccessDatabaseConfig()) {
+        return (
+            <div className="text-center py-8">
+                <h2 className="text-xl font-bold text-slate-800">Acesso Negado</h2>
+                <p className="text-slate-600 mt-2">Você não tem permissão para acessar as configurações de banco de dados.</p>
+            </div>
+        );
+    }
 
     const handleDatabaseConfigChange = async (id: string) => {
         try {
@@ -678,6 +690,7 @@ const DatabaseSettings: React.FC = () => {
 
 const StorageSettings: React.FC = () => {
     const { configs, activeConfig, addConfig, updateConfig, deleteConfig, setActiveConfig, loading } = useStorageConfig();
+    const { canAccessStorageConfig } = useUserPermissions();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingConfig, setEditingConfig] = useState<any>(null);
     const [formData, setFormData] = useState({
@@ -695,6 +708,16 @@ const StorageSettings: React.FC = () => {
             return () => clearTimeout(timer);
         }
     }, [notification]);
+
+    // Check permissions
+    if (!canAccessStorageConfig()) {
+        return (
+            <div className="text-center py-8">
+                <h2 className="text-xl font-bold text-slate-800">Acesso Negado</h2>
+                <p className="text-slate-600 mt-2">Você não tem permissão para acessar as configurações de armazenamento.</p>
+            </div>
+        );
+    }
 
     const handleStorageConfigChange = async (id: string) => {
         try {
@@ -814,6 +837,8 @@ const StorageSettings: React.FC = () => {
             console.error('Storage config save error:', error);
             if (error.message?.includes('tabela storage_configs não existe')) {
                 alert('Erro: A tabela storage_configs não existe no banco de dados.\n\nPara resolver, execute este SQL no Supabase:\n\nCREATE TABLE storage_configs (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  storage_url TEXT NOT NULL,\n  storage_key TEXT NOT NULL,\n  bucket_name TEXT NOT NULL,\n  is_active BOOLEAN DEFAULT false,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);');
+            } else if (error.message?.includes('row-level security policy') || error.message?.includes('permissão RLS')) {
+                alert('Erro de RLS: Você não tem permissão para adicionar configurações de storage.\n\nPara resolver, execute este SQL no Supabase:\n\n-- Remover política restritiva\nDROP POLICY IF EXISTS "Admin full access" ON public.storage_configs;\n\n-- Permitir acesso anônimo para leitura\nCREATE POLICY "Allow anonymous read access" ON public.storage_configs FOR SELECT USING (true);\n\n-- Permitir acesso completo para usuários autenticados\nCREATE POLICY "Allow authenticated users full access" ON public.storage_configs FOR ALL USING (auth.role() = \'authenticated\');\n\n-- OU para teste, permitir acesso total:\n-- CREATE POLICY "Allow all access for testing" ON public.storage_configs FOR ALL USING (true);');
             } else {
                 alert(`Erro ao salvar configuração de storage: ${error.message || 'Erro desconhecido'}`);
             }
@@ -970,58 +995,63 @@ const StorageSettings: React.FC = () => {
 };
 
 
-const SettingsPage: React.FC = () => {
+const SettingsTabs: React.FC = () => {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('profile');
 
     const tabs = [
-        { id: 'profile', name: 'Perfil', icon: <UserCircleIcon className="w-5 h-5 mr-2" /> },
-        { id: 'notifications', name: 'Notificações', icon: <BellIcon className="w-5 h-5 mr-2" /> },
-        { id: 'security', name: 'Segurança', icon: <ShieldIcon className="w-5 h-5 mr-2" /> },
-        { id: 'storage', name: 'Armazenamento', icon: <CloudIcon className="w-5 h-5 mr-2" /> },
-        { id: 'database', name: 'Banco de Dados', icon: <DatabaseIcon className="w-5 h-5 mr-2" /> },
-        { id: 'ai', name: 'Inteligência Artificial', icon: <SparklesIcon className="w-5 h-5 mr-2" /> },
+        { id: 'profile', name: 'Perfil', icon: <UserCircleIcon className="w-5 h-5" /> },
+        { id: 'notifications', name: 'Notificações', icon: <BellIcon className="w-5 h-5" /> },
+        { id: 'security', name: 'Segurança', icon: <ShieldIcon className="w-5 h-5" /> },
+        { id: 'ai', name: 'IA', icon: <SparklesIcon className="w-5 h-5" /> },
+        // Only show storage and database tabs to joaovictor.priv@gmail.com
+        ...(user?.email === 'joaovictor.priv@gmail.com' ? [
+            { id: 'storage', name: 'Armazenamento', icon: <CloudIcon className="w-5 h-5" /> },
+            { id: 'database', name: 'Banco de Dados', icon: <DatabaseIcon className="w-5 h-5" /> }
+        ] : [])
     ];
-
-    const renderContent = () => {
-        switch (activeTab) {
-            case 'profile': return <ProfileSettings />;
-            case 'notifications': return <NotificationSettings />;
-            case 'security': return <SecuritySettings />;
-            case 'storage': return <StorageSettings />;
-            case 'database': return <DatabaseSettings />;
-            case 'ai': return <AISettings />;
-            default: return <ProfileSettings />;
-        }
-    };
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-6">Configurações</h1>
-            <div className="flex flex-col md:flex-row gap-8">
-                <div className="w-full md:w-1/4">
-                    <nav className="space-y-1">
-                        {tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-left ${
-                                    activeTab === tab.id
-                                        ? 'bg-primary-blue/20 text-primary-blue'
-                                        : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                            >
-                                {tab.icon}
-                                {tab.name}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-                <div className="w-full md:w-3/4">
-                    <div className="bg-white p-8 rounded-lg shadow-sm">
-                        {renderContent()}
-                    </div>
-                </div>
+            <div className="border-b border-slate-200">
+                <nav className="-mb-px flex space-x-8 overflow-x-auto pb-2">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                                activeTab === tab.id
+                                    ? 'border-primary-blue text-primary-blue'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                            }`}
+                        >
+                            {tab.icon}
+                            <span>{tab.name}</span>
+                        </button>
+                    ))}
+                </nav>
             </div>
+
+            <div className="mt-6">
+                {activeTab === 'profile' && <ProfileSettings />}
+                {activeTab === 'notifications' && <NotificationSettings />}
+                {activeTab === 'security' && <SecuritySettings />}
+                {activeTab === 'ai' && <AISettings />}
+                {activeTab === 'storage' && user?.email === 'joaovictor.priv@gmail.com' && <StorageSettings />}
+                {activeTab === 'database' && user?.email === 'joaovictor.priv@gmail.com' && <DatabaseSettings />}
+            </div>
+        </div>
+    );
+};
+
+const SettingsPage: React.FC = () => {
+    return (
+        <div>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-slate-900">Configurações</h1>
+                <p className="text-slate-500 mt-2">Gerencie as configurações da sua conta e do sistema.</p>
+            </div>
+            <SettingsTabs />
         </div>
     );
 };

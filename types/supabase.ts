@@ -190,6 +190,7 @@ export type Database = {
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
+          youtubeUrl?: string
           viewCount?: number
           display_order?: number
           translations?: { [key: string]: { title?: string; description?: string } } | null
@@ -223,6 +224,7 @@ export type Database = {
           listedByUserId?: string
           isPopular?: boolean
           tourUrl?: string
+          youtubeUrl?: string
           viewCount?: number
           display_order?: number
           translations?: { [key: string]: { title?: string; description?: string } } | null
@@ -256,6 +258,7 @@ export type Database = {
           priceHistory?: PriceHistory[]
           isPopular?: boolean
           tourUrl?: string
+          youtubeUrl?: string
           viewCount?: number
           display_order?: number
           translations?: { [key: string]: { title?: string; description?: string } } | null
