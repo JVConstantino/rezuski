@@ -33,16 +33,21 @@ const Header: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [langMenuRef]);
 
+  const currentLanguage = supportedLanguages.find(lang => lang.code === locale);
+
   const LanguageSwitcher = () => (
     <div className="relative" ref={langMenuRef}>
       <button 
         onClick={() => setLangMenuOpen(!isLangMenuOpen)} 
-        className="flex items-center text-slate-600 hover:text-primary-blue transition-colors p-2 rounded-full hover:bg-slate-100"
+        className="flex items-center text-slate-600 hover:text-primary-blue transition-colors p-2 rounded-full hover:bg-slate-100 space-x-1"
         aria-haspopup="true"
         aria-expanded={isLangMenuOpen}
         aria-label="Select language"
       >
         <GlobeIcon className="w-6 h-6" />
+        {currentLanguage && (
+          <span className="text-lg">{currentLanguage.flag}</span>
+        )}
       </button>
       {isLangMenuOpen && (
         <div 
