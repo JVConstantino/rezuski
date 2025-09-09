@@ -264,6 +264,7 @@ const RecentProperties: React.FC = () => {
 
     const recentProperties = [...properties]
         .filter(p => p.status === 'AVAILABLE')
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 9);
     
     const scrollAmount = 350;
@@ -449,7 +450,10 @@ const ServicesSection: React.FC = () => {
 const PropertiesForPurpose: React.FC<{ title: string; purpose: PropertyPurpose; isGray?: boolean }> = ({ title, purpose, isGray }) => {
     const { properties } = useProperties();
     const { t } = useLanguage();
-    const filteredProperties = properties.filter(p => p.purpose === purpose && p.status === 'AVAILABLE').slice(0, 6);
+    const filteredProperties = properties
+        .filter(p => p.purpose === purpose && p.status === 'AVAILABLE')
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 6);
     
     if(filteredProperties.length === 0) return null;
 
