@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDatabaseConfig } from '../../contexts/DatabaseConfigContext';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { useImages } from '../../contexts/ImageContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface DiagnosticLog {
     timestamp: string;
@@ -12,11 +13,17 @@ interface DiagnosticLog {
 }
 
 const DatabaseImageDiagnostic: React.FC = () => {
+    const { user } = useAuth();
     const databaseContext = useDatabaseConfig();
     const storageContext = useStorageConfig();
     const imageContext = useImages();
     const [logs, setLogs] = useState<DiagnosticLog[]>([]);
     const [isVisible, setIsVisible] = useState(false);
+
+    // Só permite acesso para o usuário específico
+    if (!user || user.email !== 'joaovictor.priv@gmail.com') {
+        return null;
+    }
 
     const addLog = (event: string) => {
         const log: DiagnosticLog = {
