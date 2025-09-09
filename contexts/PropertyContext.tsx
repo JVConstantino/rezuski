@@ -15,7 +15,11 @@ interface PropertyContextType {
     updatePropertyOrder: (updates: { id: string; display_order: number }[]) => Promise<void>;
     bulkUpdateProperties: (propertyIds: string[], updates: Partial<Property>) => Promise<void>;
     bulkDeleteProperties: (propertyIds: string[]) => Promise<void>;
+    loadMoreProperties: () => Promise<void>;
+    hasMoreProperties: boolean;
+    totalCount: number;
     loading: boolean;
+    loadingMore: boolean;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -43,24 +47,107 @@ const setStoredViewCounts = (counts: Record<string, number>) => {
 };
 
 
+const PROPERTIES_PER_PAGE = 20;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+interface CacheData {
+    data: Property[];
+    timestamp: number;
+    totalCount: number;
+    hasMore: boolean;
+    page: number;
+}
+
 export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMoreProperties, setHasMoreProperties] = useState(true);
+    const [totalCount, setTotalCount] = useState(0);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [cache, setCache] = useState<Map<string, CacheData>>(new Map());
 
-    const fetchProperties = useCallback(async () => {
-        setLoading(true);
+    const getCacheKey = (page: number) => `properties_page_${page}`;
+
+    const isCacheValid = (cacheData: CacheData): boolean => {
+        return Date.now() - cacheData.timestamp < CACHE_TTL;
+    };
+
+    const clearCache = () => {
+        setCache(new Map());
+    };
+
+    const fetchProperties = useCallback(async (reset = true) => {
+        if (reset) {
+            setLoading(true);
+            setCurrentPage(0);
+            setProperties([]);
+        } else {
+            setLoadingMore(true);
+        }
+
+        const page = reset ? 0 : currentPage + 1;
+        const cacheKey = getCacheKey(page);
+        const cachedData = cache.get(cacheKey);
+
+        // Check if we have valid cached data
+        if (cachedData && isCacheValid(cachedData) && !reset) {
+            const storedViewCounts = getStoredViewCounts();
+            const propertiesWithLocalViews = cachedData.data.map(prop => ({
+                ...prop,
+                viewCount: Math.max(storedViewCounts[prop.id] || 0, prop.viewCount || 0),
+            }));
+
+            if (reset) {
+                setProperties(propertiesWithLocalViews);
+                setCurrentPage(0);
+            } else {
+                setProperties(prev => [...prev, ...propertiesWithLocalViews]);
+                setCurrentPage(page);
+            }
+
+            setTotalCount(cachedData.totalCount);
+            setHasMoreProperties(cachedData.hasMore);
+            setLoading(false);
+            setLoadingMore(false);
+            return;
+        }
+
+        const from = page * PROPERTIES_PER_PAGE;
+        const to = from + PROPERTIES_PER_PAGE - 1;
+
+        // Get total count first
+        const { count } = await supabase
+            .from('properties')
+            .select('*', { count: 'exact', head: true });
+
         const { data, error } = await supabase
             .from('properties')
             .select('*')
             .order('display_order', { ascending: true, nullsFirst: false })
-            .order('createdAt', { ascending: false });
+            .order('createdAt', { ascending: false })
+            .range(from, to);
 
         if (error) {
             console.error('Error fetching properties:', error);
-            setProperties([]);
+            if (reset) {
+                setProperties([]);
+            }
         } else {
             const fetchedProperties = data as unknown as Property[];
             const storedViewCounts = getStoredViewCounts();
+            const hasMore = fetchedProperties.length === PROPERTIES_PER_PAGE && (page + 1) * PROPERTIES_PER_PAGE < (count || 0);
+
+            // Cache the data
+            const newCache = new Map(cache);
+            newCache.set(cacheKey, {
+                data: fetchedProperties,
+                timestamp: Date.now(),
+                totalCount: count || 0,
+                hasMore,
+                page
+            });
+            setCache(newCache);
 
             // Merge stored view counts with fetched data. Prioritize higher value.
             const propertiesWithLocalViews = fetchedProperties.map(prop => ({
@@ -75,14 +162,30 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             });
             setStoredViewCounts(newStoredCounts);
 
-            setProperties(propertiesWithLocalViews);
+            if (reset) {
+                setProperties(propertiesWithLocalViews);
+            } else {
+                setProperties(prev => [...prev, ...propertiesWithLocalViews]);
+            }
+            
+            setCurrentPage(page);
+            setTotalCount(count || 0);
+            setHasMoreProperties(hasMore);
         }
+        
         setLoading(false);
-    }, []);
+        setLoadingMore(false);
+    }, [currentPage, PROPERTIES_PER_PAGE, cache]);
+
+    const loadMoreProperties = useCallback(async () => {
+        if (!loadingMore && hasMoreProperties) {
+            await fetchProperties(false);
+        }
+    }, [fetchProperties, loadingMore, hasMoreProperties]);
 
     useEffect(() => {
-        fetchProperties();
-    }, [fetchProperties]);
+        fetchProperties(true);
+    }, []);
     
     const updatePropertyOrder = async (updates: { id: string; display_order: number }[]) => {
         const updatePromises = updates.map(u => 
@@ -96,8 +199,9 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error updating property order:', firstError.error.message);
             alert(`Erro ao salvar a ordem: ${firstError.error.message}`);
         } else {
+            clearCache(); // Clear cache when data changes
             // Refetch to get the correctly ordered list from the DB
-            await fetchProperties();
+            await fetchProperties(true);
         }
     };
 
@@ -152,6 +256,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             alert(`Error adding property: ${error.message}`);
         } else if (data) {
             console.log('PropertyContext - Propriedade salva com sucesso:', data[0]);
+            clearCache(); // Clear cache when data changes
             await fetchProperties(); // Refetch to maintain order
         }
     };
@@ -179,7 +284,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             alert(`Error updating property: ${error.message}`);
         } else if (data) {
             console.log('PropertyContext - Propriedade atualizada com sucesso:', data[0]);
-             setProperties(prev => prev.map(p => p.id === updatedProperty.id ? (data[0] as unknown as Property) : p));
+            clearCache(); // Clear cache when data changes
+            setProperties(prev => prev.map(p => p.id === updatedProperty.id ? (data[0] as unknown as Property) : p));
         }
     };
     
@@ -199,7 +305,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error toggling archive status:', error.message);
             alert(`Error toggling archive status: ${error.message}`);
         } else if (data) {
-             setProperties(prev => prev.map(p => p.id === propertyId ? (data[0] as unknown as Property) : p));
+            clearCache(); // Clear cache when data changes
+            setProperties(prev => prev.map(p => p.id === propertyId ? (data[0] as unknown as Property) : p));
         }
     }
 
@@ -247,6 +354,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error deleting property:', dbError.message);
             alert(`Erro ao excluir imóvel: ${dbError.message}`);
         } else {
+            clearCache(); // Clear cache when data changes
             setProperties(prev => prev.filter(p => p.id !== propertyId));
         }
     };
@@ -261,6 +369,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error in bulk update:', error.message);
             alert(`Erro na atualização em massa: ${error.message}`);
         } else {
+            clearCache(); // Clear cache when data changes
             await fetchProperties(); // Refetch to show changes
             alert(`${propertyIds.length} imóveis atualizados com sucesso.`);
         }
@@ -305,6 +414,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error deleting properties:', dbError.message);
             alert(`Erro ao excluir imóveis: ${dbError.message}`);
         } else {
+            clearCache(); // Clear cache when data changes
             await fetchProperties();
             alert(`${propertyIds.length} imóveis excluídos com sucesso.`);
         }
@@ -312,7 +422,22 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     return (
-        <PropertyContext.Provider value={{ properties, addProperty, updateProperty, toggleArchiveProperty, deleteProperty, loading, incrementViewCount, updatePropertyOrder, bulkUpdateProperties, bulkDeleteProperties }}>
+        <PropertyContext.Provider value={{
+            properties,
+            addProperty,
+            updateProperty,
+            toggleArchiveProperty,
+            deleteProperty,
+            incrementViewCount,
+            updatePropertyOrder,
+            bulkUpdateProperties,
+            bulkDeleteProperties,
+            loadMoreProperties,
+            hasMoreProperties,
+            totalCount,
+            loading,
+            loadingMore
+        }}>
             {children}
         </PropertyContext.Provider>
     );

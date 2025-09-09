@@ -5,6 +5,7 @@ import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStorageConfig } from '../contexts/StorageConfigContext';
 import { localizeProperty, getOptimizedImageUrl } from '../lib/localize';
+import LazyImage from './LazyImage';
 
 interface PropertyCardProps {
   property: Property;
@@ -46,7 +47,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property: originalProperty 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-lg">
       <div className="relative">
-        <img src={optimizedImageUrl} alt={property.title} className="w-full aspect-video object-cover" />
+        <LazyImage 
+          src={optimizedImageUrl} 
+          alt={property.title} 
+          className="w-full aspect-video object-cover" 
+        />
         {property.isPopular && (
           <div className="absolute top-3 left-3 bg-primary-blue text-white text-xs font-bold px-2 py-1 rounded">
             POPULAR

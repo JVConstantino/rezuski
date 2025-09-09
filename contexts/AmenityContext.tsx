@@ -16,7 +16,13 @@ interface AmenityContextType {
     loading: boolean;
 }
 
+interface CacheData {
+    data: ManagedAmenity[];
+    timestamp: number;
+}
+
 const AmenityContext = createContext<AmenityContextType | undefined>(undefined);
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 // Helper to clean potential markdown and extra text from AI JSON responses
 const cleanAIResponse = (response: string): string => {
@@ -64,8 +70,23 @@ const cleanAIResponse = (response: string): string => {
 export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [amenities, setAmenities] = useState<ManagedAmenity[]>([]);
     const [loading, setLoading] = useState(true);
+    const [cache, setCache] = useState<CacheData | null>(null);
+
+    const isCacheValid = (cacheData: CacheData): boolean => {
+        return Date.now() - cacheData.timestamp < CACHE_TTL;
+    };
+
+    const clearCache = () => {
+        setCache(null);
+    };
 
     const fetchAmenities = useCallback(async () => {
+        // Check if we have valid cached data
+        if (cache && isCacheValid(cache)) {
+            setAmenities(cache.data);
+            return;
+        }
+
         // Only set loading true if it's not already loading to prevent flickers
         setLoading(current => current ? true : true);
         const { data, error } = await supabase.from('amenities').select('*').order('name', { ascending: true });
@@ -73,10 +94,17 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.error('Error fetching amenities:', error);
             setAmenities([]);
         } else {
-            setAmenities(data as ManagedAmenity[] || []);
+            const amenitiesData = data as ManagedAmenity[] || [];
+            setAmenities(amenitiesData);
+            
+            // Cache the data
+            setCache({
+                data: amenitiesData,
+                timestamp: Date.now()
+            });
         }
         setLoading(false);
-    }, []);
+    }, [cache]);
 
     useEffect(() => {
         fetchAmenities();
@@ -115,6 +143,8 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error adding amenity:', error);
             alert(`Erro ao adicionar comodidade: ${error.message}`);
+        } else {
+            clearCache(); // Clear cache when data changes
         }
     };
 
@@ -136,6 +166,8 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error updating amenity:', error);
             alert(`Erro ao atualizar comodidade: ${error.message}`);
+        } else {
+            clearCache(); // Clear cache when data changes
         }
     };
 
@@ -148,6 +180,8 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (error) {
             console.error('Error deleting amenity:', error);
             alert(`Erro ao remover comodidade: ${error.message}`);
+        } else {
+            clearCache(); // Clear cache when data changes
         }
     };
 
@@ -223,6 +257,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (updates.length > 0) {
                 const { error } = await supabase.from('amenities').upsert(updates);
                 if (error) throw error;
+                clearCache(); // Clear cache when data changes
                 // Realtime listener will handle the UI update
             }
             

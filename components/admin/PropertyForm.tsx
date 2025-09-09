@@ -14,6 +14,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { GoogleGenAI, Type } from "@google/genai";
 import OpenAI from 'openai';
+import LazyImage from '../LazyImage';
 
 interface PropertyFormProps {
     initialData?: Property;
@@ -680,7 +681,11 @@ Agora, gere o objeto JSON completo.`;
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                             {images.map((image, index) => (
                                 <div key={index} className="relative group">
-                                    <img src={getOptimizedImageUrl(image.preview, { width: 200, height: 128 }, storageConfig)} alt={`Preview ${index}`} className="w-full h-32 object-cover rounded-lg" />
+                                    <LazyImage 
+                                      src={getOptimizedImageUrl(image.preview, { width: 200, height: 128 }, storageConfig)} 
+                                      alt={`Preview ${index}`} 
+                                      className="w-full h-32 object-cover rounded-lg" 
+                                    />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center space-y-2">
                                         <button type="button" onClick={() => handleSetPrimary(index)} disabled={index === 0} className="text-white disabled:opacity-50">
                                             <StarIcon className={`w-6 h-6 ${index === 0 ? 'text-yellow-400 fill-current' : ''}`} />

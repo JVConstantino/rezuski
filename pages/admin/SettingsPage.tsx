@@ -153,7 +153,7 @@ const SystemSettings: React.FC = () => {
                                             className="h-16 object-contain" 
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement;
-                                                target.src = '/uploads/logo.png';
+                                                target.src = 'https://constantino-rezuski-db.62mil3.easypanel.host/storage/v1/object/public/property-images/public/ui/logo.png';
                                             }}
                                         />
                                     )}

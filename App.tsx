@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 import { AuthProvider } from './contexts/AuthContext';
@@ -27,32 +27,33 @@ import ResourcesPage from './pages/public/ResourcesPage';
 import AboutPage from './pages/public/AboutPage';
 import ConnectionTestPage from './pages/public/ConnectionTestPage'; // Import new page
 
-import AdminLayout from './pages/admin/AdminLayout';
-import DashboardPage from './pages/admin/DashboardPage';
-import PropertiesPage from './pages/admin/PropertiesPage';
-import PropertyDetailPage from './pages/admin/PropertyDetailPage';
-import AddPropertyPage from './pages/admin/AddPropertyPage';
-import EditPropertyPage from './pages/admin/EditPropertyPage';
-import ApplicationsPage from './pages/admin/ApplicationsPage';
-import ApplicationSummaryPage from './pages/admin/ApplicationSummaryPage';
-import TenantsPage from './pages/admin/TenantsPage';
-import MessagesPage from './pages/admin/MessagesPage';
-import ReportsPage from './pages/admin/ReportsPage';
-import SettingsPage from './pages/admin/SettingsPage';
-import BrokersPage from './pages/admin/BrokersPage';
-import AddBrokerPage from './pages/admin/AddBrokerPage';
-import EditBrokerPage from './pages/admin/EditBrokerPage';
-import CategoriesPage from './pages/admin/CategoriesPage';
-import AddCategoryPage from './pages/admin/AddCategoryPage';
-import EditCategoryPage from './pages/admin/EditCategoryPage';
-import AdminResourcesPage from './pages/admin/ResourcesPage';
-import AddResourcePage from './pages/admin/AddResourcePage';
-import EditResourcePage from './pages/admin/EditResourcePage';
-import GalleryPage from './pages/admin/GalleryPage';
-import AmenitiesPage from './pages/admin/AmenitiesPage';
-import DataPreviewPage from './pages/admin/DataPreviewPage';
-import StorageTestPage from './pages/admin/StorageTestPage';
-import DatabaseMigrationPage from './pages/admin/DatabaseMigrationPage';
+// Lazy load admin pages for better performance
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
+const PropertiesPage = lazy(() => import('./pages/admin/PropertiesPage'));
+const PropertyDetailPage = lazy(() => import('./pages/admin/PropertyDetailPage'));
+const AddPropertyPage = lazy(() => import('./pages/admin/AddPropertyPage'));
+const EditPropertyPage = lazy(() => import('./pages/admin/EditPropertyPage'));
+const ApplicationsPage = lazy(() => import('./pages/admin/ApplicationsPage'));
+const ApplicationSummaryPage = lazy(() => import('./pages/admin/ApplicationSummaryPage'));
+const TenantsPage = lazy(() => import('./pages/admin/TenantsPage'));
+const MessagesPage = lazy(() => import('./pages/admin/MessagesPage'));
+const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'));
+const BrokersPage = lazy(() => import('./pages/admin/BrokersPage'));
+const AddBrokerPage = lazy(() => import('./pages/admin/AddBrokerPage'));
+const EditBrokerPage = lazy(() => import('./pages/admin/EditBrokerPage'));
+const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
+const AddCategoryPage = lazy(() => import('./pages/admin/AddCategoryPage'));
+const EditCategoryPage = lazy(() => import('./pages/admin/EditCategoryPage'));
+const AdminResourcesPage = lazy(() => import('./pages/admin/ResourcesPage'));
+const AddResourcePage = lazy(() => import('./pages/admin/AddResourcePage'));
+const EditResourcePage = lazy(() => import('./pages/admin/EditResourcePage'));
+const GalleryPage = lazy(() => import('./pages/admin/GalleryPage'));
+const AmenitiesPage = lazy(() => import('./pages/admin/AmenitiesPage'));
+const DataPreviewPage = lazy(() => import('./pages/admin/DataPreviewPage'));
+const StorageTestPage = lazy(() => import('./pages/admin/StorageTestPage'));
+const DatabaseMigrationPage = lazy(() => import('./pages/admin/DatabaseMigrationPage'));
 import DatabaseImageDiagnostic from './components/debug/DatabaseImageDiagnostic';
 
 // Wrapper component to connect database and storage configurations
@@ -103,32 +104,36 @@ const AppContent: React.FC = () => {
 
                                                                     {/* Admin Routes */}
                                                                     <Route element={<ProtectedRoute />}>
-                                                                        <Route path="/admin" element={<AdminLayout />}>
+                                                                        <Route path="/admin" element={
+                                                                            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div></div>}>
+                                                                                <AdminLayout />
+                                                                            </Suspense>
+                                                                        }>
                                                                             <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                                                                            <Route path="dashboard" element={<DashboardPage />} />
-                                                                            <Route path="properties" element={<PropertiesPage />} />
-                                                                            <Route path="properties/new" element={<AddPropertyPage />} />
-                                                                            <Route path="properties/edit/:propertyId" element={<EditPropertyPage />} />
-                                                                            <Route path="properties/:propertyId" element={<PropertyDetailPage />} />
-                                                                            <Route path="brokers" element={<BrokersPage />} />
-                                                                            <Route path="brokers/new" element={<AddBrokerPage />} />
-                                                                            <Route path="brokers/edit/:brokerId" element={<EditBrokerPage />} />
-                                                                            <Route path="categories" element={<CategoriesPage />} />
-                                                                            <Route path="categories/new" element={<AddCategoryPage />} />
-                                                                            <Route path="categories/edit/:categoryId" element={<EditCategoryPage />} />
-                                                                            <Route path="resources" element={<AdminResourcesPage />} />
-                                                                            <Route path="resources/new" element={<AddResourcePage />} />
-                                                                            <Route path="resources/edit/:resourceId" element={<EditResourcePage />} />
-                                                                            <Route path="gallery" element={<GalleryPage />} />
+                                                                            <Route path="dashboard" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><DashboardPage /></Suspense>} />
+                                                                            <Route path="properties" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><PropertiesPage /></Suspense>} />
+                                                                            <Route path="properties/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddPropertyPage /></Suspense>} />
+                                                                            <Route path="properties/edit/:propertyId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditPropertyPage /></Suspense>} />
+                                                                            <Route path="properties/:propertyId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><PropertyDetailPage /></Suspense>} />
+                                                                            <Route path="brokers" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><BrokersPage /></Suspense>} />
+                                                                            <Route path="brokers/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddBrokerPage /></Suspense>} />
+                                                                            <Route path="brokers/edit/:brokerId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditBrokerPage /></Suspense>} />
+                                                                            <Route path="categories" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><CategoriesPage /></Suspense>} />
+                                                                            <Route path="categories/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddCategoryPage /></Suspense>} />
+                                                                            <Route path="categories/edit/:categoryId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditCategoryPage /></Suspense>} />
+                                                                            <Route path="resources" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AdminResourcesPage /></Suspense>} />
+                                                                            <Route path="resources/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddResourcePage /></Suspense>} />
+                                                                            <Route path="resources/edit/:resourceId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditResourcePage /></Suspense>} />
+                                                                            <Route path="gallery" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><GalleryPage /></Suspense>} />
                                                                             <Route element={<AdminProtectedRoute />}>
-                                                                                <Route path="storage-test" element={<StorageTestPage />} />
-                                                                                <Route path="data-preview" element={<DataPreviewPage />} />
-                                                                                <Route path="database-migration" element={<DatabaseMigrationPage />} />
+                                                                                <Route path="storage-test" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><StorageTestPage /></Suspense>} />
+                                                                                <Route path="data-preview" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><DataPreviewPage /></Suspense>} />
+                                                                                <Route path="database-migration" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><DatabaseMigrationPage /></Suspense>} />
                                                                             </Route>
-                                                                            <Route path="amenities" element={<AmenitiesPage />} />
-                                                                            <Route path="messages" element={<MessagesPage />} />
-                                                                            <Route path="reports" element={<ReportsPage />} />
-                                                                            <Route path="settings" element={<SettingsPage />} />
+                                                                            <Route path="amenities" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AmenitiesPage /></Suspense>} />
+                                                                            <Route path="messages" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><MessagesPage /></Suspense>} />
+                                                                            <Route path="reports" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><ReportsPage /></Suspense>} />
+                                                                            <Route path="settings" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><SettingsPage /></Suspense>} />
                                                                         </Route>
                                                                     </Route>
 

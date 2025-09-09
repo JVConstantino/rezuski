@@ -11,6 +11,7 @@ import { Property, PriceHistory } from '../../types';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { localizeProperty, getOptimizedImageUrl } from '../../lib/localize';
+import LazyImage from '../../components/LazyImage';
 
 declare var mapboxgl: any;
 
@@ -50,11 +51,10 @@ const Lightbox: React.FC<{
                 <ChevronLeftIcon className="w-8 h-8 text-white" />
             </button>
             
-            <img 
+            <LazyImage 
                 src={getOptimizedImageUrl(images[currentIndex], { width: 800, height: 600 }, activeConfig)} 
                 alt={`Property view ${currentIndex + 1}`} 
                 className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
-                onClick={e => e.stopPropagation()}
             />
             
             <button
@@ -93,7 +93,11 @@ const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (
         <div className="w-full">
             {/* Main Image */}
             <div className="relative w-full aspect-[16/9] max-h-[75vh] mx-auto bg-black rounded-lg overflow-hidden shadow-lg cursor-pointer group" onClick={() => onImageClick(currentIndex)}>
-                <img src={getOptimizedImageUrl(images[currentIndex], { width: 800, height: 450 }, activeConfig)} alt={`${title} - Imagem ${currentIndex + 1}`} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                <LazyImage 
+                  src={getOptimizedImageUrl(images[currentIndex], { width: 800, height: 450 }, activeConfig)} 
+                  alt={`${title} - Imagem ${currentIndex + 1}`} 
+                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" 
+                />
 
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                     <p className="text-white text-lg font-bold">Clique para ampliar</p>
@@ -121,7 +125,11 @@ const ImageCarousel: React.FC<{ images: string[]; title: string; onImageClick: (
                                 onClick={() => selectImage(index)} 
                                 className={`flex-shrink-0 w-32 aspect-[16/9] rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-blue transition-all ${currentIndex === index ? 'ring-2 ring-primary-blue' : 'opacity-70 hover:opacity-100'}`}
                             >
-                                <img src={getOptimizedImageUrl(img, { width: 128, height: 72 }, activeConfig)} alt={`Miniatura ${index + 1}`} className="w-full h-full object-cover" />
+                                <LazyImage 
+                                  src={getOptimizedImageUrl(img, { width: 128, height: 72 }, activeConfig)} 
+                                  alt={`Miniatura ${index + 1}`} 
+                                  className="w-full h-full object-cover" 
+                                />
                             </button>
                         ))}
                     </div>

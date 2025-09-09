@@ -202,7 +202,7 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
 };
 
 const SearchResultsPage: React.FC = () => {
-    const { properties } = useProperties();
+    const { properties, loadMoreProperties, hasMoreProperties, loading, loadingMore } = useProperties();
     const [searchParams, setSearchParams] = useSearchParams();
     const { t } = useLanguage();
     
@@ -219,6 +219,8 @@ const SearchResultsPage: React.FC = () => {
         bathrooms: searchParams.get('bathrooms') || 'any',
         amenities: searchParams.getAll('amenities') || [],
     });
+    
+    const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
     
     const [isFilterModalOpen, setFilterModalOpen] = useState(false);
     
@@ -237,6 +239,7 @@ const SearchResultsPage: React.FC = () => {
             amenities: searchParams.getAll('amenities') || [],
         };
         setFilters(urlFilters);
+        setSortBy(searchParams.get('sortBy') || 'newest');
     }, [searchParams]);
 
     const applyFilters = (currentFilters) => {
@@ -251,6 +254,7 @@ const SearchResultsPage: React.FC = () => {
         if (currentFilters.priceRange && currentFilters.priceRange !== 'any') newParams.set('priceRange', currentFilters.priceRange);
         if (currentFilters.bedrooms && currentFilters.bedrooms !== 'any') newParams.set('bedrooms', currentFilters.bedrooms);
         if (currentFilters.bathrooms && currentFilters.bathrooms !== 'any') newParams.set('bathrooms', currentFilters.bathrooms);
+        if (sortBy && sortBy !== 'newest') newParams.set('sortBy', sortBy);
         
         newParams.delete('amenities');
         if (currentFilters.amenities && currentFilters.amenities.length > 0) {
@@ -343,8 +347,34 @@ const SearchResultsPage: React.FC = () => {
             );
         }
 
-        return results;
-    }, [properties, searchParams]);
+        // Aplicar ordenação
+        const sortedResults = [...results];
+        switch (sortBy) {
+            case 'oldest':
+                sortedResults.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                break;
+            case 'price_asc':
+                sortedResults.sort((a, b) => {
+                    const priceA = a.purpose === 'SALE' ? (a.salePrice || 0) : (a.rentPrice || 0);
+                    const priceB = b.purpose === 'SALE' ? (b.salePrice || 0) : (b.rentPrice || 0);
+                    return priceA - priceB;
+                });
+                break;
+            case 'price_desc':
+                sortedResults.sort((a, b) => {
+                    const priceA = a.purpose === 'SALE' ? (a.salePrice || 0) : (a.rentPrice || 0);
+                    const priceB = b.purpose === 'SALE' ? (b.salePrice || 0) : (b.rentPrice || 0);
+                    return priceB - priceA;
+                });
+                break;
+            case 'newest':
+            default:
+                sortedResults.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                break;
+        }
+
+        return sortedResults;
+    }, [properties, searchParams, sortBy]);
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
@@ -390,9 +420,30 @@ const SearchResultsPage: React.FC = () => {
                     <div className="md:col-span-3">
                         <div className="flex justify-between items-center mb-6">
                             <p className="text-slate-600">{filteredProperties.length} {t('search.results_found')}</p>
-                            <div className="flex items-center space-x-2">
-                                <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-primary-blue/20 text-primary-blue' : 'text-slate-500 hover:bg-slate-100'}`}><ListIcon className="w-5 h-5" /></button>
-                                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-primary-blue/20 text-primary-blue' : 'text-slate-500 hover:bg-slate-100'}`}><LayoutGridIcon className="w-5 h-5" /></button>
+                            <div className="flex items-center space-x-4">
+                                <select 
+                                    value={sortBy} 
+                                    onChange={(e) => {
+                                        setSortBy(e.target.value);
+                                        const newParams = new URLSearchParams(searchParams);
+                                        if (e.target.value !== 'newest') {
+                                            newParams.set('sortBy', e.target.value);
+                                        } else {
+                                            newParams.delete('sortBy');
+                                        }
+                                        setSearchParams(newParams, { replace: true });
+                                    }}
+                                    className="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue focus:border-transparent"
+                                >
+                                    <option value="newest">{t('search.sort_newest')}</option>
+                                    <option value="oldest">{t('search.sort_oldest')}</option>
+                                    <option value="price_asc">{t('search.sort_price_asc')}</option>
+                                    <option value="price_desc">{t('search.sort_price_desc')}</option>
+                                </select>
+                                <div className="flex items-center space-x-2">
+                                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-primary-blue/20 text-primary-blue' : 'text-slate-500 hover:bg-slate-100'}`}><ListIcon className="w-5 h-5" /></button>
+                                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-primary-blue/20 text-primary-blue' : 'text-slate-500 hover:bg-slate-100'}`}><LayoutGridIcon className="w-5 h-5" /></button>
+                                </div>
                             </div>
                         </div>
                         {filteredProperties.length === 0 ? (
@@ -425,6 +476,26 @@ const SearchResultsPage: React.FC = () => {
 
                                         <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Próxima página"><ChevronRightIcon className="w-5 h-5"/></button>
                                         <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Última página"><ChevronsRightIcon className="w-5 h-5"/></button>
+                                    </div>
+                                )}
+                                
+                                {/* Botão Carregar Mais */}
+                                {hasMoreProperties && !loading && (
+                                    <div className="flex justify-center mt-8">
+                                        <button 
+                                            onClick={loadMoreProperties}
+                                            disabled={loadingMore}
+                                            className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                                        >
+                                            {loadingMore ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                    <span>Carregando...</span>
+                                                </>
+                                            ) : (
+                                                <span>Carregar mais imóveis</span>
+                                            )}
+                                        </button>
                                     </div>
                                 )}
                             </>

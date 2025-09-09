@@ -14,50 +14,39 @@ const Logo: React.FC<LogoProps> = ({
   onClick,
   variant = 'default'
 }) => {
-  const [currentSrc, setCurrentSrc] = useState(LOGO_URL);
+  // Use the local logo image
+  const logoUrl = '/rezuski-logo.png';
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
-  const handleError = () => {
-    if (retryCount === 0 && currentSrc !== LOGO_URL_SUPABASE) {
-      // First fallback: try Supabase URL
-      setCurrentSrc(LOGO_URL_SUPABASE);
-      setRetryCount(1);
-    } else if (retryCount === 1 && currentSrc !== LOGO_URL_FALLBACK) {
-      // Second fallback: use local fallback
-      setCurrentSrc(LOGO_URL_FALLBACK);
-      setRetryCount(2);
-    } else {
-      // Final fallback: show text logo
-      setHasError(true);
-    }
+  console.log('Logo component rendering with URL:', logoUrl);
+
+  const handleError = (e: any) => {
+    console.error('Logo failed to load:', logoUrl, e);
+    setHasError(true);
+    setIsLoading(false);
   };
 
   const handleLoad = () => {
+    console.log('Logo loaded successfully:', logoUrl);
     setHasError(false);
+    setIsLoading(false);
   };
 
-  if (hasError) {
-    return (
-      <div 
-        className={`flex items-center justify-center bg-primary-blue text-white font-bold text-xl px-4 py-2 rounded ${className}`}
-        onClick={onClick}
-        style={{ cursor: onClick ? 'pointer' : 'default' }}
-      >
-        REZUSKI
-      </div>
-    );
-  }
-
+  // Always render the image, no fallback to text
   return (
     <img 
-      src={currentSrc}
+      src={logoUrl + '?t=' + Date.now()}
       alt={alt}
       className={`${className} ${variant === 'inverted' ? 'filter brightness-0 invert' : ''}`}
       onError={handleError}
       onLoad={handleLoad}
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      crossOrigin="anonymous"
+      style={{ 
+        cursor: onClick ? 'pointer' : 'default',
+        display: hasError ? 'none' : 'block'
+      }}
     />
   );
 };

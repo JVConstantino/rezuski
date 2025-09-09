@@ -5,6 +5,7 @@ import { BedIcon, BathIcon, MaximizeIcon, MapPinIcon, HashIcon } from './Icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStorageConfig } from '../contexts/StorageConfigContext';
 import { localizeProperty, getOptimizedImageUrl } from '../lib/localize';
+import LazyImage from './LazyImage';
 
 interface PropertyListItemProps {
   property: Property;
@@ -45,7 +46,11 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ property: originalP
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col md:flex-row transition-shadow hover:shadow-md">
       <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
         <Link to={`/property/${property.id}`}>
-         <img src={optimizedImageUrl} alt={property.title} className="w-full h-48 md:h-full object-cover" />
+         <LazyImage 
+           src={optimizedImageUrl} 
+           alt={property.title} 
+           className="w-full h-48 md:h-full object-cover" 
+         />
         </Link>
       </div>
       <div className="p-5 flex flex-col flex-grow md:w-2/3 lg:w-3/4">

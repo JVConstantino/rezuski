@@ -121,6 +121,10 @@ export const translations = {
         'quality:Ruim': 'Ruim',
         'search.bedrooms': 'Quartos',
         'search.bathrooms': 'Banheiros',
+        'search.sort_newest': 'Mais Recente',
+        'search.sort_oldest': 'Mais Antigo',
+        'search.sort_price_asc': 'Menor Preço',
+        'search.sort_price_desc': 'Maior Preço',
     },
     'en-US': {
         'nav.home': 'Home',
@@ -241,6 +245,10 @@ export const translations = {
         'quality:Ruim': 'Poor',
         'search.bedrooms': 'Bedrooms',
         'search.bathrooms': 'Bathrooms',
+        'search.sort_newest': 'Newest',
+        'search.sort_oldest': 'Oldest',
+        'search.sort_price_asc': 'Price: Low to High',
+        'search.sort_price_desc': 'Price: High to Low',
     },
     'es-ES': {
         'nav.home': 'Inicio',
@@ -361,6 +369,10 @@ export const translations = {
         'quality:Ruim': 'Pobre',
         'search.bedrooms': 'Habitaciones',
         'search.bathrooms': 'Baños',
+        'search.sort_newest': 'Más Reciente',
+        'search.sort_oldest': 'Más Antiguo',
+        'search.sort_price_asc': 'Precio Menor',
+        'search.sort_price_desc': 'Precio Mayor',
     },
     'fr-FR': {
         'nav.home': 'Accueil',
@@ -481,6 +493,10 @@ export const translations = {
         'quality:Ruim': 'Mauvais',
         'search.bedrooms': 'Chambres',
         'search.bathrooms': 'Salles de bain',
+        'search.sort_newest': 'Plus Récent',
+        'search.sort_oldest': 'Plus Ancien',
+        'search.sort_price_asc': 'Prix Croissant',
+        'search.sort_price_desc': 'Prix Décroissant',
     },
     'it-IT': {
         'nav.home': 'Home',
@@ -601,5 +617,9 @@ export const translations = {
         'quality:Ruim': 'Povero',
         'search.bedrooms': 'Camere da letto',
         'search.bathrooms': 'Bagni',
+        'search.sort_newest': 'Più Recente',
+        'search.sort_oldest': 'Più Vecchio',
+        'search.sort_price_asc': 'Prezzo: Dal Basso all\'Alto',
+        'search.sort_price_desc': 'Prezzo: Dall\'Alto al Basso',
     }
 };

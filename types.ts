@@ -81,6 +81,7 @@ export interface ManagedAmenity {
 
 export interface Property {
   id: string;
+  createdAt: string;
   title: string;
   code?: string;
   address: string;

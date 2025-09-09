@@ -58,7 +58,7 @@ const BulkActionBar: React.FC<{
 
 
 const PropertiesPage: React.FC = () => {
-  const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder, bulkUpdateProperties, bulkDeleteProperties } = useProperties();
+  const { properties, toggleArchiveProperty, deleteProperty, updatePropertyOrder, bulkUpdateProperties, bulkDeleteProperties, loadMoreProperties, hasMoreProperties, loading, loadingMore, totalCount } = useProperties();
   const { t, propertyTypes } = useLanguage();
   const { categories } = useCategories();
   const { activeConfig } = useStorageConfig();
@@ -71,6 +71,7 @@ const PropertiesPage: React.FC = () => {
   const [purposeFilter, setPurposeFilter] = useState('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     setLocalProperties(properties);
@@ -87,6 +88,22 @@ const PropertiesPage: React.FC = () => {
       const typeMatch = propertyTypeFilter === 'all' || prop.propertyType === propertyTypeFilter;
       const statusMatch = statusFilter === 'all' || prop.status === statusFilter;
       return searchTermMatch && purposeMatch && typeMatch && statusMatch;
+  }).sort((a, b) => {
+      switch (sortBy) {
+          case 'oldest':
+              return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          case 'price_asc':
+              const priceA = a.purpose === 'SALE' ? (a.salePrice || 0) : (a.rentPrice || 0);
+              const priceB = b.purpose === 'SALE' ? (b.salePrice || 0) : (b.rentPrice || 0);
+              return priceA - priceB;
+          case 'price_desc':
+              const priceA2 = a.purpose === 'SALE' ? (a.salePrice || 0) : (a.rentPrice || 0);
+              const priceB2 = b.purpose === 'SALE' ? (b.salePrice || 0) : (b.rentPrice || 0);
+              return priceB2 - priceA2;
+          case 'newest':
+          default:
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
   });
   
   const allVisibleSelected = filteredProperties.length > 0 && selectedProperties.length === filteredProperties.length;
@@ -261,6 +278,12 @@ const PropertiesPage: React.FC = () => {
                 <option value="all">Tipo: Todos</option>
                 {propertyTypes.map(type => <option key={type.name} value={type.name}>{t(`propertyType:${type.name}`)}</option>)}
             </select>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-primary-blue focus:border-primary-blue">
+                <option value="newest">{t('search.sort_newest')}</option>
+                <option value="oldest">{t('search.sort_oldest')}</option>
+                <option value="price_asc">{t('search.sort_price_asc')}</option>
+                <option value="price_desc">{t('search.sort_price_desc')}</option>
+            </select>
           </div>
         </div>
 
@@ -375,6 +398,26 @@ const PropertiesPage: React.FC = () => {
         {filteredProperties.length === 0 && (
             <div className="text-center py-10 text-slate-500">
                 <p>Nenhuma propriedade encontrada.</p>
+            </div>
+        )}
+        
+        {/* Botão Carregar Mais */}
+        {hasMoreProperties && !loading && (
+            <div className="flex justify-center mt-6">
+                <button 
+                    onClick={loadMoreProperties}
+                    disabled={loadingMore}
+                    className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                    {loadingMore ? (
+                        <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Carregando...</span>
+                        </>
+                    ) : (
+                        <span>Carregar mais propriedades ({properties.length} de {totalCount})</span>
+                    )}
+                </button>
             </div>
         )}
       </div>
