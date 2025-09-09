@@ -5,7 +5,7 @@ import {
     BarChartIcon, SettingsIcon, BellIcon, SearchIcon, LogOutIcon, MenuIcon, XIcon, EyeIcon, FolderIcon, HouseUserIcon, CheckCircleIcon, DatabaseIcon
 } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { LOGO_URL } from '../../constants';
+import Logo from '../../components/Logo';
 
 const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
@@ -59,15 +59,7 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
             >
                 <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200">
                      <Link to="/" className="flex-shrink-0">
-                        <img 
-                            src={LOGO_URL} 
-                            alt="Rezuski Imóveis Logo" 
-                            className="h-16 object-contain" 
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = '/uploads/logo.png';
-                            }}
-                        />
+                        <Logo className="h-16 object-contain" />
                     </Link>
                     <button onClick={onClose} className="md:hidden text-slate-500 hover:text-primary-blue" aria-label="Close menu">
                         <XIcon className="w-6 h-6" />

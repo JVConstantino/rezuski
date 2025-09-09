@@ -8,7 +8,8 @@ import { useProperties } from '../../contexts/PropertyContext';
 import { useBrokers } from '../../contexts/BrokerContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
-import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES, LOGO_URL } from '../../constants';
+import { TESTIMONIALS, RENT_PRICE_RANGES, SALE_PRICE_RANGES } from '../../constants';
+import Logo from '../../components/Logo';
 import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailIcon, DollarSignIcon, HashIcon, HandshakeIcon, HouseUserIcon, EyeIcon, LegalizationIcon, UserPlusIcon, StarIcon, UserCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '../../components/Icons';
 import { PropertyPurpose, PropertyType } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
@@ -93,15 +94,7 @@ const HeroSection = () => {
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
             <AnimateOnScroll>
-                <img 
-                    src={LOGO_URL} 
-                    alt="Rezuski Imóveis Logo" 
-                    className="h-32 mx-auto mb-6 object-contain" 
-                    onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/uploads/logo.png';
-                    }}
-                />
+                <Logo className="h-32 mx-auto mb-6 object-contain" />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">

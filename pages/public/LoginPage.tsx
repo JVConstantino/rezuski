@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LOGO_URL } from '../../constants';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { EyeIcon, EyeOffIcon } from '../../components/Icons';
+import Logo from '../../components/Logo';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -54,14 +55,8 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center">
-          <img 
-                    src={LOGO_URL} 
-                    alt="Rezuski Imóveis Logo" 
-                    className="h-20 object-contain" 
-                    onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/uploads/logo.png';
-                    }}
+          <Logo 
+                    className="h-20 object-contain"
                 />
         </Link>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">

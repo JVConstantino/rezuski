@@ -6,6 +6,7 @@ import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { useDatabaseConfig } from '../../contexts/DatabaseConfigContext';
 import { useUserPermissions } from '../../hooks/useUserPermissions';
 import { LOGO_URL } from '../../constants';
+import Logo from '../../components/Logo';
 
 const ProfileSettings: React.FC = () => {
     const { user, updateProfile } = useAuth();
@@ -143,15 +144,19 @@ const SystemSettings: React.FC = () => {
                     <div className="space-y-4">
                         <div className="flex items-center space-x-4">
                             <div className="w-24 h-24 border-2 border-slate-200 rounded-lg flex items-center justify-center bg-slate-50">
-                                <img 
-                                    src={logoPreview} 
-                                    alt="Logo atual" 
-                                    className="max-w-full max-h-full object-contain"
-                                    onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = '/uploads/logo.png';
-                                    }}
-                                />
+                                {logoPreview === LOGO_URL ? (
+                                        <Logo className="h-16 object-contain" />
+                                    ) : (
+                                        <img 
+                                            src={logoPreview} 
+                                            alt="Logo Preview" 
+                                            className="h-16 object-contain" 
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.src = '/uploads/logo.png';
+                                            }}
+                                        />
+                                    )}
                             </div>
                             <div className="flex-1">
                                 <p className="text-sm text-slate-600 mb-2">Logo atual do sistema</p>

@@ -5,8 +5,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { LOGO_URL } from '../constants';
 import { GlobeIcon, CheckCircleIcon } from './Icons';
+import Logo from './Logo';
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout, openLoginModal } = useAuth();
@@ -75,15 +75,7 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
-            <img 
-                    src={LOGO_URL} 
-                    alt="Rezuski Imóveis Logo" 
-                    className="h-16 object-contain" 
-                    onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/uploads/logo.png';
-                    }}
-                />
+            <Logo className="h-16 object-contain" />
           </Link>
 
           {/* Navigation Links */}

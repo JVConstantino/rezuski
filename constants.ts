@@ -1,6 +1,8 @@
 import { Activity, ApplicationStatus, PriceHistoryEvent, BackgroundCheckType, BackgroundCheckStatus, Broker, Testimonial, Category, Tenant, ResourceDocument, User, Property, Application } from './types';
 
-export const LOGO_URL = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
+export const LOGO_URL = '/uploads/logo.png';
+export const LOGO_URL_FALLBACK = '/uploads/logo.png';
+export const LOGO_URL_SUPABASE = 'https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/LOGO.png';
 
 // Mock data has been migrated to Supabase. These constants are kept for reference or for parts of the app not yet migrated.
 // In a full migration, these would be removed entirely.

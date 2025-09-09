@@ -3,8 +3,8 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LOGO_URL } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
+import Logo from './Logo';
 
 const Footer: React.FC = () => {
   const { t } = useLanguage();
@@ -30,14 +30,9 @@ const Footer: React.FC = () => {
           {/* About */}
           <div className="col-span-1">
             <Link to="/">
-                <img 
-                    src={LOGO_URL} 
-                    alt="Rezuski Imóveis Logo" 
-                    className="h-16 object-contain mb-4 filter brightness-0 invert" 
-                    onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/uploads/logo.png';
-                    }}
+                <Logo 
+                    className="h-16 object-contain mb-4" 
+                    variant="inverted"
                 />
             </Link>
             <p className="text-slate-400 max-w-xs">{t('footer.about')}</p>
