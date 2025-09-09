@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/Header';
@@ -479,25 +477,6 @@ const SearchResultsPage: React.FC = () => {
                                     </div>
                                 )}
                                 
-                                {/* Botão Carregar Mais */}
-                                {hasMoreProperties && !loading && (
-                                    <div className="flex justify-center mt-8">
-                                        <button 
-                                            onClick={loadMoreProperties}
-                                            disabled={loadingMore}
-                                            className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                                        >
-                                            {loadingMore ? (
-                                                <>
-                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                    <span>Carregando...</span>
-                                                </>
-                                            ) : (
-                                                <span>Carregar mais imóveis</span>
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
                             </>
                         )}
                     </div>

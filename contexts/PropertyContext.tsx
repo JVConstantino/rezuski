@@ -1,5 +1,3 @@
-
-
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Property, PropertyStatus, Amenity, PriceHistory } from '../types';
 import { supabase } from '../lib/supabaseClient';
@@ -47,7 +45,7 @@ const setStoredViewCounts = (counts: Record<string, number>) => {
 };
 
 
-const PROPERTIES_PER_PAGE = 20;
+const PROPERTIES_PER_PAGE = 1000; // Aumentado para carregar todas as propriedades
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 interface CacheData {
@@ -86,47 +84,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             setLoadingMore(true);
         }
 
-        const page = reset ? 0 : currentPage + 1;
-        const cacheKey = getCacheKey(page);
-        const cachedData = cache.get(cacheKey);
-
-        // Check if we have valid cached data
-        if (cachedData && isCacheValid(cachedData) && !reset) {
-            const storedViewCounts = getStoredViewCounts();
-            const propertiesWithLocalViews = cachedData.data.map(prop => ({
-                ...prop,
-                viewCount: Math.max(storedViewCounts[prop.id] || 0, prop.viewCount || 0),
-            }));
-
-            if (reset) {
-                setProperties(propertiesWithLocalViews);
-                setCurrentPage(0);
-            } else {
-                setProperties(prev => [...prev, ...propertiesWithLocalViews]);
-                setCurrentPage(page);
-            }
-
-            setTotalCount(cachedData.totalCount);
-            setHasMoreProperties(cachedData.hasMore);
-            setLoading(false);
-            setLoadingMore(false);
-            return;
-        }
-
-        const from = page * PROPERTIES_PER_PAGE;
-        const to = from + PROPERTIES_PER_PAGE - 1;
-
-        // Get total count first
-        const { count } = await supabase
+        // Carregar todas as propriedades de uma vez
+        const { data, error, count } = await supabase
             .from('properties')
-            .select('*', { count: 'exact', head: true });
-
-        const { data, error } = await supabase
-            .from('properties')
-            .select('*')
+            .select('*', { count: 'exact' })
             .order('display_order', { ascending: true, nullsFirst: false })
-            .order('createdAt', { ascending: false })
-            .range(from, to);
+            .order('createdAt', { ascending: false });
 
         if (error) {
             console.error('Error fetching properties:', error);
@@ -136,18 +99,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         } else {
             const fetchedProperties = data as unknown as Property[];
             const storedViewCounts = getStoredViewCounts();
-            const hasMore = fetchedProperties.length === PROPERTIES_PER_PAGE && (page + 1) * PROPERTIES_PER_PAGE < (count || 0);
-
-            // Cache the data
-            const newCache = new Map(cache);
-            newCache.set(cacheKey, {
-                data: fetchedProperties,
-                timestamp: Date.now(),
-                totalCount: count || 0,
-                hasMore,
-                page
-            });
-            setCache(newCache);
 
             // Merge stored view counts with fetched data. Prioritize higher value.
             const propertiesWithLocalViews = fetchedProperties.map(prop => ({
@@ -168,14 +119,14 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
                 setProperties(prev => [...prev, ...propertiesWithLocalViews]);
             }
             
-            setCurrentPage(page);
+            setCurrentPage(0);
             setTotalCount(count || 0);
-            setHasMoreProperties(hasMore);
+            setHasMoreProperties(false); // Não há mais páginas
         }
         
         setLoading(false);
         setLoadingMore(false);
-    }, [currentPage, PROPERTIES_PER_PAGE, cache]);
+    }, []);
 
     const loadMoreProperties = useCallback(async () => {
         if (!loadingMore && hasMoreProperties) {

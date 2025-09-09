@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LOGO_URL, LOGO_URL_FALLBACK, LOGO_URL_SUPABASE } from '../constants';
+import { LOGO_URL } from '../constants';
 
 interface LogoProps {
   className?: string;
@@ -14,8 +14,8 @@ const Logo: React.FC<LogoProps> = ({
   onClick,
   variant = 'default'
 }) => {
-  // Use the local logo image
-  const logoUrl = '/rezuski-logo.png';
+  // Use the Supabase logo URL
+  const logoUrl = LOGO_URL;
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 

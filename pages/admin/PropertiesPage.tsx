@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
@@ -401,25 +399,6 @@ const PropertiesPage: React.FC = () => {
             </div>
         )}
         
-        {/* Botão Carregar Mais */}
-        {hasMoreProperties && !loading && (
-            <div className="flex justify-center mt-6">
-                <button 
-                    onClick={loadMoreProperties}
-                    disabled={loadingMore}
-                    className="bg-primary-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                    {loadingMore ? (
-                        <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Carregando...</span>
-                        </>
-                    ) : (
-                        <span>Carregar mais propriedades ({properties.length} de {totalCount})</span>
-                    )}
-                </button>
-            </div>
-        )}
       </div>
     </div>
   );
