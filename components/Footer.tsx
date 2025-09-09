@@ -4,10 +4,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
 
 const Footer: React.FC = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const navLinks = [
     { name: t('nav.home'), path: '/' },
     { name: t('nav.buy'), path: '/search?purpose=SALE' },
@@ -47,9 +49,11 @@ const Footer: React.FC = () => {
                   <Link to={link.path} className="text-slate-400 hover:text-white transition-colors">{link.name}</Link>
                 </li>
               ))}
-               <li>
-                  <Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">{t('footer.connection_test')}</Link>
-                </li>
+               {user?.email === 'joaovictor.priv@gmail.com' && (
+                 <li>
+                    <Link to="/connection-test" className="text-yellow-400 hover:text-yellow-300 transition-colors">{t('footer.connection_test')}</Link>
+                  </li>
+               )}
             </ul>
           </div>
 
