@@ -5,6 +5,7 @@ import { AIConfig } from './AIConfigContext';
 import { supportedLanguages, useLanguage } from './LanguageContext';
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from 'openai';
+import { useDatabaseConfig } from "./DatabaseConfigContext";
 
 interface CategoryContextType {
     categories: Category[];
@@ -63,6 +64,7 @@ const cleanAIResponse = (response: string): string => {
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const { activeConfig } = useDatabaseConfig(); // ADICIONADO
     
     // Get refreshDynamicData from LanguageContext if available
     let refreshLanguageData: (() => Promise<void>) | null = null;
@@ -80,10 +82,27 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error fetching categories:', error);
             setCategories([]);
         } else {
-            setCategories(data || []);
+            let loadedCategories = data || [];
+            // Se houver ordem definida na config ativa, reordenar
+            if (activeConfig?.category_order) {
+                try {
+                    const orderArr = JSON.parse(activeConfig.category_order) as string[];
+                    loadedCategories = orderArr
+                        .map(id => loadedCategories.find(cat => cat.id === id))
+                        .filter(Boolean) as Category[];
+                    // Adiciona categorias não listadas no order ao final
+                    const remaining = loadedCategories.length < data.length
+                        ? data.filter((cat: Category) => !orderArr.includes(cat.id))
+                        : [];
+                    loadedCategories = [...loadedCategories, ...remaining];
+                } catch (e) {
+                    console.warn("category_order inválido ou não é JSON", e);
+                }
+            }
+            setCategories(loadedCategories);
         }
         setLoading(false);
-    }, []);
+    }, [activeConfig]);
 
     useEffect(() => {
         fetchCategories();

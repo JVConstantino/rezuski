@@ -8,6 +8,7 @@ interface DatabaseConfig {
     description?: string;
     created_at: string;
     is_active: boolean;
+    category_order?: string | null; // ordem das categorias
 }
 
 interface DatabaseConfigContextType {
@@ -18,6 +19,7 @@ interface DatabaseConfigContextType {
     updateConfig: (id: string, config: Partial<Omit<DatabaseConfig, 'id' | 'created_at'>>) => Promise<void>;
     deleteConfig: (id: string) => Promise<void>;
     setActiveConfig: (id: string) => Promise<void>;
+    setCategoryOrder: (order: string) => Promise<void>; // novo método
 }
 
 const DatabaseConfigContext = createContext<DatabaseConfigContextType | undefined>(undefined);
@@ -203,6 +205,38 @@ export const DatabaseConfigProvider: React.FC<{ children: ReactNode }> = ({ chil
         }
     };
 
+    const setCategoryOrder = async (order: string) => {
+        try {
+            if (!activeConfig) {
+                console.error('No active config to update category order');
+                return;
+            }
+
+            // Update the database
+            const { error } = await supabase
+                .from('database_configs')
+                .update({ category_order: order })
+                .eq('id', activeConfig.id);
+
+            if (error) {
+                console.error('Error updating category order:', error);
+                throw error;
+            }
+
+            // Update local state
+            setConfigs(prev => prev.map(config => 
+                config.id === activeConfig.id 
+                    ? { ...config, category_order: order }
+                    : config
+            ));
+            
+            setActiveConfigState(prev => prev ? { ...prev, category_order: order } : prev);
+        } catch (error) {
+            console.error('Error setting category order:', error);
+            throw error;
+        }
+    };
+
     useEffect(() => {
         fetchConfigs();
     }, []);
@@ -215,7 +249,8 @@ export const DatabaseConfigProvider: React.FC<{ children: ReactNode }> = ({ chil
             addConfig,
             updateConfig,
             deleteConfig,
-            setActiveConfig
+            setActiveConfig,
+            setCategoryOrder
         }}>
             {children}
         </DatabaseConfigContext.Provider>

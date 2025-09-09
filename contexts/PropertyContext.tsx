@@ -264,51 +264,76 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     const deleteProperty = async (propertyId: string) => {
+        console.log('🗑️ Starting property deletion for ID:', propertyId);
+        
         const propertyToDelete = properties.find(p => p.id === propertyId);
-        if (!propertyToDelete) return;
-
-        // 1. Delete images from storage
-        if (propertyToDelete.images && propertyToDelete.images.length > 0) {
-            const bucketName = 'property-images';
-            const filePaths = propertyToDelete.images.map(url => {
-                try {
-                    const urlObject = new URL(url);
-                    const pathParts = urlObject.pathname.split(`/${bucketName}/`);
-                    if (pathParts.length > 1) {
-                        return pathParts[1];
-                    }
-                    console.warn('Could not extract file path from URL:', url);
-                    return null;
-                } catch (e) {
-                    console.warn('Could not parse image URL to delete from storage:', url);
-                    return null;
-                }
-            }).filter((path): path is string => path !== null);
-
-            if (filePaths.length > 0) {
-                const { error: storageError } = await supabase.storage
-                    .from(bucketName)
-                    .remove(filePaths);
-
-                if (storageError) {
-                    console.error('Error deleting property images:', storageError);
-                    alert(`Não foi possível remover as imagens do armazenamento. Erro: ${storageError.message}. O imóvel ainda será excluído.`);
-                }
-            }
+        if (!propertyToDelete) {
+            console.error('❌ Property not found in local state:', propertyId);
+            alert('Propriedade não encontrada.');
+            return;
         }
 
-        // 2. Delete the property record
-        const { error: dbError } = await supabase
-            .from('properties')
-            .delete()
-            .eq('id', propertyId);
+        console.log('📋 Property to delete:', propertyToDelete.title);
 
-        if (dbError) {
-            console.error('Error deleting property:', dbError.message);
-            alert(`Erro ao excluir imóvel: ${dbError.message}`);
-        } else {
+        try {
+            // 1. Delete images from storage
+            if (propertyToDelete.images && propertyToDelete.images.length > 0) {
+                console.log('🖼️ Deleting images from storage:', propertyToDelete.images.length, 'images');
+                const bucketName = 'property-images';
+                const filePaths = propertyToDelete.images.map(url => {
+                    try {
+                        const urlObject = new URL(url);
+                        const pathParts = urlObject.pathname.split(`/${bucketName}/`);
+                        if (pathParts.length > 1) {
+                            return pathParts[1];
+                        }
+                        console.warn('Could not extract file path from URL:', url);
+                        return null;
+                    } catch (e) {
+                        console.warn('Could not parse image URL to delete from storage:', url);
+                        return null;
+                    }
+                }).filter((path): path is string => path !== null);
+
+                if (filePaths.length > 0) {
+                    console.log('📁 File paths to delete:', filePaths);
+                    const { error: storageError } = await supabase.storage
+                        .from(bucketName)
+                        .remove(filePaths);
+
+                    if (storageError) {
+                        console.error('❌ Error deleting property images:', storageError);
+                        alert(`Não foi possível remover as imagens do armazenamento. Erro: ${storageError.message}. O imóvel ainda será excluído.`);
+                    } else {
+                        console.log('✅ Images deleted successfully');
+                    }
+                }
+            } else {
+                console.log('📷 No images to delete');
+            }
+
+            // 2. Delete the property record
+            console.log('🗄️ Deleting property record from database...');
+            const { error: dbError } = await supabase
+                .from('properties')
+                .delete()
+                .eq('id', propertyId);
+
+            if (dbError) {
+                console.error('❌ Error deleting property from database:', dbError);
+                alert(`Erro ao excluir imóvel: ${dbError.message}`);
+                return;
+            }
+
+            console.log('✅ Property deleted successfully from database');
             clearCache(); // Clear cache when data changes
             setProperties(prev => prev.filter(p => p.id !== propertyId));
+            console.log('🔄 Local state updated');
+            alert('Propriedade excluída com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Unexpected error during property deletion:', error);
+            alert(`Erro inesperado ao excluir propriedade: ${error}`);
         }
     };
 

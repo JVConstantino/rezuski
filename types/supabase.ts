@@ -459,3 +459,40 @@ export type Database = {
     }
   }
 }
+database_configs: {
+  Row: {
+    id: string
+    database_url: string
+    is_active: boolean
+    created_at: string
+    category_order?: string | null // campo para ordem das categorias
+  },
+  Insert: {
+    id?: string
+    database_url: string
+    is_active?: boolean
+    created_at?: string
+    category_order?: string | null
+  },
+  Update: {
+    id?: string
+    database_url?: string
+    is_active?: boolean
+    created_at?: string
+    category_order?: string | null
+  },
+  Relationships: []
+},
+{
+  foreignKeyName: "applications_applicantid_fkey"
+  columns: ["applicantId"]
+  referencedRelation: "profiles"
+  referencedColumns: ["id"]
+},
+{
+  foreignKeyName: "applications_propertyid_fkey"
+  columns: ["propertyId"]
+  referencedRelation: "properties"
+  referencedColumns: ["id"]
+},
+]

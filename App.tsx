@@ -78,17 +78,17 @@ const AppContent: React.FC = () => {
     }, [location.pathname]);
     
     return (
-        <LanguageProvider>
-            <AuthProvider>
-                <UserProvider>
-                    <ApplicationProvider>
-                        <TenantProvider>
-                            <ResourceProvider>
-                                <CategoryProvider>
-                                    <BrokerProvider>
-                                        <PropertyProvider>
-                                            <AmenityProvider>
-                                                <DatabaseConfigProvider>
+        <DatabaseConfigProvider>
+            <LanguageProvider>
+                <AuthProvider>
+                    <UserProvider>
+                        <ApplicationProvider>
+                            <TenantProvider>
+                                <ResourceProvider>
+                                    <CategoryProvider>
+                                        <BrokerProvider>
+                                            <PropertyProvider>
+                                                <AmenityProvider>
                                                     <StorageWithDatabaseProvider>
                                                         <ImageProvider>
                                                             <AIConfigProvider>
@@ -145,17 +145,17 @@ const AppContent: React.FC = () => {
                                                             </AIConfigProvider>
                                                         </ImageProvider>
                                                     </StorageWithDatabaseProvider>
-                                                </DatabaseConfigProvider>
-                                            </AmenityProvider>
-                                        </PropertyProvider>
-                                    </BrokerProvider>
-                                </CategoryProvider>
-                            </ResourceProvider>
-                        </TenantProvider>
-                    </ApplicationProvider>
-                </UserProvider>
-            </AuthProvider>
-        </LanguageProvider>
+                                                </AmenityProvider>
+                                            </PropertyProvider>
+                                        </BrokerProvider>
+                                    </CategoryProvider>
+                                </ResourceProvider>
+                            </TenantProvider>
+                        </ApplicationProvider>
+                    </UserProvider>
+                </AuthProvider>
+            </LanguageProvider>
+        </DatabaseConfigProvider>
     );
 };
 

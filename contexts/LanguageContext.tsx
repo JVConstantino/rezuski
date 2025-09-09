@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { translations } from '../translations';
 import { supabase } from '../lib/supabaseClient';
 import { Category } from '../types';
+import { useDatabaseConfig } from './DatabaseConfigContext';
 
 type Locale = 'pt-BR' | 'en-US' | 'es-ES' | 'fr-FR' | 'it-IT';
 
@@ -41,6 +42,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     const [locale, setLocale] = useState<Locale>('pt-BR');
     const [dynamicData, setDynamicData] = useState<DynamicData>({ categories: [], propertyTypes: [] });
     const [loading, setLoading] = useState(true);
+    const { activeConfig } = useDatabaseConfig();
 
     useEffect(() => {
         const storedLocale = localStorage.getItem('rezuski_locale') as Locale;
@@ -60,8 +62,27 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
             if (categoriesRes.error) throw categoriesRes.error;
             if (propertyTypesRes.error) throw propertyTypesRes.error;
 
+            let categories = categoriesRes.data || [];
+            
+            // Se houver ordem definida na config ativa, reordenar
+            if (activeConfig?.category_order) {
+                try {
+                    const orderArr = JSON.parse(activeConfig.category_order) as string[];
+                    categories = orderArr
+                        .map(id => categories.find(cat => cat.id === id))
+                        .filter(Boolean) as Category[];
+                    // Adiciona categorias não listadas no order ao final
+                    const remaining = categories.length < categoriesRes.data.length
+                        ? categoriesRes.data.filter((cat: Category) => !orderArr.includes(cat.id))
+                        : [];
+                    categories = [...categories, ...remaining];
+                } catch (e) {
+                    console.warn("category_order inválido ou não é JSON", e);
+                }
+            }
+
             setDynamicData({
-                categories: categoriesRes.data || [],
+                categories,
                 propertyTypes: propertyTypesRes.data || [],
             });
         } catch (error) {
@@ -73,7 +94,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     useEffect(() => {
         fetchDynamicData();
-    }, []);
+    }, [activeConfig]);
 
     const changeLanguage = (newLocale: Locale) => {
         localStorage.setItem('rezuski_locale', newLocale);
