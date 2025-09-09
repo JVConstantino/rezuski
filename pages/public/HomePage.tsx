@@ -13,6 +13,7 @@ import { MapPinIcon, BuildingIcon, SearchIcon, ChevronDownIcon, PhoneIcon, MailI
 import { PropertyPurpose, PropertyType } from '../../types';
 import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
+import ImageWithFallback from '../../components/ImageWithFallback';
 import { getOptimizedImageUrl } from '../../lib/localize';
 
 
@@ -74,12 +75,33 @@ const HeroSection = () => {
   return (
     <div className="relative bg-emerald-800 overflow-hidden">
       <div className="absolute inset-0">
-        <img src="https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/FUNDO.jpg" className="w-full h-full object-cover opacity-60" alt="Hero background" />
+        <img 
+                    src="https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/FUNDO.jpg" 
+                    className="w-full h-full object-cover opacity-60" 
+                    alt="Hero background" 
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        // Adiciona um gradiente de fallback ao container pai
+                        const container = target.parentElement;
+                        if (container) {
+                            container.style.background = 'linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%)';
+                        }
+                    }}
+                />
       </div>
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
             <AnimateOnScroll>
-                <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-32 mx-auto mb-6 object-contain" />
+                <img 
+                    src={LOGO_URL} 
+                    alt="Rezuski Imóveis Logo" 
+                    className="h-32 mx-auto mb-6 object-contain" 
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/uploads/logo.png';
+                    }}
+                />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">
@@ -387,7 +409,12 @@ const Categories: React.FC = () => {
                 {categories.map((cat, index) => (
                     <AnimateOnScroll key={cat.id} delay={100 * (index + 1)}>
                         <Link to={`/search?categoryId=${cat.id}`} className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
-                            <img src={getOptimizedImageUrl(cat.iconUrl, { width: 64, height: 64 }, activeConfig)} alt={t(`category:${cat.id}`)} className="w-16 h-16" />
+                            <ImageWithFallback 
+                                src={getOptimizedImageUrl(cat.iconUrl, { width: 64, height: 64 }, activeConfig)} 
+                                alt={t(`category:${cat.id}`)} 
+                                className="w-16 h-16 object-contain rounded"
+                                categoryName={cat.name}
+                            />
                             <p className="mt-4 font-semibold text-slate-700 text-center">{t(`category:${cat.id}`)}</p>
                         </Link>
                     </AnimateOnScroll>

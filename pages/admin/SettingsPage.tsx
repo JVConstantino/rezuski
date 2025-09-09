@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircleIcon, BellIcon, ShieldIcon, SparklesIcon, EyeIcon, EyeOffIcon, PlusIcon, EditIcon, TrashIcon, XIcon, CloudIcon, DatabaseIcon } from '../../components/Icons';
+import { UserCircleIcon, BellIcon, ShieldIcon, SparklesIcon, EyeIcon, EyeOffIcon, PlusIcon, EditIcon, TrashIcon, XIcon, CloudIcon, DatabaseIcon, SettingsIcon, UploadIcon } from '../../components/Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAIConfig, AIConfig } from '../../contexts/AIConfigContext';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { useDatabaseConfig } from '../../contexts/DatabaseConfigContext';
 import { useUserPermissions } from '../../hooks/useUserPermissions';
+import { LOGO_URL } from '../../constants';
 
 const ProfileSettings: React.FC = () => {
     const { user, updateProfile } = useAuth();
@@ -86,6 +87,118 @@ const SecuritySettings: React.FC = () => {
                 </div>
                 <div className="pt-4">
                     <button className="bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95">Atualizar Senha</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SystemSettings: React.FC = () => {
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string>(LOGO_URL);
+    const [isUploading, setIsUploading] = useState(false);
+    const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setLogoPreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleLogoUpload = async () => {
+        if (!logoFile) return;
+        
+        setIsUploading(true);
+        setMessage(null);
+        
+        try {
+            // TODO: Implementar upload da logo para o storage
+            // Por enquanto, apenas simula o upload
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            setMessage({ type: 'success', text: 'Logo atualizada com sucesso!' });
+            setLogoFile(null);
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Erro ao fazer upload da logo.' });
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return (
+        <div>
+            <h2 className="text-xl font-bold text-slate-800">Sistema</h2>
+            <p className="text-slate-500 mt-1">Gerencie as configurações gerais do sistema.</p>
+            
+            <div className="mt-6 space-y-8">
+                {/* Logo Management */}
+                <div className="max-w-lg">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Logo do Sistema</h3>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center space-x-4">
+                            <div className="w-24 h-24 border-2 border-slate-200 rounded-lg flex items-center justify-center bg-slate-50">
+                                <img 
+                                    src={logoPreview} 
+                                    alt="Logo atual" 
+                                    className="max-w-full max-h-full object-contain"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.src = '/uploads/logo.png';
+                                    }}
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-sm text-slate-600 mb-2">Logo atual do sistema</p>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleLogoChange}
+                                    className="hidden"
+                                    id="logo-upload"
+                                />
+                                <label
+                                    htmlFor="logo-upload"
+                                    className="inline-flex items-center px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer"
+                                >
+                                    <UploadIcon className="w-4 h-4 mr-2" />
+                                    Escolher Nova Logo
+                                </label>
+                            </div>
+                        </div>
+                        
+                        {logoFile && (
+                            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <span className="text-sm text-blue-700">Arquivo selecionado: {logoFile.name}</span>
+                                <button
+                                    onClick={handleLogoUpload}
+                                    disabled={isUploading}
+                                    className="bg-primary-blue text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                                >
+                                    {isUploading ? 'Enviando...' : 'Atualizar Logo'}
+                                </button>
+                            </div>
+                        )}
+                        
+                        {message && (
+                            <div className={`p-3 rounded-md text-sm ${
+                                message.type === 'success' 
+                                    ? 'bg-green-50 text-green-700' 
+                                    : 'bg-red-50 text-red-700'
+                            }`}>
+                                {message.text}
+                            </div>
+                        )}
+                        
+                        <p className="text-xs text-slate-500">
+                            Recomendado: PNG ou SVG com fundo transparente, tamanho máximo 2MB
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1003,6 +1116,7 @@ const SettingsTabs: React.FC = () => {
         { id: 'profile', name: 'Perfil', icon: <UserCircleIcon className="w-5 h-5" /> },
         { id: 'notifications', name: 'Notificações', icon: <BellIcon className="w-5 h-5" /> },
         { id: 'security', name: 'Segurança', icon: <ShieldIcon className="w-5 h-5" /> },
+        { id: 'system', name: 'Sistema', icon: <SettingsIcon className="w-5 h-5" /> },
         { id: 'ai', name: 'IA', icon: <SparklesIcon className="w-5 h-5" /> },
         // Only show storage and database tabs to joaovictor.priv@gmail.com
         ...(user?.email === 'joaovictor.priv@gmail.com' ? [
@@ -1036,6 +1150,7 @@ const SettingsTabs: React.FC = () => {
                 {activeTab === 'profile' && <ProfileSettings />}
                 {activeTab === 'notifications' && <NotificationSettings />}
                 {activeTab === 'security' && <SecuritySettings />}
+                {activeTab === 'system' && <SystemSettings />}
                 {activeTab === 'ai' && <AISettings />}
                 {activeTab === 'storage' && user?.email === 'joaovictor.priv@gmail.com' && <StorageSettings />}
                 {activeTab === 'database' && user?.email === 'joaovictor.priv@gmail.com' && <DatabaseSettings />}

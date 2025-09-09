@@ -19,6 +19,7 @@ interface PropertyFormProps {
     initialData?: Property;
     onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[]; translations: Property['translations'] }, status: PropertyStatus) => void;
     isEditing: boolean;
+    isSubmitting?: boolean;
 }
 
 interface ImageState {
@@ -26,7 +27,7 @@ interface ImageState {
     isPrimary: boolean;
 }
 
-const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing }) => {
+const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing, isSubmitting = false }) => {
     const { categories } = useCategories();
     const { amenities: managedAmenities, loading: amenitiesLoading } = useAmenities();
     const { refresh: refreshGallery } = useImages();
@@ -407,7 +408,18 @@ Agora, gere o objeto JSON completo.`;
             images: primaryImageFirst.map(img => img.preview),
             amenities: amenities,
             translations: translations,
+            // Garantir que tourUrl e youtubeUrl sejam enviados corretamente
+            tourUrl: formData.tourUrl || undefined,
+            youtubeUrl: formData.youtubeUrl || undefined,
         };
+        
+        // Debug: verificar se youtubeUrl está sendo enviado
+        console.log('PropertyForm - Dados sendo enviados:', {
+            tourUrl: propertyData.tourUrl,
+            youtubeUrl: propertyData.youtubeUrl,
+            formDataYoutubeUrl: formData.youtubeUrl
+        });
+        
         onSubmit(propertyData, status);
     };
 
@@ -697,12 +709,14 @@ Agora, gere o objeto JSON completo.`;
                 </div>
 
                 <div className="pt-8 flex justify-end space-x-3">
-                    <button type="button" onClick={() => navigate(-1)} className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+                    <button type="button" onClick={() => navigate(-1)} disabled={isSubmitting} className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">Cancelar</button>
                     {isEditing && (
-                        <button type="button" onClick={() => triggerSubmit('ARCHIVED')} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95">Salvar e Arquivar</button>
+                        <button type="button" onClick={() => triggerSubmit('ARCHIVED')} disabled={isSubmitting} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                            {isSubmitting ? 'Salvando...' : 'Salvar e Arquivar'}
+                        </button>
                     )}
-                    <button type="submit" className="bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95">
-                        {isEditing ? 'Salvar Alterações' : 'Adicionar Propriedade'}
+                    <button type="submit" disabled={isSubmitting} className="bg-primary-green text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Adicionar Propriedade')}
                     </button>
                 </div>
             </form>

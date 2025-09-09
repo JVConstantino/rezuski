@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode, useCa
 import { Category } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { AIConfig } from './AIConfigContext';
-import { supportedLanguages } from './LanguageContext';
+import { supportedLanguages, useLanguage } from './LanguageContext';
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from 'openai';
 
@@ -63,6 +63,15 @@ const cleanAIResponse = (response: string): string => {
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // Get refreshDynamicData from LanguageContext if available
+    let refreshLanguageData: (() => Promise<void>) | null = null;
+    try {
+        const languageContext = useLanguage();
+        refreshLanguageData = languageContext.refreshDynamicData;
+    } catch {
+        // LanguageContext not available, which is fine
+    }
 
     const fetchCategories = useCallback(async () => {
         setLoading(true);
@@ -91,6 +100,10 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error adding category:', error);
         } else if (data) {
             await fetchCategories();
+            // Refresh LanguageContext data to sync categories
+            if (refreshLanguageData) {
+                await refreshLanguageData();
+            }
         }
     };
 
@@ -105,6 +118,10 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error updating category:', error);
         } else {
             await fetchCategories();
+            // Refresh LanguageContext data to sync categories
+            if (refreshLanguageData) {
+                await refreshLanguageData();
+            }
         }
     };
 
@@ -118,6 +135,10 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error deleting category:', error);
         } else {
             await fetchCategories();
+            // Refresh LanguageContext data to sync categories
+            if (refreshLanguageData) {
+                await refreshLanguageData();
+            }
         }
     };
 
@@ -193,6 +214,10 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
                 const { error } = await supabase.from('categories').upsert(updates);
                 if (error) throw error;
                 await fetchCategories(); // Refetch to update state
+                // Refresh LanguageContext data to sync categories
+                if (refreshLanguageData) {
+                    await refreshLanguageData();
+                }
             }
             
             alert('Tradução das categorias concluída com sucesso!');

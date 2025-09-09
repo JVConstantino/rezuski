@@ -32,6 +32,7 @@ interface LanguageContextType {
     categories: Category[];
     propertyTypes: { name: string; translations: any }[];
     loading: boolean;
+    refreshDynamicData: () => Promise<void>;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -48,29 +49,29 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     }, []);
 
+    const fetchDynamicData = async () => {
+        setLoading(true);
+        try {
+            const [categoriesRes, propertyTypesRes] = await Promise.all([
+                supabase.from('categories').select('*'),
+                supabase.from('property_type_translations').select('*')
+            ]);
+
+            if (categoriesRes.error) throw categoriesRes.error;
+            if (propertyTypesRes.error) throw propertyTypesRes.error;
+
+            setDynamicData({
+                categories: categoriesRes.data || [],
+                propertyTypes: propertyTypesRes.data || [],
+            });
+        } catch (error) {
+            console.error("Failed to fetch dynamic translation data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchDynamicData = async () => {
-            setLoading(true);
-            try {
-                const [categoriesRes, propertyTypesRes] = await Promise.all([
-                    supabase.from('categories').select('*'),
-                    supabase.from('property_type_translations').select('*')
-                ]);
-
-                if (categoriesRes.error) throw categoriesRes.error;
-                if (propertyTypesRes.error) throw propertyTypesRes.error;
-
-                setDynamicData({
-                    categories: categoriesRes.data || [],
-                    propertyTypes: propertyTypesRes.data || [],
-                });
-            } catch (error) {
-                console.error("Failed to fetch dynamic translation data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchDynamicData();
     }, []);
 
@@ -111,6 +112,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         categories: dynamicData.categories,
         propertyTypes: dynamicData.propertyTypes,
         loading,
+        refreshDynamicData: fetchDynamicData,
     };
 
     return (

@@ -75,7 +75,15 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
-            <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
+            <img 
+                    src={LOGO_URL} 
+                    alt="Rezuski Imóveis Logo" 
+                    className="h-16 object-contain" 
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/uploads/logo.png';
+                    }}
+                />
           </Link>
 
           {/* Navigation Links */}

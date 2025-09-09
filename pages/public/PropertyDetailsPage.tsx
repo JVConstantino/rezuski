@@ -457,6 +457,34 @@ const PropertyDetailsPage: React.FC = () => {
                         </div>
                     </>
                 )}
+                {property.youtubeUrl && (
+                    <>
+                        <hr className="my-8"/>
+                        <h2 className="text-2xl font-bold text-slate-900">Vídeo do Imóvel</h2>
+                        <div className="mt-6 aspect-[16/9] w-full bg-slate-200 rounded-lg overflow-hidden shadow-lg">
+                           <iframe 
+                                src={(() => {
+                                    const url = property.youtubeUrl;
+                                    // Converter diferentes formatos de URL do YouTube para embed
+                                    if (url.includes('youtube.com/watch?v=')) {
+                                        return url.replace('youtube.com/watch?v=', 'youtube.com/embed/');
+                                    } else if (url.includes('youtu.be/')) {
+                                        return url.replace('youtu.be/', 'youtube.com/embed/');
+                                    } else if (url.includes('youtube.com/embed/')) {
+                                        return url; // Já está no formato correto
+                                    }
+                                    return url; // Retorna a URL original se não reconhecer o formato
+                                })()} 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen 
+                                className="w-full h-full"
+                                title={`${property.title} - Vídeo`}
+                                aria-label={`${property.title} - Vídeo`}
+                            ></iframe>
+                        </div>
+                    </>
+                )}
                 {property.priceHistory && property.priceHistory.length > 0 && (
                     <>
                         <hr className="my-8"/>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProperties } from '../../contexts/PropertyContext';
 import PropertyForm from '../../components/admin/PropertyForm';
@@ -9,14 +9,25 @@ const EditPropertyPage: React.FC = () => {
     const { propertyId } = useParams<{ propertyId: string }>();
     const { properties, updateProperty } = useProperties();
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const propertyToEdit = properties.find(p => p.id === propertyId);
 
     const handleSubmit = async (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[], translations: Property['translations'] }, status: PropertyStatus) => {
-        if (propertyToEdit) {
-            const updatedProperty = { ...propertyToEdit, ...data, status };
-            await updateProperty(updatedProperty);
-            navigate('/admin/properties');
+        if (propertyToEdit && !isSubmitting) {
+            setIsSubmitting(true);
+            try {
+                const updatedProperty = { ...propertyToEdit, ...data, status };
+                console.log('EditPropertyPage - Iniciando atualização da propriedade:', updatedProperty.id);
+                await updateProperty(updatedProperty);
+                console.log('EditPropertyPage - Propriedade atualizada com sucesso, navegando...');
+                navigate('/admin/properties');
+            } catch (error) {
+                console.error('EditPropertyPage - Erro ao atualizar propriedade:', error);
+                alert('Erro ao salvar a propriedade. Tente novamente.');
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -31,7 +42,7 @@ const EditPropertyPage: React.FC = () => {
                 Voltar para Propriedades
             </button>
             <h1 className="text-3xl font-bold text-slate-900 mb-6">Editar Propriedade</h1>
-            <PropertyForm initialData={propertyToEdit} onSubmit={handleSubmit} isEditing={true} />
+            <PropertyForm initialData={propertyToEdit} onSubmit={handleSubmit} isEditing={true} isSubmitting={isSubmitting} />
         </div>
     );
 };

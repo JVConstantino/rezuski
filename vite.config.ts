@@ -13,6 +13,37 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      // Configurações de otimização de cache e performance
+      server: {
+        hmr: {
+          overlay: false
+        },
+        fs: {
+          strict: false
+        }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              vendor: ['react', 'react-dom'],
+              router: ['react-router-dom'],
+              supabase: ['@supabase/supabase-js'],
+              charts: ['recharts']
+            }
+          }
+        },
+        chunkSizeWarningLimit: 1000
+      },
+      optimizeDeps: {
+        include: [
+          'react',
+          'react-dom',
+          'react-router-dom',
+          '@supabase/supabase-js',
+          'recharts'
+        ]
       }
     };
 });

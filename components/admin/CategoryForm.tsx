@@ -3,6 +3,8 @@ import { Category } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import ImageGalleryModal from './ImageGalleryModal';
 import { supabase } from '../../lib/supabaseClient';
+import ImageWithFallback from '../ImageWithFallback';
+import { BuildingIcon } from '../Icons';
 
 interface CategoryFormProps {
     initialData?: Category;
@@ -79,7 +81,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ initialData, onSubmit, isEd
                     <div className="mt-2 flex items-center space-x-4">
                         <div className="relative w-20 h-20 rounded-md bg-slate-100 p-1 flex items-center justify-center border">
                             {iconUrl ? (
-                                <img src={iconUrl} alt="Preview" className="h-full w-full object-contain" />
+                                <ImageWithFallback 
+                                    src={iconUrl} 
+                                    alt="Preview do ícone" 
+                                    className="w-20 h-20 object-contain rounded border"
+                                    categoryName={name}
+                                />
                             ) : (
                                 <span className="text-xs text-slate-500">Sem Ícone</span>
                             )}

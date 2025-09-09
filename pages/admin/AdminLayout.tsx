@@ -59,7 +59,15 @@ const Sidebar: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, o
             >
                 <div className="h-20 flex items-center justify-between px-6 border-b border-slate-200">
                      <Link to="/" className="flex-shrink-0">
-                        <img src={LOGO_URL} alt="Rezuski Imóveis Logo" className="h-16 object-contain" />
+                        <img 
+                            src={LOGO_URL} 
+                            alt="Rezuski Imóveis Logo" 
+                            className="h-16 object-contain" 
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/uploads/logo.png';
+                            }}
+                        />
                     </Link>
                     <button onClick={onClose} className="md:hidden text-slate-500 hover:text-primary-blue" aria-label="Close menu">
                         <XIcon className="w-6 h-6" />

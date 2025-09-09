@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCategories } from '../../contexts/CategoryContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAIConfig } from '../../contexts/AIConfigContext';
-import { PlusIcon, EditIcon, TrashIcon, SparklesIcon } from '../../components/Icons';
+import { PlusIcon, EditIcon, TrashIcon, SparklesIcon, BuildingIcon } from '../../components/Icons';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const CategoriesPage: React.FC = () => {
     const { categories, deleteCategory, translateAllCategoriesWithAI, loading } = useCategories();
@@ -59,7 +60,12 @@ const CategoriesPage: React.FC = () => {
                     {categories.map(category => (
                         <div key={category.id} className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
                             <div className="flex items-center space-x-4">
-                                <img src={category.iconUrl} alt={category.name} className="w-10 h-10 object-contain" />
+                                <ImageWithFallback 
+                                    src={category.iconUrl} 
+                                    alt={category.name} 
+                                    className="w-10 h-10 object-contain rounded" 
+                                    categoryName={category.name}
+                                />
                                 <p className="font-semibold text-slate-800">{t(`category:${category.id}`)}</p>
                             </div>
                             <div className="flex space-x-1">
@@ -88,7 +94,12 @@ const CategoriesPage: React.FC = () => {
                             {categories.map(category => (
                                 <tr key={category.id} className="border-b border-slate-200 hover:bg-slate-50">
                                     <td className="p-4">
-                                        <img src={category.iconUrl} alt={category.name} className="w-10 h-10 object-contain" />
+                                        <ImageWithFallback 
+                                            src={category.iconUrl} 
+                                            alt={category.name} 
+                                            className="w-10 h-10 object-contain rounded" 
+                                            categoryName={category.name}
+                                        />
                                     </td>
                                     <td className="p-4">
                                         <p className="font-semibold text-slate-800">{t(`category:${category.id}`)}</p>

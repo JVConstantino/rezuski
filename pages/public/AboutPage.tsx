@@ -45,6 +45,10 @@ const AboutPage: React.FC = () => {
                                     src={getOptimizedImageUrl(facadeImageUrl, { width: 800, height: 600 }, activeConfig)}
                                     alt="Fachada da Rezuski Imóveis" 
                                     className="rounded-lg shadow-lg object-cover"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                    }}
                                 />
                             </AnimateOnScroll>
                             <AnimateOnScroll delay={100}>

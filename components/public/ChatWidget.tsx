@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { Conversation, Message } from '../../types';
 import { MessageSquareIcon, XIcon, UserCircleIcon, ChevronUpIcon } from '../Icons';
 import { Database } from '../../types/supabase';
-import type { RealtimePostgresChangesPayload } from 'https://esm.sh/@supabase/supabase-js@2.44.4';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const SendIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -134,32 +134,24 @@ const ChatWidget: React.FC = () => {
     
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !conversation) return;
+        if (!newMessage.trim()) return;
 
         const messageContent = newMessage.trim();
+        
+        // Número do WhatsApp da Rezuski Imóveis
+        const recipientPhone = "5521967567178";
+        
+        // Codifica a mensagem para URL
+        const encodedMessage = encodeURIComponent(messageContent);
+        
+        // Cria a URL do WhatsApp
+        const whatsappUrl = `https://wa.me/${recipientPhone}?text=${encodedMessage}`;
+        
+        // Abre o WhatsApp em uma nova aba
+        window.open(whatsappUrl, '_blank');
+        
+        // Limpa o campo de mensagem
         setNewMessage('');
-
-        const messagePayload: Database['public']['Tables']['messages']['Insert'] = {
-            conversation_id: conversation.id,
-            sender: 'CUSTOMER',
-            content: messageContent
-        };
-        
-        const { error: msgError } = await supabase
-            .from('messages')
-            .insert([messagePayload]);
-        
-        if (msgError) {
-             console.error("Error sending message:", msgError);
-             setNewMessage(messageContent);
-        } else {
-            const conversationUpdate: Database['public']['Tables']['conversations']['Update'] = {
-                last_message_at: new Date().toISOString(),
-                last_message_preview: messageContent,
-                admin_has_unread: true
-            };
-            await supabase.from('conversations').update(conversationUpdate).eq('id', conversation.id);
-        }
     };
     
     const handleEndChat = () => {

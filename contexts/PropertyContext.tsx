@@ -130,21 +130,42 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, []);
 
     const addProperty = async (property: Omit<Property, 'id'>) => {
+        // Debug: verificar dados recebidos
+        console.log('PropertyContext - addProperty recebeu:', {
+            tourUrl: property.tourUrl,
+            youtubeUrl: property.youtubeUrl,
+            fullProperty: property
+        });
+        
+        console.log('PropertyContext - Dados sendo enviados para o Supabase:', JSON.stringify(property, null, 2));
+        
         const { data, error } = await supabase
             .from('properties')
             .insert([property])
             .select();
+            
+        console.log('PropertyContext - Resposta do Supabase:', { data, error });
         
         if (error) {
             console.error('Error adding property:', error.message);
+            console.error('Error details:', error);
             alert(`Error adding property: ${error.message}`);
         } else if (data) {
+            console.log('PropertyContext - Propriedade salva com sucesso:', data[0]);
             await fetchProperties(); // Refetch to maintain order
         }
     };
 
     const updateProperty = async (updatedProperty: Property) => {
         const { id, ...updateData } = updatedProperty;
+        
+        // Debug: verificar dados recebidos
+        console.log('PropertyContext - updateProperty recebeu:', {
+            id: id,
+            tourUrl: updateData.tourUrl,
+            youtubeUrl: updateData.youtubeUrl,
+            fullUpdateData: updateData
+        });
         
         const { data, error } = await supabase
             .from('properties')
@@ -154,8 +175,10 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         if (error) {
             console.error('Error updating property:', error.message);
+            console.error('Error details:', error);
             alert(`Error updating property: ${error.message}`);
         } else if (data) {
+            console.log('PropertyContext - Propriedade atualizada com sucesso:', data[0]);
              setProperties(prev => prev.map(p => p.id === updatedProperty.id ? (data[0] as unknown as Property) : p));
         }
     };
