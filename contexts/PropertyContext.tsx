@@ -1,3 +1,5 @@
+
+
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Property, PropertyStatus, Amenity, PriceHistory } from '../types';
 import { supabase } from '../lib/supabaseClient';
