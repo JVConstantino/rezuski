@@ -51,7 +51,7 @@ export const DatabaseConfigProvider: React.FC<{ children: ReactNode }> = ({ chil
                     },
                     {
                         id: 'constantino',
-                        database_url: 'https://constantino-supabase.62mil3.easypanel.host',
+                        database_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
                         database_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
                         description: 'Constantino Supabase Database',
                         created_at: new Date().toISOString(),
@@ -127,19 +127,51 @@ export const DatabaseConfigProvider: React.FC<{ children: ReactNode }> = ({ chil
 
     const deleteConfig = async (id: string) => {
         try {
+            if (!id) {
+                throw new Error('ID da configuração é obrigatório para exclusão');
+            }
+            
+            console.log('Tentando excluir configuração:', id);
+            
+            // Verificar se a configuração existe antes de tentar excluir
+            const { data: existingConfig, error: fetchError } = await supabase
+                .from('database_configs')
+                .select('id, is_active')
+                .eq('id', id)
+                .single();
+            
+            if (fetchError && fetchError.code !== 'PGRST116') {
+                console.error('Erro ao verificar existência da configuração:', fetchError);
+                throw fetchError;
+            }
+            
+            if (!existingConfig) {
+                console.warn('Configuração não encontrada:', id);
+                throw new Error('Configuração não encontrada');
+            }
+            
+            // Verificar se não é a configuração ativa
+            if (existingConfig.is_active) {
+                throw new Error('Não é possível excluir a configuração ativa');
+            }
+            
             const { error } = await supabase
                 .from('database_configs')
                 .delete()
                 .eq('id', id);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Erro ao excluir configuração:', error);
+                throw error;
+            }
 
+            console.log('Configuração excluída com sucesso');
             setConfigs(prev => prev.filter(config => config.id !== id));
             if (activeConfig?.id === id) {
                 setActiveConfigState(null);
             }
         } catch (error) {
-            console.error('Error deleting database config:', error);
+            console.error('Erro na função deleteConfig:', error);
             throw error;
         }
     };

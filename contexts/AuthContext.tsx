@@ -45,33 +45,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     const updateUserState = async (session: Session | null) => {
-        if (session?.user) {
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('id, name, email, avatarUrl, role')
-                .eq('id', session.user.id)
-                .single();
-            
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error fetching profile:', error.message);
-                setUser(null);
-                return;
-            }
+        try {
+            if (session?.user) {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('id, name, email, avatarUrl, role')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Error fetching profile:', error.message);
+                    setUser(null);
+                    return;
+                }
 
-            if (profile) {
-                const appUser: User = {
-                    id: profile.id,
-                    email: session.user.email!,
-                    name: profile.name || session.user.email!,
-                    avatarUrl: profile.avatarUrl || `https://avatar.vercel.sh/${session.user.email!}.svg`,
-                    role: profile.role as UserRole,
-                };
-                setUser(appUser);
+                if (profile) {
+                    const appUser: User = {
+                        id: profile.id,
+                        email: session.user.email!,
+                        name: profile.name || session.user.email!,
+                        avatarUrl: profile.avatarUrl || `https://avatar.vercel.sh/${session.user.email!}.svg`,
+                        role: profile.role as UserRole,
+                    };
+                    setUser(appUser);
+                } else {
+                    console.warn(`Authentication successful, but no profile found for user ID: ${session.user.id}. Please ensure a profile exists in the 'profiles' table.`);
+                    setUser(null);
+                }
             } else {
-                console.warn(`Authentication successful, but no profile found for user ID: ${session.user.id}. Please ensure a profile exists in the 'profiles' table.`);
                 setUser(null);
             }
-        } else {
+        } catch (error) {
+            console.error('Unexpected error in updateUserState:', error);
             setUser(null);
         }
     }
@@ -191,9 +196,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const value = { isAuthenticated, user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal, sendPasswordResetEmail, updateProfile };
 
+    // Renderiza um loading spinner enquanto carrega
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Carregando autenticação...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

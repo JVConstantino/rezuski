@@ -457,42 +457,60 @@ export type Database = {
     CompositeTypes: {
       [_ in never]: never
     }
+      },
+      database_configs: {
+        Row: {
+          id: string
+          database_url: string
+          database_key: string
+          description?: string
+          is_active: boolean
+          created_at: string
+          category_order?: string | null
+        },
+        Insert: {
+          id?: string
+          database_url: string
+          database_key: string
+          description?: string
+          is_active?: boolean
+          created_at?: string
+          category_order?: string | null
+        },
+        Update: {
+          id?: string
+          database_url?: string
+          database_key?: string
+          description?: string
+          is_active?: boolean
+          created_at?: string
+          category_order?: string | null
+        },
+        Relationships: []
+      }
+    },
+    Views: {
+      [_ in never]: never
+    },
+    Functions: {
+      increment_view_count: {
+        Args: {
+          prop_id: string
+        }
+        Returns: undefined
+      },
+      set_active_ai_config: {
+        Args: {
+          config_id: string
+        }
+        Returns: undefined
+      }
+    },
+    Enums: {
+      [_ in never]: never
+    },
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
-database_configs: {
-  Row: {
-    id: string
-    database_url: string
-    is_active: boolean
-    created_at: string
-    category_order?: string | null // campo para ordem das categorias
-  },
-  Insert: {
-    id?: string
-    database_url: string
-    is_active?: boolean
-    created_at?: string
-    category_order?: string | null
-  },
-  Update: {
-    id?: string
-    database_url?: string
-    is_active?: boolean
-    created_at?: string
-    category_order?: string | null
-  },
-  Relationships: []
-},
-{
-  foreignKeyName: "applications_applicantid_fkey"
-  columns: ["applicantId"]
-  referencedRelation: "profiles"
-  referencedColumns: ["id"]
-},
-{
-  foreignKeyName: "applications_propertyid_fkey"
-  columns: ["propertyId"]
-  referencedRelation: "properties"
-  referencedColumns: ["id"]
-},
-]

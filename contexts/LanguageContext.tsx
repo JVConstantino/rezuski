@@ -48,6 +48,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         const storedLocale = localStorage.getItem('rezuski_locale') as Locale;
         if (storedLocale && supportedLanguages.some(l => l.code === storedLocale)) {
             setLocale(storedLocale);
+        } else {
+            // Define português BR como idioma padrão se não houver idioma armazenado
+            setLocale('pt-BR');
+            localStorage.setItem('rezuski_locale', 'pt-BR');
         }
     }, []);
 

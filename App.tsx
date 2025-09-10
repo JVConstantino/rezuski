@@ -1,5 +1,19 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useAutoReload } from './hooks/useAutoReload';
+
+// Service Worker registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
 
 import { AuthProvider } from './contexts/AuthContext';
 import { PropertyProvider } from './contexts/PropertyContext';
@@ -19,6 +33,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginModalController from './components/LoginModalController';
 import ChatWidget from './components/public/ChatWidget';
+import CookieConsent from './components/CookieConsent';
+import HotReloadIndicator from './components/HotReloadIndicator';
+import Preloader from './components/Preloader';
 
 import HomePage from './pages/public/HomePage';
 import SearchResultsPage from './pages/public/SearchResultsPage';
@@ -55,6 +72,8 @@ const DataPreviewPage = lazy(() => import('./pages/admin/DataPreviewPage'));
 const StorageTestPage = lazy(() => import('./pages/admin/StorageTestPage'));
 const DatabaseMigrationPage = lazy(() => import('./pages/admin/DatabaseMigrationPage'));
 import DatabaseImageDiagnostic from './components/debug/DatabaseImageDiagnostic';
+// import AdminDiagnostic from './components/debug/AdminDiagnostic'; // Temporarily disabled due to infinite loop
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Wrapper component to connect database and storage configurations
 const StorageWithDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -105,35 +124,37 @@ const AppContent: React.FC = () => {
                                                                     {/* Admin Routes */}
                                                                     <Route element={<ProtectedRoute />}>
                                                                         <Route path="/admin" element={
-                                                                            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div></div>}>
-                                                                                <AdminLayout />
-                                                                            </Suspense>
+                                                                            <ErrorBoundary>
+                                                                                <Suspense fallback={<Preloader isLoading={true} message="Carregando painel administrativo..." />}>
+                                                                                    <AdminLayout />
+                                                                                </Suspense>
+                                                                            </ErrorBoundary>
                                                                         }>
                                                                             <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                                                                            <Route path="dashboard" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><DashboardPage /></Suspense>} />
-                                                                            <Route path="properties" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><PropertiesPage /></Suspense>} />
-                                                                            <Route path="properties/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddPropertyPage /></Suspense>} />
-                                                                            <Route path="properties/edit/:propertyId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditPropertyPage /></Suspense>} />
-                                                                            <Route path="properties/:propertyId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><PropertyDetailPage /></Suspense>} />
-                                                                            <Route path="brokers" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><BrokersPage /></Suspense>} />
-                                                                            <Route path="brokers/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddBrokerPage /></Suspense>} />
-                                                                            <Route path="brokers/edit/:brokerId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditBrokerPage /></Suspense>} />
-                                                                            <Route path="categories" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><CategoriesPage /></Suspense>} />
-                                                                            <Route path="categories/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddCategoryPage /></Suspense>} />
-                                                                            <Route path="categories/edit/:categoryId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditCategoryPage /></Suspense>} />
-                                                                            <Route path="resources" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AdminResourcesPage /></Suspense>} />
-                                                                            <Route path="resources/new" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AddResourcePage /></Suspense>} />
-                                                                            <Route path="resources/edit/:resourceId" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><EditResourcePage /></Suspense>} />
-                                                                            <Route path="gallery" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><GalleryPage /></Suspense>} />
+                                                                            <Route path="dashboard" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando dashboard..." />}><DashboardPage /></Suspense>} />
+                                                                            <Route path="properties" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando propriedades..." />}><PropertiesPage /></Suspense>} />
+                                                                            <Route path="properties/new" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando formulário..." />}><AddPropertyPage /></Suspense>} />
+                                                                            <Route path="properties/edit/:propertyId" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando editor..." />}><EditPropertyPage /></Suspense>} />
+                                                                            <Route path="properties/:propertyId" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando detalhes..." />}><PropertyDetailPage /></Suspense>} />
+                                                                            <Route path="brokers" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando corretores..." />}><BrokersPage /></Suspense>} />
+                                                                            <Route path="brokers/new" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando formulário..." />}><AddBrokerPage /></Suspense>} />
+                                                                            <Route path="brokers/edit/:brokerId" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando editor..." />}><EditBrokerPage /></Suspense>} />
+                                                                            <Route path="categories" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando categorias..." />}><CategoriesPage /></Suspense>} />
+                                                                            <Route path="categories/new" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando formulário..." />}><AddCategoryPage /></Suspense>} />
+                                                                            <Route path="categories/edit/:categoryId" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando editor..." />}><EditCategoryPage /></Suspense>} />
+                                                                            <Route path="resources" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando recursos..." />}><AdminResourcesPage /></Suspense>} />
+                                                                            <Route path="resources/new" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando formulário..." />}><AddResourcePage /></Suspense>} />
+                                                                            <Route path="resources/edit/:resourceId" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando editor..." />}><EditResourcePage /></Suspense>} />
+                                                                            <Route path="gallery" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando galeria..." />}><GalleryPage /></Suspense>} />
                                                                             <Route element={<AdminProtectedRoute />}>
-                                                                                <Route path="storage-test" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><StorageTestPage /></Suspense>} />
-                                                                                <Route path="data-preview" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><DataPreviewPage /></Suspense>} />
-                                                                                <Route path="database-migration" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><DatabaseMigrationPage /></Suspense>} />
+                                                                                <Route path="storage-test" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando teste..." />}><StorageTestPage /></Suspense>} />
+                                                                                <Route path="data-preview" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando dados..." />}><DataPreviewPage /></Suspense>} />
+                                                                                <Route path="database-migration" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando migração..." />}><DatabaseMigrationPage /></Suspense>} />
                                                                             </Route>
-                                                                            <Route path="amenities" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><AmenitiesPage /></Suspense>} />
-                                                                            <Route path="messages" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><MessagesPage /></Suspense>} />
-                                                                            <Route path="reports" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><ReportsPage /></Suspense>} />
-                                                                            <Route path="settings" element={<Suspense fallback={<div className="p-4">Carregando...</div>}><SettingsPage /></Suspense>} />
+                                                                            <Route path="amenities" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando comodidades..." />}><AmenitiesPage /></Suspense>} />
+                                                                            <Route path="messages" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando mensagens..." />}><MessagesPage /></Suspense>} />
+                                                                            <Route path="reports" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando relatórios..." />}><ReportsPage /></Suspense>} />
+                                                                            <Route path="settings" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando configurações..." />}><SettingsPage /></Suspense>} />
                                                                         </Route>
                                                                     </Route>
 
@@ -141,7 +162,10 @@ const AppContent: React.FC = () => {
                                                                     <Route path="*" element={<Navigate to="/" replace />} />
                                                                 </Routes>
                                                                 {!isAdminPage && <ChatWidget />}
-                                                                <DatabaseImageDiagnostic />
+                                                                <CookieConsent />
+                                                                 <HotReloadIndicator />
+                                                                 <DatabaseImageDiagnostic />
+                                                                 {/* <AdminDiagnostic /> */} {/* Temporarily disabled due to infinite loop */}
                                                             </AIConfigProvider>
                                                         </ImageProvider>
                                                     </StorageWithDatabaseProvider>
@@ -160,6 +184,15 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Ativa o sistema de auto-reload
+  const { forceReload, isHMRActive } = useAutoReload({
+    enabled: true,
+    interval: 2000, // Verifica a cada 2 segundos
+    onReload: () => {
+      console.log('🔄 Sistema detectou mudanças, recarregando...');
+    }
+  });
+
   return (
     <BrowserRouter>
       <AppContent />

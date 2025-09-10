@@ -61,41 +61,70 @@ export const ResourceProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     const deleteResource = async (resourceId: string) => {
-        const resourceToDelete = resources.find(r => r.id === resourceId);
-        if (!resourceToDelete) return;
-
-        // 1. Delete file from storage
-        if (resourceToDelete.fileUrl) {
-            const bucketName = 'resource-documents';
-            try {
-                const url = new URL(resourceToDelete.fileUrl);
-                const filePath = url.pathname.split(`/${bucketName}/`)[1];
-                if (filePath) {
-                    const { error: storageError } = await supabase.storage
-                        .from(bucketName)
-                        .remove([filePath]);
-
-                    if (storageError) {
-                        console.error('Error deleting resource document:', storageError);
-                        alert(`Não foi possível remover o documento do armazenamento. Erro: ${storageError.message}. O recurso ainda será excluído.`);
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not parse resource URL to delete from storage:', resourceToDelete.fileUrl);
+        try {
+            if (!resourceId) {
+                throw new Error('ID do recurso é obrigatório para exclusão');
             }
-        }
-        
-        // 2. Delete the resource record from database
-        const { error: dbError } = await supabase
-            .from('resources')
-            .delete()
-            .eq('id', resourceId);
-        
-        if (dbError) {
-            console.error('Error deleting resource:', dbError.message);
-            alert(`Erro ao excluir recurso: ${dbError.message}`);
-        } else {
+            
+            console.log('Tentando excluir recurso:', resourceId);
+            
+            const resourceToDelete = resources.find(r => r.id === resourceId);
+            if (!resourceToDelete) {
+                // Verificar se o recurso existe no banco antes de tentar excluir
+                const { data: existingResource, error: fetchError } = await supabase
+                    .from('resources')
+                    .select('id')
+                    .eq('id', resourceId)
+                    .single();
+                
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    console.error('Erro ao verificar existência do recurso:', fetchError);
+                    throw fetchError;
+                }
+                
+                if (!existingResource) {
+                    console.warn('Recurso não encontrado:', resourceId);
+                    throw new Error('Recurso não encontrado');
+                }
+            }
+
+            // 1. Delete file from storage
+            if (resourceToDelete && resourceToDelete.fileUrl) {
+                const bucketName = 'resource-documents';
+                try {
+                    const url = new URL(resourceToDelete.fileUrl);
+                    const filePath = url.pathname.split(`/${bucketName}/`)[1];
+                    if (filePath) {
+                        const { error: storageError } = await supabase.storage
+                            .from(bucketName)
+                            .remove([filePath]);
+
+                        if (storageError) {
+                            console.error('Error deleting resource document:', storageError);
+                            alert(`Não foi possível remover o documento do armazenamento. Erro: ${storageError.message}. O recurso ainda será excluído.`);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not parse resource URL to delete from storage:', resourceToDelete.fileUrl);
+                }
+            }
+            
+            // 2. Delete the resource record from database
+            const { error: dbError } = await supabase
+                .from('resources')
+                .delete()
+                .eq('id', resourceId);
+            
+            if (dbError) {
+                console.error('Erro ao excluir recurso:', dbError);
+                throw dbError;
+            }
+
+            console.log('Recurso excluído com sucesso');
             setResources(prev => prev.filter(r => r.id !== resourceId));
+        } catch (error) {
+            console.error('Erro na função deleteResource:', error);
+            throw error;
         }
     };
 

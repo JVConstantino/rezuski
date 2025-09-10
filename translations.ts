@@ -125,6 +125,11 @@ export const translations = {
         'search.sort_oldest': 'Mais Antigo',
         'search.sort_price_asc': 'Menor Preço',
         'search.sort_price_desc': 'Maior Preço',
+        'cookies.title': 'Política de Cookies',
+        'cookies.message': 'Utilizamos cookies para melhorar sua experiência em nosso site. Ao continuar navegando, você concorda com nossa',
+        'cookies.privacy_policy': 'Política de Privacidade',
+        'cookies.accept': 'Aceitar Cookies',
+        'cookies.decline': 'Recusar',
     },
     'en-US': {
         'nav.home': 'Home',
@@ -249,6 +254,11 @@ export const translations = {
         'search.sort_oldest': 'Oldest',
         'search.sort_price_asc': 'Price: Low to High',
         'search.sort_price_desc': 'Price: High to Low',
+        'cookies.title': 'Cookie Policy',
+        'cookies.message': 'We use cookies to improve your experience on our website. By continuing to browse, you agree to our',
+        'cookies.privacy_policy': 'Privacy Policy',
+        'cookies.accept': 'Accept Cookies',
+        'cookies.decline': 'Decline',
     },
     'es-ES': {
         'nav.home': 'Inicio',
@@ -373,6 +383,11 @@ export const translations = {
         'search.sort_oldest': 'Más Antiguo',
         'search.sort_price_asc': 'Precio Menor',
         'search.sort_price_desc': 'Precio Mayor',
+        'cookies.title': 'Política de Cookies',
+        'cookies.message': 'Utilizamos cookies para mejorar su experiencia en nuestro sitio web. Al continuar navegando, acepta nuestra',
+        'cookies.privacy_policy': 'Política de Privacidad',
+        'cookies.accept': 'Aceptar Cookies',
+        'cookies.decline': 'Rechazar',
     },
     'fr-FR': {
         'nav.home': 'Accueil',
@@ -497,6 +512,11 @@ export const translations = {
         'search.sort_oldest': 'Plus Ancien',
         'search.sort_price_asc': 'Prix Croissant',
         'search.sort_price_desc': 'Prix Décroissant',
+        'cookies.title': 'Politique des Cookies',
+        'cookies.message': 'Nous utilisons des cookies pour améliorer votre expérience sur notre site web. En continuant à naviguer, vous acceptez notre',
+        'cookies.privacy_policy': 'Politique de Confidentialité',
+        'cookies.accept': 'Accepter les Cookies',
+        'cookies.decline': 'Refuser',
     },
     'it-IT': {
         'nav.home': 'Home',
@@ -621,5 +641,10 @@ export const translations = {
         'search.sort_oldest': 'Più Vecchio',
         'search.sort_price_asc': 'Prezzo: Dal Basso all\'Alto',
         'search.sort_price_desc': 'Prezzo: Dall\'Alto al Basso',
+        'cookies.title': 'Politica dei Cookie',
+        'cookies.message': 'Utilizziamo i cookie per migliorare la tua esperienza sul nostro sito web. Continuando a navigare, accetti la nostra',
+        'cookies.privacy_policy': 'Informativa sulla Privacy',
+        'cookies.accept': 'Accetta Cookie',
+        'cookies.decline': 'Rifiuta',
     }
 };

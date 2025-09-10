@@ -21,13 +21,21 @@ export default defineConfig(({ mode }) => {
       // Configurações de otimização de cache e performance
       server: {
         hmr: {
-          overlay: false
+          overlay: true, // Mostra erros na tela
+          clientPort: 5173,
+          port: 24678 // Porta separada para HMR
         },
         fs: {
           strict: false
         },
         port: 5173,
-        host: true
+        host: true,
+        // Configurações de watch para hot reload mais eficiente
+        watch: {
+          usePolling: true,
+          interval: 100,
+          ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**']
+        }
       },
       preview: {
         port: 4173,

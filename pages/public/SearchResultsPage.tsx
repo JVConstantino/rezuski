@@ -497,8 +497,8 @@ const SearchResultsPage: React.FC = () => {
             
             {/* Filter Toggle Button for Mobile */}
             <div className="md:hidden fixed bottom-20 right-4 z-30">
-                <button onClick={() => setFilterModalOpen(true)} className="bg-primary-blue text-white p-4 rounded-full shadow-lg flex items-center">
-                    <FilterIcon className="w-6 h-6"/>
+                <button onClick={() => setFilterModalOpen(true)} className="bg-primary-blue text-white p-3 sm:p-4 rounded-full shadow-lg flex items-center">
+                    <FilterIcon className="w-5 h-5 sm:w-6 sm:h-6"/>
                 </button>
             </div>
             

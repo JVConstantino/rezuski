@@ -141,20 +141,36 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, []);
     
     const updatePropertyOrder = async (updates: { id: string; display_order: number }[]) => {
-        const updatePromises = updates.map(u => 
-            supabase.from('properties').update({ display_order: u.display_order }).eq('id', u.id)
-        );
-    
-        const results = await Promise.all(updatePromises);
-        const firstError = results.find(res => res.error);
-    
-        if (firstError) {
-            console.error('Error updating property order:', firstError.error.message);
-            alert(`Erro ao salvar a ordem: ${firstError.error.message}`);
-        } else {
+        console.log('🔄 Starting property order update with:', updates);
+        
+        try {
+            const updatePromises = updates.map(u => {
+                console.log(`📝 Updating property ${u.id} to display_order ${u.display_order}`);
+                return supabase.from('properties').update({ display_order: u.display_order }).eq('id', u.id);
+            });
+        
+            const results = await Promise.all(updatePromises);
+            console.log('📊 Update results:', results);
+            
+            const firstError = results.find(res => res.error);
+        
+            if (firstError) {
+                console.error('❌ Error updating property order:', firstError.error);
+                alert(`Erro ao salvar a ordem: ${firstError.error.message}`);
+                return;
+            }
+            
+            console.log('✅ Property order updated successfully');
             clearCache(); // Clear cache when data changes
+            
             // Refetch to get the correctly ordered list from the DB
+            console.log('🔄 Refetching properties with new order...');
             await fetchProperties(true);
+            console.log('✅ Properties refetched successfully');
+            
+        } catch (error) {
+            console.error('❌ Unexpected error in updatePropertyOrder:', error);
+            alert(`Erro inesperado ao salvar a ordem: ${error}`);
         }
     };
 

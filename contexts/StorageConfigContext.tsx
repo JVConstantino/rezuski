@@ -28,14 +28,19 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode; activeDataba
     const [configs, setConfigs] = useState<StorageConfig[]>([]);
     const [activeConfig, setActiveConfigState] = useState<StorageConfig | null>(null);
     const [loading, setLoading] = useState(true);
+    const [databaseClient, setDatabaseClient] = useState(() => supabase);
 
-    // Create dynamic supabase client based on active database
-    const getDatabaseClient = () => {
+    // Update database client when activeDatabase changes
+    useEffect(() => {
         if (activeDatabase) {
-            return createClient<Database>(activeDatabase.database_url, activeDatabase.database_key);
+            setDatabaseClient(createClient<Database>(activeDatabase.database_url, activeDatabase.database_key));
+        } else {
+            setDatabaseClient(supabase);
         }
-        return supabase; // fallback to default
-    };
+    }, [activeDatabase?.database_url, activeDatabase?.database_key]);
+
+    // Use cached database client
+    const getDatabaseClient = () => databaseClient;
 
     const fetchConfigs = async () => {
         setLoading(true);
@@ -62,7 +67,7 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode; activeDataba
                     },
                     {
                         id: 'constantino',
-                        storage_url: 'https://constantino-supabase.62mil3.easypanel.host',
+                        storage_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
                         storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
                         bucket_name: 'property-images',
                         created_at: new Date().toISOString(),

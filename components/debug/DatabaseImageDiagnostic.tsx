@@ -20,10 +20,8 @@ const DatabaseImageDiagnostic: React.FC = () => {
     const [logs, setLogs] = useState<DiagnosticLog[]>([]);
     const [isVisible, setIsVisible] = useState(false);
 
-    // Só permite acesso para o usuário específico
-    if (!user || user.email !== 'joaovictor.priv@gmail.com') {
-        return null;
-    }
+    // Só permite acesso para o usuário específico - moved after all hooks
+    const hasAccess = user && user.email === 'joaovictor.priv@gmail.com';
 
     const addLog = (event: string) => {
         const log: DiagnosticLog = {
@@ -77,6 +75,11 @@ const DatabaseImageDiagnostic: React.FC = () => {
         console.log('Current Images:', imageContext.galleryItems);
         console.log('================================');
     };
+
+    // Se o usuário não tem acesso, não renderiza nada
+    if (!hasAccess) {
+        return null;
+    }
 
     if (!isVisible) {
         return (

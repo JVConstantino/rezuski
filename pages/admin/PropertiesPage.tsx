@@ -162,6 +162,7 @@ const PropertiesPage: React.FC = () => {
   }
   
   const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, property: Property) => {
+    console.log('🎯 Drag started for property:', property.title, property.id);
     setDraggedItem(property);
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.style.opacity = '0.5';
@@ -180,32 +181,53 @@ const PropertiesPage: React.FC = () => {
     e.preventDefault();
     e.currentTarget.style.background = '';
     
-    if (!draggedItem || draggedItem.id === targetProperty.id) return;
+    console.log('📍 Drop event - Target:', targetProperty.title, targetProperty.id);
+    console.log('📍 Drop event - Dragged item:', draggedItem?.title, draggedItem?.id);
+    
+    if (!draggedItem || draggedItem.id === targetProperty.id) {
+      console.log('❌ Drop cancelled - same item or no dragged item');
+      return;
+    }
 
     const currentIndex = localProperties.findIndex(p => p.id === draggedItem.id);
     const targetIndex = localProperties.findIndex(p => p.id === targetProperty.id);
+    
+    console.log('📊 Reordering - Current index:', currentIndex, 'Target index:', targetIndex);
 
     const newList = [...localProperties];
     const [removed] = newList.splice(currentIndex, 1);
     newList.splice(targetIndex, 0, removed);
-
+    
+    console.log('✅ New order created, setting local properties and isDirty=true');
     setLocalProperties(newList);
     setIsDirty(true);
     setDraggedItem(null);
   };
   
   const handleDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
+      console.log('🏁 Drag ended');
       e.currentTarget.style.opacity = '1';
       setDraggedItem(null);
   }
   
   const handleSaveChanges = async () => {
+      console.log('💾 Save changes clicked - isDirty:', isDirty);
+      console.log('📋 Local properties count:', localProperties.length);
+      
       const updates = localProperties.map((p, index) => ({
           id: p.id,
           display_order: index,
       }));
-      await updatePropertyOrder(updates);
-      setIsDirty(false);
+      
+      console.log('📝 Updates to be sent:', updates);
+      
+      try {
+          await updatePropertyOrder(updates);
+          console.log('✅ updatePropertyOrder completed, setting isDirty=false');
+          setIsDirty(false);
+      } catch (error) {
+          console.error('❌ Error in handleSaveChanges:', error);
+      }
   };
 
   const handleDelete = async (id: string, title: string) => {

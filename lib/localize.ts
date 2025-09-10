@@ -24,6 +24,12 @@ function getPathFromUrl(fullUrl: string): string | null {
 export function getOptimizedImageUrl(relativePath: string, options: { width: number; height: number; }, activeStorageConfig?: { storage_url?: string, storage_key?: string, bucket_name?: string }): string {
     if (!relativePath) return '';
     
+    // Skip base64 data URLs to prevent 414 errors
+    if (relativePath.includes('data:image') || relativePath.includes('base64')) {
+        console.warn('Skipping base64 data URL in getOptimizedImageUrl:', relativePath.substring(0, 50) + '...');
+        return '';
+    }
+    
     // Se já é uma URL completa, extrai o caminho relativo primeiro
     const filePath = relativePath.startsWith('http') ? 
         getRelativePath(relativePath, activeStorageConfig?.bucket_name) : relativePath;

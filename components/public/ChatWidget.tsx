@@ -240,10 +240,10 @@ const ChatWidget: React.FC = () => {
             {/* Launcher Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-primary-blue text-white rounded-full p-4 shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center"
+                className="bg-primary-blue text-white rounded-full p-3 sm:p-4 shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center"
                 aria-label={isOpen ? 'Fechar chat' : 'Abrir chat'}
             >
-                {isOpen ? <XIcon className="w-8 h-8" /> : <MessageSquareIcon className="w-8 h-8" />}
+                {isOpen ? <XIcon className="w-6 h-6 sm:w-8 sm:h-8" /> : <MessageSquareIcon className="w-6 h-6 sm:w-8 sm:h-8" />}
             </button>
         </div>
     );

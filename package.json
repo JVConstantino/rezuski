@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
+    "dev:debug": "vite --debug",
     "build": "vite build",
     "preview": "vite preview",
     "migrate": "node scripts/migrate.mjs",
     "migrate-help": "node scripts/migrate-help.mjs",
-    "test-migration": "node test/migration-test.js"
+    "test-migration": "node test/migration-test.js",
+    "reload": "echo 'Forçando hot reload...' && touch src/main.tsx"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",

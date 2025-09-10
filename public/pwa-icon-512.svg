@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#3b82f6"/>
+  <rect x="32" y="32" width="448" height="448" rx="32" fill="white"/>
+  <g transform="translate(128, 128)">
+    <!-- Casa/Imóvel Icon -->
+    <path d="M128 64L42.67 128v128h42.67V192h42.67v64h42.67V128L128 64z" fill="#3b82f6"/>
+    <path d="M128 42.67L21.33 128v21.33h21.33V128l85.34-64 85.33 64v21.33h21.33V128L128 42.67z" fill="#1e40af"/>
+    <!-- Detalhes da casa -->
+    <rect x="64" y="149.33" width="21.33" height="21.33" fill="#60a5fa"/>
+    <rect x="96" y="149.33" width="21.33" height="21.33" fill="#60a5fa"/>
+    <rect x="80" y="192" width="16" height="42.67" fill="#1e40af"/>
+    <!-- Janelas adicionais -->
+    <rect x="48" y="149.33" width="10.67" height="10.67" fill="#93c5fd"/>
+    <rect x="117.33" y="149.33" width="10.67" height="10.67" fill="#93c5fd"/>
+  </g>
+  <!-- Texto Rezuski -->
+  <text x="256" y="380" text-anchor="middle" fill="#3b82f6" font-family="Arial, sans-serif" font-size="48" font-weight="bold">REZUSKI</text>
+  <text x="256" y="420" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="24">Imóveis</text>
+</svg>

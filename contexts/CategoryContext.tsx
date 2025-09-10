@@ -145,19 +145,65 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     const deleteCategory = async (categoryId: string) => {
-        const { error } = await supabase
-            .from('categories')
-            .delete()
-            .eq('id', categoryId);
-        
-        if (error) {
-            console.error('Error deleting category:', error);
-        } else {
+        try {
+            if (!categoryId) {
+                throw new Error('ID da categoria é obrigatório para exclusão');
+            }
+            
+            console.log('Tentando excluir categoria:', categoryId);
+            
+            // Verificar se a categoria existe antes de tentar excluir
+            const { data: existingCategory, error: fetchError } = await supabase
+                .from('categories')
+                .select('id, name')
+                .eq('id', categoryId)
+                .single();
+            
+            if (fetchError && fetchError.code !== 'PGRST116') {
+                console.error('Erro ao verificar existência da categoria:', fetchError);
+                throw fetchError;
+            }
+            
+            if (!existingCategory) {
+                console.warn('Categoria não encontrada:', categoryId);
+                throw new Error('Categoria não encontrada');
+            }
+            
+            // Verificar se há propriedades usando esta categoria
+            const { data: propertiesUsingCategory, error: propertiesError } = await supabase
+                .from('properties')
+                .select('id')
+                .eq('category_id', categoryId)
+                .limit(1);
+            
+            if (propertiesError) {
+                console.error('Erro ao verificar propriedades da categoria:', propertiesError);
+                throw propertiesError;
+            }
+            
+            if (propertiesUsingCategory && propertiesUsingCategory.length > 0) {
+                throw new Error('Não é possível excluir categoria que possui propriedades associadas');
+            }
+            
+            const { error } = await supabase
+                .from('categories')
+                .delete()
+                .eq('id', categoryId);
+
+            if (error) {
+                console.error('Erro ao excluir categoria:', error);
+                throw error;
+            }
+
+            console.log('Categoria excluída com sucesso');
             await fetchCategories();
             // Refresh LanguageContext data to sync categories
             if (refreshLanguageData) {
                 await refreshLanguageData();
             }
+        } catch (error) {
+            console.error('Erro na função deleteCategory:', error);
+            throw error;
         }
     };
 
