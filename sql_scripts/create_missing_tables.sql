@@ -44,10 +44,7 @@ CREATE POLICY "Allow all access for development" ON public.storage_configs FOR A
 CREATE POLICY "Allow all access for development" ON public.ai_configs FOR ALL USING (true);
 
 -- 6. Inserir configurações padrão
-INSERT INTO public.database_configs (id, database_url, database_key, description, is_active)
-VALUES 
-    ('constantino-new', 'https://constantino-rezuski-db.62mil3.easypanel.host', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE', 'Constantino Rezuski Database', true)
-ON CONFLICT (id) DO NOTHING;
+-- Configurações removidas - usando apenas rezuski-server-rezuski-db-server.h7c5nc.easypanel.host
 
 -- 7. Verificar se as tabelas foram criadas
 SELECT table_name 

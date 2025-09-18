@@ -8,8 +8,8 @@ const clientCache = new Map<string, any>();
 export const getStorageClient = (storageUrl?: string, storageKey?: string) => {
     try {
         // Use as configurações fornecidas ou fallback para as variáveis de ambiente
-        const url = storageUrl || import.meta.env.VITE_SUPABASE_URL || 'https://constantino-rezuski-db.62mil3.easypanel.host';
-        const key = storageKey || import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE';
+        const url = storageUrl || import.meta.env.VITE_SUPABASE_URL || 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host';
+        const key = storageKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
         
         if (!url || !key) {
             console.error('Supabase URL and key are required');
@@ -43,7 +43,7 @@ export const getImageUrl = (relativePath: string, storageUrl?: string, bucketNam
         if (relativePath.startsWith('http')) return relativePath;
         
         // Constrói a URL usando a configuração fornecida ou variáveis de ambiente
-        const baseUrl = storageUrl || import.meta.env.VITE_SUPABASE_URL || 'https://constantino-rezuski-db.62mil3.easypanel.host';
+        const baseUrl = storageUrl || import.meta.env.VITE_SUPABASE_URL || 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host';
         const bucket = bucketName || 'property-images';
         
         if (!baseUrl) {

@@ -18,7 +18,7 @@ const AboutPage: React.FC = () => {
     const email = "rezuski.imoveis@gmail.com";
 
     const mapQuery = encodeURIComponent(address1);
-    const facadeImageUrl = "https://emofviiywuhaxqoqowup.supabase.co/storage/v1/object/public/general-files/public/fachada.jpeg";
+    const facadeImageUrl = "https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host/storage/v1/object/public/general-files/public/fachada.jpeg";
     
     return (
         <div className="bg-white min-h-screen flex flex-col">

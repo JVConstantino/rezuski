@@ -41,29 +41,14 @@ export const DatabaseConfigProvider: React.FC<{ children: ReactNode }> = ({ chil
                 console.error('Error fetching database configs:', error);
                 // Se a tabela não existe, vamos usar configurações padrão
                 const defaultConfigs: DatabaseConfig[] = [
+
                     {
-                        id: 'constantino-new',
-                        database_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
-                        database_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
-                        description: 'Constantino Rezuski Database',
+                        id: 'rezuski-main',
+                        database_url: 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host',
+                        database_key: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+                        description: 'Rezuski Main Database',
                         created_at: new Date().toISOString(),
                         is_active: true
-                    },
-                    {
-                        id: 'constantino',
-                        database_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
-                        database_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
-                        description: 'Constantino Supabase Database',
-                        created_at: new Date().toISOString(),
-                        is_active: false
-                    },
-                    {
-                        id: 'default',
-                        database_url: 'https://emofviiywuhaxqoqowup.supabase.co',
-                        database_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtb2Z2aWl5d3VoYXhxb3Fvd3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1Mzk2NTEsImV4cCI6MjA2ODExNTY1MX0.6APrqMN6YD-_0OQR7jkmEzhZ7Ary0kMGdBRagU5ymhY',
-                        description: 'Main Supabase Database',
-                        created_at: new Date().toISOString(),
-                        is_active: false
                     }
                 ];
                 setConfigs(defaultConfigs);

@@ -22,13 +22,13 @@ export default defineConfig(({ mode }) => {
       server: {
         hmr: {
           overlay: true, // Mostra erros na tela
-          clientPort: 5173,
-          port: 24678 // Porta separada para HMR
+          clientPort: 3000,
+          port: 24679 // Porta separada para HMR
         },
         fs: {
           strict: false
         },
-        port: 5173,
+        port: 3000,
         host: true,
         // Configurações de watch para hot reload mais eficiente
         watch: {

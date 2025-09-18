@@ -57,29 +57,14 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode; activeDataba
                 console.log('StorageConfigContext: Using fallback configs');
                 // Se a tabela não existe, vamos usar configurações padrão
                 const defaultConfigs: StorageConfig[] = [
+
                     {
-                        id: 'constantino-new',
-                        storage_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
-                        storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q',
+                        id: 'constantino',
+                        storage_url: 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host',
+                        storage_key: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
                         bucket_name: 'property-images',
                         created_at: new Date().toISOString(),
                         is_active: true
-                    },
-                    {
-                        id: 'constantino',
-                        storage_url: 'https://constantino-rezuski-db.62mil3.easypanel.host',
-                        storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
-                        bucket_name: 'property-images',
-                        created_at: new Date().toISOString(),
-                        is_active: false
-                    },
-                    {
-                        id: 'default',
-                        storage_url: 'https://emofviiywuhaxqoqowup.supabase.co',
-                        storage_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtb2Z2aWl5d3VoYXhxb3Fvd3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1Mzk2NTEsImV4cCI6MjA2ODExNTY1MX0.6APrqMN6YD-_0OQR7jkmEzhZ7Ary0kMGdBRagU5ymhY',
-                        bucket_name: 'property-images',
-                        created_at: new Date().toISOString(),
-                        is_active: false
                     }
                 ];
                 setConfigs(defaultConfigs);

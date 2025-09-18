@@ -77,7 +77,7 @@ const HeroSection = () => {
     <div className="relative bg-emerald-800 overflow-hidden">
       <div className="absolute inset-0">
         <img 
-                    src="https://constantino-rezuski-db.62mil3.easypanel.host/storage/v1/object/public/property-images/public/ui/FUDO%20-%20HERO%20SECTION.jpg" 
+                    src="https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host/storage/v1/object/public/property-images/public/ui/FUDO%20-%20HERO%20SECTION.jpg" 
                     className="w-full h-full object-cover opacity-60" 
                     alt="Hero background" 
                     onError={(e) => {
