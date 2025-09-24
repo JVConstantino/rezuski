@@ -16,9 +16,9 @@ const Header: React.FC = () => {
 
   const navLinksConfig = [
     { name: t('nav.home'), path: '/' },
-    { name: t('nav.buy'), path: '/search?purpose=SALE' },
-    { name: t('nav.rent'), path: '/search?purpose=RENT' },
-    { name: t('nav.seasonal'), path: '/search?purpose=SEASONAL' },
+    { name: t('nav.buy'), path: '/vendas' },
+    { name: t('nav.rent'), path: '/alugueis' },
+    { name: t('nav.seasonal'), path: '/temporada' },
     { name: t('nav.resources'), path: '/resources' },
     { name: t('nav.about'), path: '/about' },
   ];

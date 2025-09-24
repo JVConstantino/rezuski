@@ -13,8 +13,9 @@ import { PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
 import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS } from '../../constants';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useLoading } from '../../contexts/LoadingContext';
 
-const FilterPanel = ({ filters, onFilterChange, onApply }) => {
+const FilterPanel = ({ filters, onFilterChange, onApply, forcedPurpose }) => {
     const { t, propertyTypes, categories } = useLanguage();
     const { properties } = useProperties();
     const { amenities: availableAmenities } = useAmenities();
@@ -58,6 +59,7 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                 <h2 className="text-xl font-bold text-slate-800">{t('search.filters')}</h2>
             </div>
             <div className="space-y-6">
+                {!forcedPurpose && (
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">{t('search.purpose')}</label>
                     <div className="grid grid-cols-3 rounded-md shadow-sm">
@@ -66,6 +68,7 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
                         <button type="button" onClick={() => onFilterChange('purpose', 'SEASONAL')} className={`px-4 py-2 text-sm font-medium border border-slate-300 rounded-r-md w-full transition-colors ${filters.purpose === 'SEASONAL' ? 'bg-primary-blue text-white' : 'bg-white hover:bg-slate-50'}`}>{t('search.seasonal_button')}</button>
                     </div>
                 </div>
+                )}
                  <div>
                     <label className="block text-sm font-medium text-slate-700">{t('search.description')}</label>
                     <div className="relative mt-1">
@@ -201,13 +204,19 @@ const FilterPanel = ({ filters, onFilterChange, onApply }) => {
     );
 };
 
-const SearchResultsPage: React.FC = () => {
+interface SearchResultsPageProps {
+  forcedPurpose?: 'SALE' | 'RENT' | 'SEASONAL';
+}
+
+const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) => {
     const { properties, loadMoreProperties, hasMoreProperties, loading, loadingMore } = useProperties();
     const [searchParams, setSearchParams] = useSearchParams();
     const { t } = useLanguage();
+    const { showLoading, hideLoading, withLoading } = useLoading();
     
+
     const [filters, setFilters] = useState({
-        purpose: (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
+        purpose: forcedPurpose || (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
         searchTerm: searchParams.get('searchTerm') || '',
         city: searchParams.get('city') || 'any',
         neighborhood: searchParams.get('neighborhood') || 'any',
@@ -221,12 +230,13 @@ const SearchResultsPage: React.FC = () => {
     });
     
     const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
+    const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1', 10));
     
     const [isFilterModalOpen, setFilterModalOpen] = useState(false);
     
     useEffect(() => {
         const urlFilters = {
-            purpose: (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
+            purpose: forcedPurpose || (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
             searchTerm: searchParams.get('searchTerm') || '',
             city: searchParams.get('city') || 'any',
             neighborhood: searchParams.get('neighborhood') || 'any',
@@ -238,13 +248,26 @@ const SearchResultsPage: React.FC = () => {
             bathrooms: searchParams.get('bathrooms') || 'any',
             amenities: searchParams.getAll('amenities') || [],
         };
-        setFilters(urlFilters);
+        
+setFilters(urlFilters);
         setSortBy(searchParams.get('sortBy') || 'newest');
-    }, [searchParams]);
+        setCurrentPage(parseInt(searchParams.get('page') || '1', 10));
+    }, [searchParams, forcedPurpose]);
 
-    const applyFilters = (currentFilters) => {
+    const applyFilters = async (currentFilters, newPage = 1) => {
+        // Mostrar preloader durante a aplicação de filtros
+        showLoading('Aplicando filtros...');
+        
+        // Simular um pequeno delay para demonstrar o preloader
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const newParams = new URLSearchParams();
-        newParams.set('purpose', currentFilters.purpose as string);
+        
+        // Só incluir purpose na URL se não for forçado
+        if (!forcedPurpose) {
+            newParams.set('purpose', currentFilters.purpose as string);
+        }
+        
         if (currentFilters.searchTerm) newParams.set('searchTerm', currentFilters.searchTerm);
         if (currentFilters.city && currentFilters.city !== 'any') newParams.set('city', currentFilters.city);
         if (currentFilters.neighborhood && currentFilters.neighborhood !== 'any') newParams.set('neighborhood', currentFilters.neighborhood);
@@ -256,6 +279,11 @@ const SearchResultsPage: React.FC = () => {
         if (currentFilters.bathrooms && currentFilters.bathrooms !== 'any') newParams.set('bathrooms', currentFilters.bathrooms);
         if (sortBy && sortBy !== 'newest') newParams.set('sortBy', sortBy);
         
+        // Adicionar paginação se não for a primeira página
+        if (newPage > 1) {
+            newParams.set('page', newPage.toString());
+        }
+        
         newParams.delete('amenities');
         if (currentFilters.amenities && currentFilters.amenities.length > 0) {
             currentFilters.amenities.forEach(amenity => newParams.append('amenities', amenity));
@@ -263,9 +291,25 @@ const SearchResultsPage: React.FC = () => {
         
         setSearchParams(newParams, { replace: true });
         setFilterModalOpen(false);
+        setCurrentPage(newPage);
+        
+        // Esconder preloader após aplicar filtros
+        hideLoading();
+    };
+
+    const handlePageChange = async (page: number) => {
+        if (page >= 1 && page <= Math.ceil(filteredProperties.length / (viewMode === 'grid' ? 9 : 5))) {
+            await applyFilters(filters, page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const handleFilterChange = (field, value) => {
+        // Não permitir alteração do purpose se forcedPurpose estiver definido
+        if (field === 'purpose' && forcedPurpose) {
+            return;
+        }
+        
         const newFilters = { ...filters, [field]: value };
         if (field === 'purpose') {
             newFilters.priceRange = 'any';
@@ -274,16 +318,19 @@ const SearchResultsPage: React.FC = () => {
             newFilters.neighborhood = 'any';
         }
         setFilters(newFilters);
+        // Resetar para página 1 quando filtros mudarem
+        setCurrentPage(1);
         // Auto-apply on desktop
         if (window.innerWidth >= 768) {
-             applyFilters(newFilters);
+            applyFilters(newFilters, 1);
         }
     };
     
     const filteredProperties = useMemo(() => {
         let results = properties.filter(p => p.status === 'AVAILABLE');
         
-        const purpose = searchParams.get('purpose');
+        // Use forcedPurpose se fornecido, caso contrário use o parâmetro da URL
+        const purpose = forcedPurpose || searchParams.get('purpose');
         const searchTerm = searchParams.get('searchTerm')?.toLowerCase();
         const city = searchParams.get('city');
         const neighborhood = searchParams.get('neighborhood');
@@ -295,6 +342,7 @@ const SearchResultsPage: React.FC = () => {
         const bathrooms = searchParams.get('bathrooms');
         const amenities = searchParams.getAll('amenities');
 
+        // Sempre aplicar filtro de purpose se definido (forcedPurpose ou URL)
         if (purpose) { results = results.filter(p => p.purpose === purpose); }
         if (searchTerm) {
             results = results.filter(p => 
@@ -374,23 +422,15 @@ const SearchResultsPage: React.FC = () => {
         }
 
         return sortedResults;
-    }, [properties, searchParams, sortBy]);
+    }, [properties, searchParams, sortBy, forcedPurpose]);
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [currentPage, setCurrentPage] = useState(1);
     
     useEffect(() => { setCurrentPage(1); }, [filteredProperties, viewMode]);
 
     const itemsPerPage = viewMode === 'grid' ? 9 : 5;
     const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
     const paginatedProperties = filteredProperties.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-    const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
 
     const renderPageNumbers = () => {
         if (totalPages <= 7) {
@@ -414,7 +454,7 @@ const SearchResultsPage: React.FC = () => {
                 <div className="md:grid md:grid-cols-4 md:gap-8">
                     <aside className="hidden md:block md:col-span-1">
                         <div className="sticky top-24">
-                            <FilterPanel filters={filters} onFilterChange={handleFilterChange} onApply={() => applyFilters(filters)} />
+                            <FilterPanel filters={filters} onFilterChange={handleFilterChange} onApply={() => applyFilters(filters)} forcedPurpose={forcedPurpose} />
                         </div>
                     </aside>
                     <div className="md:col-span-3">
@@ -490,7 +530,7 @@ const SearchResultsPage: React.FC = () => {
                 <div className="md:hidden fixed inset-0 bg-black/60 z-40" onClick={() => setFilterModalOpen(false)}>
                     <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-slate-50 shadow-lg p-4 transform transition-transform" onClick={e => e.stopPropagation()}>
                         <button onClick={() => setFilterModalOpen(false)} className="absolute top-4 right-4 text-slate-500 hover:text-slate-800"><XIcon className="w-6 h-6"/></button>
-                        <FilterPanel filters={filters} onFilterChange={handleFilterChange} onApply={() => applyFilters(filters)} />
+                        <FilterPanel filters={filters} onFilterChange={handleFilterChange} onApply={() => applyFilters(filters)} forcedPurpose={forcedPurpose} />
                     </div>
                 </div>
             )}

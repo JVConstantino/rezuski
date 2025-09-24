@@ -29,6 +29,7 @@ import { TenantProvider } from './contexts/TenantContext';
 import { AIConfigProvider } from './contexts/AIConfigContext';
 import { DatabaseConfigProvider, useDatabaseConfig } from './contexts/DatabaseConfigContext';
 import { StorageConfigProvider } from './contexts/StorageConfigContext';
+import { LoadingProvider, useLoading } from './contexts/LoadingContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginModalController from './components/LoginModalController';
@@ -39,6 +40,9 @@ import Preloader from './components/Preloader';
 
 import HomePage from './pages/public/HomePage';
 import SearchResultsPage from './pages/public/SearchResultsPage';
+import SalesPage from './pages/public/SalesPage';
+import RentPage from './pages/public/RentPage';
+import SeasonalPage from './pages/public/SeasonalPage';
 import PropertyDetailsPage from './pages/public/PropertyDetailsPage';
 import ResourcesPage from './pages/public/ResourcesPage';
 import AboutPage from './pages/public/AboutPage';
@@ -74,6 +78,19 @@ const DatabaseMigrationPage = lazy(() => import('./pages/admin/DatabaseMigration
 import DatabaseImageDiagnostic from './components/debug/DatabaseImageDiagnostic';
 // import AdminDiagnostic from './components/debug/AdminDiagnostic'; // Temporarily disabled due to infinite loop
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Componente para o preloader global
+const GlobalPreloader: React.FC = () => {
+    const { isLoading, loadingMessage } = useLoading();
+    
+    if (!isLoading) return null;
+    
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <Preloader isLoading={true} message={loadingMessage} />
+        </div>
+    );
+};
 
 // Wrapper component to connect database and storage configurations
 const StorageWithDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -111,10 +128,14 @@ const AppContent: React.FC = () => {
                                                     <StorageWithDatabaseProvider>
                                                         <ImageProvider>
                                                             <AIConfigProvider>
+                                                                <LoadingProvider>
                                                                 <LoginModalController />
                                                                 <Routes>
                                                                     {/* Public Routes */}
                                                                     <Route path="/" element={<HomePage />} />
+                                                                    <Route path="/vendas" element={<SalesPage />} />
+                                                                    <Route path="/alugueis" element={<RentPage />} />
+                                                                    <Route path="/temporada" element={<SeasonalPage />} />
                                                                     <Route path="/search" element={<SearchResultsPage />} />
                                                                     <Route path="/property/:propertyId" element={<PropertyDetailsPage />} />
                                                                     <Route path="/resources" element={<ResourcesPage />} />
@@ -166,19 +187,21 @@ const AppContent: React.FC = () => {
                                                                  <HotReloadIndicator />
                                                                  <DatabaseImageDiagnostic />
                                                                  {/* <AdminDiagnostic /> */} {/* Temporarily disabled due to infinite loop */}
-                                                            </AIConfigProvider>
-                                                        </ImageProvider>
-                                                    </StorageWithDatabaseProvider>
-                                                </AmenityProvider>
-                                            </PropertyProvider>
-                                        </BrokerProvider>
-                                    </CategoryProvider>
-                                </ResourceProvider>
-                            </TenantProvider>
-                        </ApplicationProvider>
-                    </UserProvider>
-                </AuthProvider>
-            </LanguageProvider>
+                                                                 <GlobalPreloader />
+                                                            </LoadingProvider>
+                                                        </AIConfigProvider>
+                                                    </ImageProvider>
+                                                </StorageWithDatabaseProvider>
+                                            </AmenityProvider>
+                                        </PropertyProvider>
+                                    </BrokerProvider>
+                                </CategoryProvider>
+                            </ResourceProvider>
+                        </TenantProvider>
+                    </ApplicationProvider>
+                </UserProvider>
+            </AuthProvider>
+        </LanguageProvider>
         </DatabaseConfigProvider>
     );
 };
