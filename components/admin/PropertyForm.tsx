@@ -28,6 +28,14 @@ interface ImageState {
     isPrimary: boolean;
 }
 
+interface DocumentState {
+    id?: string;
+    name: string;
+    url: string;
+    size: number;
+    uploadedAt?: string;
+}
+
 const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEditing, isSubmitting = false }) => {
     const { categories } = useCategories();
     const { amenities: managedAmenities, loading: amenitiesLoading } = useAmenities();
@@ -69,6 +77,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const [amenities, setAmenities] = useState<Amenity[]>([]);
     const [newAmenity, setNewAmenity] = useState({ name: '', quantity: 1 });
     const [images, setImages] = useState<ImageState[]>([]);
+    const [documents, setDocuments] = useState<DocumentState[]>([]);
     const [translations, setTranslations] = useState<Property['translations']>({});
 
     useEffect(() => {
@@ -104,6 +113,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             }));
             setImages(initialImages);
             setTranslations(initialData.translations || {});
+            
+            // Carregar documentos existentes se estiver editando
+            if (initialData.id) {
+                loadExistingDocuments(initialData.id);
+            }
         }
     }, [initialData]);
     
@@ -143,6 +157,122 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     
     const removeAmenity = (indexToRemove: number) => {
         setAmenities(amenities.filter((_, index) => index !== indexToRemove));
+    };
+
+    const loadExistingDocuments = async (propertyId: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('property_documents')
+                .select('*')
+                .eq('property_id', propertyId)
+                .order('uploaded_at', { ascending: false });
+
+            if (error) throw error;
+
+            const documentStates: DocumentState[] = data.map(doc => ({
+                id: doc.id,
+                name: doc.document_name,
+                url: doc.document_url,
+                size: doc.file_size || 0,
+                uploadedAt: doc.uploaded_at
+            }));
+
+            setDocuments(documentStates);
+        } catch (error) {
+            console.error('Erro ao carregar documentos:', error);
+        }
+    };
+
+    const handleDocumentUpload = async (files: FileList) => {
+        const totalFiles = files.length;
+        if (totalFiles === 0) return;
+
+        const client = getStorageClient(storageConfig?.storage_url, storageConfig?.storage_key);
+        const bucketName = 'property-documents';
+        const uploadedDocs: DocumentState[] = [];
+
+        for (let i = 0; i < totalFiles; i++) {
+            const file = files[i];
+            
+            // Validar tipo de arquivo
+            if (file.type !== 'application/pdf') {
+                alert(`O arquivo ${file.name} não é um PDF válido.`);
+                continue;
+            }
+
+            // Validar tamanho (10MB máximo)
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`O arquivo ${file.name} é muito grande. Máximo 10MB.`);
+                continue;
+            }
+
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
+            const filePath = `public/documents/${fileName}`;
+
+            try {
+                const { error: uploadError } = await client.storage
+                    .from(bucketName)
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                uploadedDocs.push({
+                    name: file.name,
+                    url: filePath,
+                    size: file.size
+                });
+            } catch (error) {
+                console.error(`Erro ao enviar o arquivo ${file.name}:`, error);
+                alert(`Erro ao enviar o arquivo: ${file.name}`);
+            }
+        }
+
+        if (uploadedDocs.length > 0) {
+            setDocuments(prev => [...prev, ...uploadedDocs]);
+        }
+    };
+
+    const handleDeleteDocument = async (index: number) => {
+        const document = documents[index];
+        
+        try {
+            // Se o documento tem ID, deletar do banco
+            if (document.id) {
+                const { error: dbError } = await supabase
+                    .from('property_documents')
+                    .delete()
+                    .eq('id', document.id);
+
+                if (dbError) throw dbError;
+            }
+
+            // Deletar do storage
+            const client = getStorageClient(storageConfig?.storage_url, storageConfig?.storage_key);
+            const { error: storageError } = await client.storage
+                .from('property-documents')
+                .remove([document.url]);
+
+            if (storageError) {
+                console.warn('Erro ao deletar arquivo do storage:', storageError);
+            }
+
+            // Remover da lista local
+            setDocuments(prev => prev.filter((_, i) => i !== index));
+        } catch (error) {
+            console.error('Erro ao deletar documento:', error);
+            alert('Erro ao deletar documento.');
+        }
+    };
+
+    const handleDownloadDocument = (document: DocumentState) => {
+        const client = getStorageClient(storageConfig?.storage_url, storageConfig?.storage_key);
+        const { data } = client.storage
+            .from('property-documents')
+            .getPublicUrl(document.url);
+        
+        if (data?.publicUrl) {
+            window.open(data.publicUrl, '_blank');
+        }
     };
 
     const handleImageUpload = async (files: FileList) => {
@@ -387,7 +517,7 @@ Agora, gere o objeto JSON completo.`;
         }
     };
 
-    const triggerSubmit = (status: PropertyStatus) => {
+    const triggerSubmit = async (status: PropertyStatus) => {
         const parsedRentPrice = parseFloat(formData.rentPrice);
         const parsedSalePrice = parseFloat(formData.salePrice);
         const parsedBedrooms = parseInt(formData.bedrooms, 10);
@@ -421,7 +551,39 @@ Agora, gere o objeto JSON completo.`;
             formDataYoutubeUrl: formData.youtubeUrl
         });
         
-        onSubmit(propertyData, status);
+        // Salvar documentos PDF se houver
+        if (documents.length > 0) {
+            try {
+                const savedProperty = await onSubmit(propertyData, status);
+                const propertyId = savedProperty?.id || initialData?.id;
+                
+                if (propertyId) {
+                    // Salvar apenas documentos novos (sem ID)
+                    const newDocuments = documents.filter(doc => !doc.id);
+                    
+                    for (const doc of newDocuments) {
+                        const { error: docError } = await supabase
+                            .from('property_documents')
+                            .insert({
+                                property_id: propertyId,
+                                document_name: doc.name,
+                                document_url: doc.url,
+                                file_size: doc.size
+                            });
+                        
+                        if (docError) {
+                            console.error('Erro ao salvar documento:', docError);
+                        }
+                    }
+                }
+                return savedProperty;
+            } catch (error) {
+                console.error('Erro ao salvar propriedade com documentos:', error);
+                throw error;
+            }
+        } else {
+            onSubmit(propertyData, status);
+        }
     };
 
     const handleFormSubmit = (e: React.FormEvent) => {
@@ -708,6 +870,75 @@ Agora, gere o objeto JSON completo.`;
                         {uploadProgress.total > 0 && (
                             <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
                                 <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}></div>
+                            </div>
+                        )}
+                    </div>
+
+                    <hr />
+
+                    {/* Seção de Documentos PDF */}
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Documentos PDF</h2>
+                        
+                        {/* Upload de PDFs */}
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Adicionar Documentos PDF
+                            </label>
+                            <input
+                                type="file"
+                                accept=".pdf"
+                                multiple
+                                onChange={(e) => e.target.files && handleDocumentUpload(e.target.files)}
+                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            <p className="text-xs text-slate-500 mt-1">
+                                Selecione um ou mais arquivos PDF (máximo 10MB cada)
+                            </p>
+                        </div>
+
+                        {/* Lista de documentos */}
+                        {documents.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                                <h4 className="text-sm font-medium text-slate-700">Documentos Carregados:</h4>
+                                {documents.map((doc, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                        <div className="flex items-center space-x-3">
+                                            <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                            </svg>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-900">{doc.name}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    {(doc.size / 1024 / 1024).toFixed(2)} MB
+                                                    {doc.uploadedAt && ` • Enviado em ${new Date(doc.uploadedAt).toLocaleDateString()}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDownloadDocument(doc)}
+                                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                                                title="Baixar documento"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteDocument(index)}
+                                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                                                title="Remover documento"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>

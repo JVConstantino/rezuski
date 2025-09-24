@@ -12,8 +12,12 @@ import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { localizeProperty, getOptimizedImageUrl } from '../../lib/localize';
 import LazyImage from '../../components/LazyImage';
+import { supabase } from '../../lib/supabaseClient';
+import { getStorageClient } from '../../lib/storageClient';
 
 declare var mapboxgl: any;
+
+
 
 const Lightbox: React.FC<{
     images: string[];
@@ -502,6 +506,9 @@ const PropertyDetailsPage: React.FC = () => {
                         </div>
                     </>
                 )}
+                
+
+                
                 <hr className="my-8"/>
                  <h2 className="text-2xl font-bold text-slate-900">{t('details.map')}</h2>
                  <div className="relative mt-6 h-96 w-full rounded-lg bg-slate-200">
