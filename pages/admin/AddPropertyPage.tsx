@@ -29,11 +29,13 @@ const AddPropertyPage: React.FC = () => {
                         }
                     ],
                 };
-                await addProperty(newProperty);
+                const saved = await addProperty(newProperty);
                 navigate('/admin/properties');
+                return saved;
             } catch (error) {
                 console.error('AddPropertyPage - Erro ao adicionar propriedade:', error);
                 alert('Erro ao salvar a propriedade. Tente novamente.');
+                return undefined;
             } finally {
                 setIsSubmitting(false);
             }

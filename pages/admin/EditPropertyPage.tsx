@@ -19,12 +19,14 @@ const EditPropertyPage: React.FC = () => {
             try {
                 const updatedProperty = { ...propertyToEdit, ...data, status };
                 console.log('EditPropertyPage - Iniciando atualização da propriedade:', updatedProperty.id);
-                await updateProperty(updatedProperty);
+                const saved = await updateProperty(updatedProperty);
                 console.log('EditPropertyPage - Propriedade atualizada com sucesso, navegando...');
                 navigate('/admin/properties');
+                return saved;
             } catch (error) {
                 console.error('EditPropertyPage - Erro ao atualizar propriedade:', error);
                 alert('Erro ao salvar a propriedade. Tente novamente.');
+                return undefined;
             } finally {
                 setIsSubmitting(false);
             }

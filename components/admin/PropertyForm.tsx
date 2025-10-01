@@ -9,7 +9,7 @@ import { useStorageConfig } from '../../contexts/StorageConfigContext';
 import { getStorageClient, getRelativePath } from '../../lib/storageClient';
 import { getOptimizedImageUrl } from '../../lib/localize';
 import ImageGalleryModal from './ImageGalleryModal';
-import { SparklesIcon, StarIcon, TrashIcon, PlusIcon } from '../Icons';
+import { SparklesIcon, StarIcon, TrashIcon, PlusIcon, DownloadIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -18,7 +18,7 @@ import LazyImage from '../LazyImage';
 
 interface PropertyFormProps {
     initialData?: Property;
-    onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[]; translations: Property['translations'] }, status: PropertyStatus) => void;
+    onSubmit: (data: Omit<Property, 'id' | 'status' | 'priceHistory' | 'amenities'> & { amenities: Amenity[]; translations: Property['translations'] }, status: PropertyStatus) => Promise<Property | undefined>;
     isEditing: boolean;
     isSubmitting?: boolean;
 }
@@ -874,67 +874,52 @@ Agora, gere o objeto JSON completo.`;
                         )}
                     </div>
 
+                    {/* Documentos PDF */}
                     <hr />
 
-                    {/* Seção de Documentos PDF */}
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">Documentos PDF</h2>
-                        
-                        {/* Upload de PDFs */}
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Adicionar Documentos PDF
+                        <div className="mt-4 flex items-center space-x-2">
+                            <label className="cursor-pointer px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-100">
+                                <span>Enviar PDF</span>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="application/pdf"
+                                    onChange={(e) => e.target.files && handleDocumentUpload(e.target.files)}
+                                    className="hidden"
+                                />
                             </label>
-                            <input
-                                type="file"
-                                accept=".pdf"
-                                multiple
-                                onChange={(e) => e.target.files && handleDocumentUpload(e.target.files)}
-                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            />
-                            <p className="text-xs text-slate-500 mt-1">
-                                Selecione um ou mais arquivos PDF (máximo 10MB cada)
-                            </p>
+                            <p className="text-xs text-slate-500">Apenas PDF. Máx. 10MB por arquivo.</p>
                         </div>
 
-                        {/* Lista de documentos */}
                         {documents.length > 0 && (
-                            <div className="mt-4 space-y-2">
-                                <h4 className="text-sm font-medium text-slate-700">Documentos Carregados:</h4>
+                            <div className="mt-4 space-y-3">
                                 {documents.map((doc, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                        <div className="flex items-center space-x-3">
-                                            <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                                            </svg>
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900">{doc.name}</p>
-                                                <p className="text-xs text-slate-500">
-                                                    {(doc.size / 1024 / 1024).toFixed(2)} MB
-                                                    {doc.uploadedAt && ` • Enviado em ${new Date(doc.uploadedAt).toLocaleDateString()}`}
-                                                </p>
-                                            </div>
+                                    <div key={index} className="flex items-center justify-between p-2 bg-slate-100 rounded-md">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-slate-700 font-medium">{doc.name}</span>
+                                            {doc.size ? (
+                                                <span className="text-xs text-slate-500">({(doc.size / 1024).toFixed(1)} KB)</span>
+                                            ) : null}
+                                            {doc.uploadedAt ? (
+                                                <span className="text-xs text-slate-500">• Enviado em {new Date(doc.uploadedAt).toLocaleString()}</span>
+                                            ) : null}
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <button
                                                 type="button"
                                                 onClick={() => handleDownloadDocument(doc)}
-                                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
-                                                title="Baixar documento"
+                                                className="p-1 text-primary-blue hover:bg-slate-200 rounded-full"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
+                                                <DownloadIcon className="w-4 h-4" />
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => handleDeleteDocument(index)}
-                                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
-                                                title="Remover documento"
+                                                className="p-1 text-red-500 hover:bg-red-100 rounded-full"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
+                                                <TrashIcon className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>

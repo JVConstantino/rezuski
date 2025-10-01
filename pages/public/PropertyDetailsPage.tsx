@@ -17,7 +17,97 @@ import { getStorageClient } from '../../lib/storageClient';
 
 declare var mapboxgl: any;
 
+interface PropertyDocument {
+    id: string;
+    document_name: string;
+    document_url: string;
+    file_size: number;
+    uploaded_at: string;
+}
 
+const PropertyDocuments: React.FC<{ propertyId: string }> = ({ propertyId }) => {
+    const [documents, setDocuments] = useState<PropertyDocument[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { activeConfig } = useStorageConfig();
+    const { t } = useLanguage();
+
+    useEffect(() => {
+        const loadDocuments = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('property_documents')
+                    .select('*')
+                    .eq('property_id', propertyId)
+                    .order('uploaded_at', { ascending: false });
+
+                if (error) throw error;
+                setDocuments(data || []);
+            } catch (error) {
+                console.error('Erro ao carregar documentos:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadDocuments();
+    }, [propertyId]);
+
+    const handleDownloadDocument = (document: PropertyDocument) => {
+        const client = getStorageClient(activeConfig?.storage_url, activeConfig?.storage_key);
+        const { data } = client.storage
+            .from('property-documents')
+            .getPublicUrl(document.document_url);
+        
+        if (data?.publicUrl) {
+            window.open(data.publicUrl, '_blank');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-blue"></div>
+            </div>
+        );
+    }
+
+    if (documents.length === 0) {
+        return null; // Não exibe a seção se não há documentos
+    }
+
+    return (
+        <>
+            <hr className="my-8"/>
+            <h2 className="text-2xl font-bold text-slate-900">Documentos</h2>
+            <div className="mt-6 space-y-3">
+                {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center space-x-3">
+                            <svg className="w-10 h-10 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                                <p className="text-lg font-medium text-slate-900">{doc.document_name}</p>
+                                <p className="text-sm text-slate-500">
+                                    {(doc.file_size / 1024 / 1024).toFixed(2)} MB • Enviado em {new Date(doc.uploaded_at).toLocaleDateString('pt-BR')}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleDownloadDocument(doc)}
+                            className="flex items-center space-x-2 px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-primary-blue/90 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>Baixar PDF</span>
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </>
+    );
+};
 
 const Lightbox: React.FC<{
     images: string[];

@@ -29,7 +29,6 @@ import { TenantProvider } from './contexts/TenantContext';
 import { AIConfigProvider } from './contexts/AIConfigContext';
 import { DatabaseConfigProvider, useDatabaseConfig } from './contexts/DatabaseConfigContext';
 import { StorageConfigProvider } from './contexts/StorageConfigContext';
-import { LoadingProvider, useLoading } from './contexts/LoadingContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginModalController from './components/LoginModalController';
@@ -79,19 +78,6 @@ import DatabaseImageDiagnostic from './components/debug/DatabaseImageDiagnostic'
 // import AdminDiagnostic from './components/debug/AdminDiagnostic'; // Temporarily disabled due to infinite loop
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Componente para o preloader global
-const GlobalPreloader: React.FC = () => {
-    const { isLoading, loadingMessage } = useLoading();
-    
-    if (!isLoading) return null;
-    
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Preloader isLoading={true} message={loadingMessage} />
-        </div>
-    );
-};
-
 // Wrapper component to connect database and storage configurations
 const StorageWithDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { activeConfig: activeDatabase } = useDatabaseConfig();
@@ -128,7 +114,6 @@ const AppContent: React.FC = () => {
                                                     <StorageWithDatabaseProvider>
                                                         <ImageProvider>
                                                             <AIConfigProvider>
-                                                                <LoadingProvider>
                                                                 <LoginModalController />
                                                                 <Routes>
                                                                     {/* Public Routes */}
@@ -187,21 +172,19 @@ const AppContent: React.FC = () => {
                                                                  <HotReloadIndicator />
                                                                  <DatabaseImageDiagnostic />
                                                                  {/* <AdminDiagnostic /> */} {/* Temporarily disabled due to infinite loop */}
-                                                                 <GlobalPreloader />
-                                                            </LoadingProvider>
-                                                        </AIConfigProvider>
-                                                    </ImageProvider>
-                                                </StorageWithDatabaseProvider>
-                                            </AmenityProvider>
-                                        </PropertyProvider>
-                                    </BrokerProvider>
-                                </CategoryProvider>
-                            </ResourceProvider>
-                        </TenantProvider>
-                    </ApplicationProvider>
-                </UserProvider>
-            </AuthProvider>
-        </LanguageProvider>
+                                                            </AIConfigProvider>
+                                                        </ImageProvider>
+                                                    </StorageWithDatabaseProvider>
+                                                </AmenityProvider>
+                                            </PropertyProvider>
+                                        </BrokerProvider>
+                                    </CategoryProvider>
+                                </ResourceProvider>
+                            </TenantProvider>
+                        </ApplicationProvider>
+                    </UserProvider>
+                </AuthProvider>
+            </LanguageProvider>
         </DatabaseConfigProvider>
     );
 };

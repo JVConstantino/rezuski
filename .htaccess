@@ -8,7 +8,7 @@ AddType application/javascript .mjs
 AddType application/json .json
 AddType image/svg+xml .svg
 
-# Handle client-side routing
+# Handle client-side routing - SPA Configuration
 RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -51,26 +51,21 @@ Deny from all
 
 # Proteção contra hotlinking de imagens
 RewriteCond %{HTTP_REFERER} !^$
-RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?seudominio.com [NC]
+RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?rezuskiimoveis.com.br [NC]
+RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?localhost [NC]
 RewriteRule \.(jpg|jpeg|png|gif|svg)$ - [NC,F,L]
 
 # Desabilita listagem de diretórios
 Options -Indexes
 
-# Proteção contra ataques de injeção
-<IfModule mod_rewrite.c>
-RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
-RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
-RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
-RewriteCond %{QUERY_STRING} ^.*([\[|\]|\(|\)|<|>|ê|"|\'|%0A|%0D|%22|%27|%3C|%3E|%00).* [NC,OR]
-RewriteCond %{QUERY_STRING} (NULL|OUTFILE|LOAD_FILE) [OR]
-RewriteCond %{QUERY_STRING} (\./|\../|\.../)+(motd|etc|bin) [NC]
-RewriteRule ^(.*)$ - [F,L]
-</IfModule>
+# Proteção básica removida temporariamente para debug
 
-# Headers de segurança
+# Headers básicos
 <IfModule mod_headers.c>
-Header always set X-Frame-Options DENY
-Header always set X-Content-Type-Options nosniff
-Header always set Referrer-Policy "strict-origin-when-cross-origin"
+# Cache control para index.html (não cachear para SPA)
+<FilesMatch "index\.html$">
+Header always set Cache-Control "no-cache, no-store, must-revalidate"
+Header always set Pragma "no-cache"
+Header always set Expires "0"
+</FilesMatch>
 </IfModule>

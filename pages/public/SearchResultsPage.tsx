@@ -13,7 +13,7 @@ import { PropertyStatus, PropertyPurpose, PropertyType } from '../../types';
 import { RENT_PRICE_RANGES, SALE_PRICE_RANGES, BEDROOM_OPTIONS, BATHROOM_OPTIONS } from '../../constants';
 import BottomNavBar from '../../components/BottomNavBar';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useLoading } from '../../contexts/LoadingContext';
+// removed: import { useLoading } from '../../contexts/LoadingContext';
 
 const FilterPanel = ({ filters, onFilterChange, onApply, forcedPurpose }) => {
     const { t, propertyTypes, categories } = useLanguage();
@@ -212,9 +212,16 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
     const { properties, loadMoreProperties, hasMoreProperties, loading, loadingMore } = useProperties();
     const [searchParams, setSearchParams] = useSearchParams();
     const { t } = useLanguage();
-    const { showLoading, hideLoading, withLoading } = useLoading();
+    // removed: const { showLoading, hideLoading, withLoading } = useLoading();
     
-
+    // Debug log para verificar propriedades carregadas
+    console.log('📊 Properties loaded:', {
+        total: properties.length,
+        loading,
+        forcedPurpose,
+        sampleProperties: properties.slice(0, 3).map(p => ({ id: p.id, title: p.title, purpose: p.purpose }))
+    });
+    
     const [filters, setFilters] = useState({
         purpose: forcedPurpose || (searchParams.get('purpose') as PropertyPurpose) || 'RENT',
         searchTerm: searchParams.get('searchTerm') || '',
@@ -249,17 +256,21 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
             amenities: searchParams.getAll('amenities') || [],
         };
         
-setFilters(urlFilters);
+        console.log('🔄 useEffect - Setting filters:', {
+            forcedPurpose,
+            urlPurpose: searchParams.get('purpose'),
+            finalPurpose: urlFilters.purpose,
+            allFilters: urlFilters
+        });
+        
+        setFilters(urlFilters);
         setSortBy(searchParams.get('sortBy') || 'newest');
         setCurrentPage(parseInt(searchParams.get('page') || '1', 10));
     }, [searchParams, forcedPurpose]);
 
     const applyFilters = async (currentFilters, newPage = 1) => {
-        // Mostrar preloader durante a aplicação de filtros
-        showLoading('Aplicando filtros...');
-        
-        // Simular um pequeno delay para demonstrar o preloader
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Removido preloader global inexistente (LoadingContext)
+        // const showLoading/hideLoading foram removidos
         
         const newParams = new URLSearchParams();
         
@@ -292,9 +303,6 @@ setFilters(urlFilters);
         setSearchParams(newParams, { replace: true });
         setFilterModalOpen(false);
         setCurrentPage(newPage);
-        
-        // Esconder preloader após aplicar filtros
-        hideLoading();
     };
 
     const handlePageChange = async (page: number) => {
@@ -342,8 +350,26 @@ setFilters(urlFilters);
         const bathrooms = searchParams.get('bathrooms');
         const amenities = searchParams.getAll('amenities');
 
+        // Debug logs
+        console.log('🔍 Filter Debug:', {
+            forcedPurpose,
+            urlPurpose: searchParams.get('purpose'),
+            finalPurpose: purpose,
+            totalProperties: properties.length,
+            availableProperties: results.length,
+            propertiesByPurpose: {
+                RENT: properties.filter(p => p.purpose === 'RENT').length,
+                SALE: properties.filter(p => p.purpose === 'SALE').length,
+                SEASONAL: properties.filter(p => p.purpose === 'SEASONAL').length
+            }
+        });
+
         // Sempre aplicar filtro de purpose se definido (forcedPurpose ou URL)
-        if (purpose) { results = results.filter(p => p.purpose === purpose); }
+        if (purpose) { 
+            const beforeFilter = results.length;
+            results = results.filter(p => p.purpose === purpose);
+            console.log(`🎯 Purpose filter applied: ${beforeFilter} -> ${results.length} properties`);
+        }
         if (searchTerm) {
             results = results.filter(p => 
                 p.title.toLowerCase().includes(searchTerm) ||

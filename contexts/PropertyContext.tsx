@@ -7,8 +7,8 @@ import { Database } from '../types/supabase';
 
 interface PropertyContextType {
     properties: Property[];
-    addProperty: (property: Omit<Property, 'id'>) => Promise<void>;
-    updateProperty: (updatedProperty: Property) => Promise<void>;
+    addProperty: (property: Omit<Property, 'id'>) => Promise<Property | undefined>;
+    updateProperty: (updatedProperty: Property) => Promise<Property | undefined>;
     toggleArchiveProperty: (propertyId: string) => Promise<void>;
     deleteProperty: (propertyId: string) => Promise<void>;
     incrementViewCount: (propertyId: string) => Promise<void>;
@@ -223,10 +223,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error adding property:', error.message);
             console.error('Error details:', error);
             alert(`Error adding property: ${error.message}`);
+            return undefined;
         } else if (data) {
             console.log('PropertyContext - Propriedade salva com sucesso:', data[0]);
             clearCache(); // Clear cache when data changes
             await fetchProperties(); // Refetch to maintain order
+            return data[0] as unknown as Property;
         }
     };
 
@@ -251,10 +253,12 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error updating property:', error.message);
             console.error('Error details:', error);
             alert(`Error updating property: ${error.message}`);
+            return undefined;
         } else if (data) {
             console.log('PropertyContext - Propriedade atualizada com sucesso:', data[0]);
             clearCache(); // Clear cache when data changes
             setProperties(prev => prev.map(p => p.id === updatedProperty.id ? (data[0] as unknown as Property) : p));
+            return data[0] as unknown as Property;
         }
     };
     
