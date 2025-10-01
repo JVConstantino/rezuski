@@ -1,5 +1,6 @@
 # Configuração para SPA React - Rezuski Imóveis - HostGator
 RewriteEngine On
+Options -MultiViews
 
 # Configurações de MIME types para JavaScript modules
 AddType application/javascript .js
