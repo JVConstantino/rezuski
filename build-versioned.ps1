@@ -29,7 +29,15 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Criando build versionado em: $buildPath" -ForegroundColor Cyan
     
     # Copia arquivos do build atual para pasta versionada
-    Copy-Item -Path "dist\*" -Destination $buildPath -Recurse -Force -Exclude "builds"
+    New-Item -ItemType Directory -Path $buildPath -Force | Out-Null
+    Get-ChildItem -Path "dist" -Force | Where-Object { $_.Name -ne 'builds' } | ForEach-Object {
+        Copy-Item -Path $_.FullName -Destination $buildPath -Recurse -Force
+    }
+
+    # Inclui .htaccess para ambientes Apache/HostGator
+    if (Test-Path ".\.htaccess") {
+        Copy-Item ".\.htaccess" -Destination $buildPath -Force
+    }
     
     Write-Host "" 
     Write-Host "=== RESUMO DO BUILD ===" -ForegroundColor Green
@@ -39,7 +47,12 @@ if ($LASTEXITCODE -eq 0) {
     
     # Mostra tamanho dos arquivos principais
     $indexSize = (Get-Item "$buildPath\index.html").Length
-    $assetsCount = (Get-ChildItem "$buildPath\assets" -File).Count
+    $assetsDir = Join-Path $buildPath "assets"
+    if (Test-Path $assetsDir) {
+        $assetsCount = (Get-ChildItem $assetsDir -File -Recurse).Count
+    } else {
+        $assetsCount = 0
+    }
     Write-Host "" 
     Write-Host "Arquivos gerados:" -ForegroundColor Cyan
     Write-Host "  - index.html: $([math]::Round($indexSize/1KB, 2)) KB" -ForegroundColor White
