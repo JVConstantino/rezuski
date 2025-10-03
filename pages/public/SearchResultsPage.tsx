@@ -256,16 +256,25 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
             amenities: searchParams.getAll('amenities') || [],
         };
         
-        console.log('🔄 useEffect - Setting filters:', {
+        const newPage = parseInt(searchParams.get('page') || '1', 10);
+        
+        console.log('🔄 useEffect - URL changed:', {
+            urlPage: searchParams.get('page'),
+            newPage,
+            currentPage,
             forcedPurpose,
             urlPurpose: searchParams.get('purpose'),
-            finalPurpose: urlFilters.purpose,
-            allFilters: urlFilters
+            finalPurpose: urlFilters.purpose
         });
         
         setFilters(urlFilters);
         setSortBy(searchParams.get('sortBy') || 'newest');
-        setCurrentPage(parseInt(searchParams.get('page') || '1', 10));
+        
+        // Só atualizar currentPage se for diferente do atual para evitar loops
+        if (newPage !== currentPage) {
+            console.log('📄 Updating currentPage from', currentPage, 'to', newPage);
+            setCurrentPage(newPage);
+        }
     }, [searchParams, forcedPurpose]);
 
     const applyFilters = async (currentFilters, newPage = 1) => {
@@ -306,16 +315,33 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
     };
 
     const handlePageChange = async (page: number) => {
+        console.log('📄 handlePageChange called:', {
+            requestedPage: page,
+            currentPage,
+            totalPages: Math.ceil(filteredProperties.length / (viewMode === 'grid' ? 9 : 5)),
+            filteredPropertiesLength: filteredProperties.length,
+            viewMode
+        });
+        
         if (page >= 1 && page <= Math.ceil(filteredProperties.length / (viewMode === 'grid' ? 9 : 5))) {
-            // Atualizar apenas a página na URL sem recarregar filtros
+            // Atualizar imediatamente o estado local para resposta rápida
+            setCurrentPage(page);
+            
+            // Atualizar a URL
             const newParams = new URLSearchParams(searchParams);
             if (page > 1) {
                 newParams.set('page', page.toString());
             } else {
                 newParams.delete('page');
             }
+            
+            console.log('📄 Updating URL:', {
+                oldParams: searchParams.toString(),
+                newParams: newParams.toString(),
+                pageParam: newParams.get('page')
+            });
+            
             setSearchParams(newParams, { replace: true });
-            setCurrentPage(page);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -460,7 +486,8 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     
-    useEffect(() => { setCurrentPage(1); }, [filteredProperties, viewMode]);
+    // Reset page only when viewMode changes, not when filteredProperties change
+    useEffect(() => { setCurrentPage(1); }, [viewMode]);
 
     const itemsPerPage = viewMode === 'grid' ? 9 : 5;
     const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
