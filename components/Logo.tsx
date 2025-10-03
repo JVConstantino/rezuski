@@ -9,7 +9,7 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ 
-  className = "h-16 object-contain", 
+  className = "h-20 object-contain", 
   alt = "Rezuski Imóveis Logo",
   onClick,
   variant = 'default'

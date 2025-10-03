@@ -307,7 +307,15 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
 
     const handlePageChange = async (page: number) => {
         if (page >= 1 && page <= Math.ceil(filteredProperties.length / (viewMode === 'grid' ? 9 : 5))) {
-            await applyFilters(filters, page);
+            // Atualizar apenas a página na URL sem recarregar filtros
+            const newParams = new URLSearchParams(searchParams);
+            if (page > 1) {
+                newParams.set('page', page.toString());
+            } else {
+                newParams.delete('page');
+            }
+            setSearchParams(newParams, { replace: true });
+            setCurrentPage(page);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -522,26 +530,47 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ forcedPurpose }) 
                                     <div className="space-y-4"><>{paginatedProperties.map(p => <PropertyListItem key={p.id} property={p} />)}</></div>
                                 )}
                                 {totalPages > 1 && (
-                                    <div className="flex items-center justify-center space-x-1 mt-12">
-                                        <button onClick={() => handlePageChange(1)} disabled={currentPage === 1} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Primeira página"><ChevronsLeftIcon className="w-5 h-5"/></button>
-                                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Página anterior"><ChevronLeftIcon className="w-5 h-5"/></button>
-                                        
-                                        {renderPageNumbers().map((page, index) =>
-                                            page === '...' ? (
-                                                <span key={`dots-${index}`} className="px-4 py-2 text-slate-500">...</span>
-                                            ) : (
-                                                <button
-                                                    key={page}
-                                                    onClick={() => handlePageChange(page as number)}
-                                                    className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === page ? 'bg-primary-blue text-white' : 'hover:bg-slate-200'}`}
-                                                >
-                                                    {page}
-                                                </button>
-                                            )
-                                        )}
+                                    <div className="flex flex-col items-center space-y-4 mt-12">
+                                        <div className="flex items-center justify-center space-x-1">
+                                            <button onClick={() => handlePageChange(1)} disabled={currentPage === 1} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Primeira página"><ChevronsLeftIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Página anterior"><ChevronLeftIcon className="w-5 h-5"/></button>
+                                            
+                                            {renderPageNumbers().map((page, index) =>
+                                                page === '...' ? (
+                                                    <span key={`dots-${index}`} className="px-4 py-2 text-slate-500">...</span>
+                                                ) : (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => handlePageChange(page as number)}
+                                                        className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === page ? 'bg-primary-blue text-white' : 'hover:bg-slate-200'}`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                )
+                                            )}
 
-                                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Próxima página"><ChevronRightIcon className="w-5 h-5"/></button>
-                                        <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Última página"><ChevronsRightIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Próxima página"><ChevronRightIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Última página"><ChevronsRightIcon className="w-5 h-5"/></button>
+                                        </div>
+                                        
+                                        {/* Input para ir diretamente para uma página */}
+                                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                            <span>Ir para página:</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={totalPages}
+                                                value={currentPage}
+                                                onChange={(e) => {
+                                                    const page = parseInt(e.target.value);
+                                                    if (page >= 1 && page <= totalPages) {
+                                                        handlePageChange(page);
+                                                    }
+                                                }}
+                                                className="w-16 px-2 py-1 border border-slate-300 rounded text-center focus:ring-primary-blue focus:border-primary-blue"
+                                            />
+                                            <span>de {totalPages}</span>
+                                        </div>
                                     </div>
                                 )}
                                 

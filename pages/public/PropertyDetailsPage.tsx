@@ -14,6 +14,7 @@ import { localizeProperty, getOptimizedImageUrl } from '../../lib/localize';
 import LazyImage from '../../components/LazyImage';
 import { supabase } from '../../lib/supabaseClient';
 import { getStorageClient } from '../../lib/storageClient';
+import Preloader from '../../components/Preloader';
 
 declare var mapboxgl: any;
 
@@ -387,7 +388,7 @@ const PriceHistoryTable: React.FC<{ history: PriceHistory[] }> = ({ history }) =
 
 const PropertyDetailsPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
-  const { properties, incrementViewCount } = useProperties();
+  const { properties, incrementViewCount, loading } = useProperties();
   const { locale, t } = useLanguage();
   const { activeConfig } = useStorageConfig();
   
@@ -504,6 +505,10 @@ const PropertyDetailsPage: React.FC = () => {
     }
   };
 
+
+  if (loading) {
+    return <Preloader isLoading={true} message="Carregando imóvel..." />;
+  }
 
   if (!property) {
     return (

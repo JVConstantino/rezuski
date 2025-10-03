@@ -1,0 +1,45 @@
+{
+  "name": "rezuski-imóveis",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:host": "vite --host",
+    "dev:debug": "vite --debug",
+    "build": "vite build",
+    "preview": "vite preview",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate-help": "node scripts/migrate-help.mjs",
+    "test-migration": "node test/migration-test.js",
+    "reload": "echo 'Forçando hot reload...' && touch src/main.tsx"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.31.9",
+    "@google/genai": "^1.10.0",
+    "@peculiar/webcrypto": "1.4.3",
+    "@supabase/functions-js": "2.4.1",
+    "@supabase/gotrue-js": "2.6.2",
+    "@supabase/postgrest-js": "1.15.5",
+    "@supabase/realtime-js": "2.9.0",
+    "@supabase/storage-js": "2.5.5",
+    "@supabase/supabase-js": "2.44.4",
+    "cross-fetch": "3.1.5",
+    "isomorphic-ws": "5.0.0",
+    "openai": "4.52.7",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-intersection-observer": "9.13.0",
+    "react-router-dom": "7.6.3",
+    "recharts": "3.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^22.14.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.13",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}

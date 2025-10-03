@@ -16,6 +16,7 @@ import AnimateOnScroll from '../../components/AnimateOnScroll';
 import BottomNavBar from '../../components/BottomNavBar';
 import ImageWithFallback from '../../components/ImageWithFallback';
 import { getOptimizedImageUrl } from '../../lib/localize';
+import Preloader from '../../components/Preloader';
 
 
 const HeroSection = () => {
@@ -94,7 +95,7 @@ const HeroSection = () => {
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
         <div className="text-center">
             <AnimateOnScroll>
-                <Logo className="h-32 mx-auto mb-6 object-contain" />
+                <Logo className="h-[231px] mx-auto mb-6 object-contain" />
             </AnimateOnScroll>
             <AnimateOnScroll delay={50}>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-gray-50 leading-tight">
@@ -487,7 +488,11 @@ const MeetTheBrokers: React.FC = () => {
             {brokers.map((broker, index) => (
                 <AnimateOnScroll key={broker.id} delay={100 * (index + 1)}>
                     <div className="bg-white p-6 rounded-lg shadow-sm text-center hover:shadow-lg transition-shadow h-full border border-slate-100">
-                        <img src={getOptimizedImageUrl(broker.avatarUrl, { width: 96, height: 96 }, activeConfig)} alt={broker.name} className="w-24 h-24 rounded-full mx-auto object-cover" />
+                        <ImageWithFallback 
+                            src={getOptimizedImageUrl(broker.avatarUrl, { width: 96, height: 96 }, activeConfig)} 
+                            alt={broker.name} 
+                            className="w-24 h-24 rounded-full mx-auto object-cover" 
+                        />
                         <h3 className="mt-4 text-lg font-semibold text-slate-800">{broker.name}</h3>
                         <p className="text-sm text-primary-blue font-medium">{broker.title}</p>
                         <div className="mt-4 flex justify-center space-x-3">
@@ -599,9 +604,25 @@ const ContactSection: React.FC = () => {
 };
 
 const HomePage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, loading: langLoading } = useLanguage();
+  const { loading: propsLoading } = useProperties();
+  const { loading: brokersLoading } = useBrokers();
+  const { loading: storageLoading } = useStorageConfig();
+  const isLoadingHome = langLoading || propsLoading || brokersLoading || storageLoading;
+  const [preloaderActive, setPreloaderActive] = useState(true);
+  const initialLoadDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (!isLoadingHome && !initialLoadDoneRef.current) {
+      initialLoadDoneRef.current = true;
+      const timer = setTimeout(() => setPreloaderActive(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingHome]);
+
   return (
     <div className="bg-white pb-24 md:pb-0">
+      <Preloader isLoading={preloaderActive && isLoadingHome} message="Carregando..." />
       <Header />
       <main>
         <HeroSection />

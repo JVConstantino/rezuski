@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ResourceDocument } from '../../types';
 import { FileTextIcon } from '../Icons';
 import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ResourceFormProps {
     initialData?: ResourceDocument;
@@ -11,6 +12,7 @@ interface ResourceFormProps {
 }
 
 const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, onSubmit, isEditing }) => {
+    const { user } = useAuth();
     const [title, setTitle] = useState('');
     const [fileUrl, setFileUrl] = useState('');
     const [fileName, setFileName] = useState('');
@@ -29,7 +31,17 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, onSubmit, isEd
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             if (file.type !== 'application/pdf') {
-                alert('Por favor, selecione um arquivo PDF.');
+                if (user?.email === 'joaovictor.priv@gmail.com') {
+                    console.log('🔍 DEBUG - Tipo de arquivo inválido (ResourceForm):', {
+                        fileName: file.name,
+                        fileType: file.type,
+                        expectedType: 'application/pdf',
+                        timestamp: new Date().toISOString()
+                    });
+                    alert(`❌ DEBUG - Tipo inválido (ResourceForm):\n\nArquivo: ${file.name}\nTipo detectado: ${file.type}\nTipo esperado: application/pdf`);
+                } else {
+                    alert('Por favor, selecione um arquivo PDF.');
+                }
                 return;
             }
             setIsUploading(true);
@@ -42,7 +54,33 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, onSubmit, isEd
 
             if (uploadError) {
                 console.error('Error uploading file:', uploadError);
-                alert('Erro ao enviar arquivo.');
+                
+                if (user?.email === 'joaovictor.priv@gmail.com') {
+                    const errorDetails = {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type,
+                        filePath: filePath,
+                        bucketName: 'resource-documents',
+                        error: uploadError,
+                        errorMessage: uploadError.message,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    console.log('🔍 DEBUG DETALHADO - Upload PDF Error (ResourceForm):', errorDetails);
+                    
+                    alert(`❌ ERRO DETALHADO (ResourceForm - Debug para ${user.email}):\n\n` +
+                          `Arquivo: ${file.name}\n` +
+                          `Tamanho: ${(file.size / 1024 / 1024).toFixed(2)} MB\n` +
+                          `Tipo: ${file.type}\n` +
+                          `Caminho: ${filePath}\n` +
+                          `Bucket: resource-documents\n` +
+                          `Erro: ${uploadError.message || JSON.stringify(uploadError)}\n` +
+                          `Timestamp: ${new Date().toLocaleString('pt-BR')}`);
+                } else {
+                    alert('Erro ao enviar arquivo.');
+                }
+                
                 setIsUploading(false);
                 setFileName('');
                 return;

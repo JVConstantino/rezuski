@@ -173,7 +173,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             const { data: propertiesUsingCategory, error: propertiesError } = await supabase
                 .from('properties')
                 .select('id')
-                .eq('category_id', categoryId)
+                .eq('categoryId', categoryId)
                 .limit(1);
             
             if (propertiesError) {

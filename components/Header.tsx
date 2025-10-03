@@ -77,10 +77,10 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 w-full border-b border-slate-200">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
-            <Logo className="h-16 object-contain" />
+            <Logo className="h-20 object-contain" />
           </Link>
 
           {/* Navigation Links */}

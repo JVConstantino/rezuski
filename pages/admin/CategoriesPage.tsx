@@ -6,6 +6,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAIConfig } from '../../contexts/AIConfigContext';
 import { PlusIcon, EditIcon, TrashIcon, SparklesIcon, GripVerticalIcon } from '../../components/Icons';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { useStorageConfig } from '../../contexts/StorageConfigContext';
+import { getOptimizedImageUrl } from '../../lib/localize';
 
 const CategoriesPage: React.FC = () => {
     const { categories, deleteCategory, translateAllCategoriesWithAI, loading } = useCategories();
@@ -16,10 +18,34 @@ const CategoriesPage: React.FC = () => {
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { activeConfig: storageActiveConfig } = useStorageConfig();
 
-    const handleDelete = (id: string, name: string) => {
+    const handleDelete = async (id: string, name: string) => {
         if (window.confirm(`Tem certeza que deseja remover a categoria "${name}"?`)) {
-            deleteCategory(id);
+            try {
+                await deleteCategory(id);
+            } catch (error: any) {
+                console.error('Erro ao remover categoria:', error);
+                const msg = error?.message || 'Erro desconhecido ao remover categoria.';
+                if (
+                    msg.toLowerCase().includes('row-level security') ||
+                    msg.toLowerCase().includes('permission denied') ||
+                    msg.toLowerCase().includes('violates') ||
+                    msg.toLowerCase().includes('policy')
+                ) {
+                    alert(
+                        'Erro de permissão (RLS): não foi possível excluir a categoria.\n\n' +
+                        'Execute as políticas RLS adequadas no Supabase para permitir exclusão por usuários autenticados:\n\n' +
+                        'DROP POLICY IF EXISTS "Public read access" ON public.categories;\n' +
+                        'CREATE POLICY "Public read access" ON public.categories FOR SELECT USING (true);\n' +
+                        "CREATE POLICY \"Allow authenticated users full access\" ON public.categories FOR ALL USING (auth.role() = 'authenticated');\n\n" +
+                        'Para testes, você pode usar:\n' +
+                        '-- CREATE POLICY "Allow all access for testing" ON public.categories FOR ALL USING (true);'
+                    );
+                } else {
+                    alert(`Não foi possível excluir a categoria: ${msg}`);
+                }
+            }
         }
     }
 
@@ -140,7 +166,7 @@ const CategoriesPage: React.FC = () => {
                             <div className="flex items-center space-x-4">
                                 <GripVerticalIcon className="w-5 h-5 text-slate-400" />
                                 <ImageWithFallback 
-                                    src={category.iconUrl} 
+                                    src={getOptimizedImageUrl(category.iconUrl, { width: 40, height: 40 }, storageActiveConfig)} 
                                     alt={category.name} 
                                     className="w-10 h-10 object-contain rounded" 
                                     categoryName={category.name}
@@ -189,7 +215,7 @@ const CategoriesPage: React.FC = () => {
                                     </td>
                                     <td className="p-4">
                                         <ImageWithFallback 
-                                            src={category.iconUrl} 
+                                            src={getOptimizedImageUrl(category.iconUrl, { width: 40, height: 40 }, storageActiveConfig)} 
                                             alt={category.name} 
                                             className="w-10 h-10 object-contain rounded" 
                                             categoryName={category.name}

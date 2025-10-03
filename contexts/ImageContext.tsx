@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { supabase } from '../lib/supabaseClient';
 import { getStorageClient, getImageUrl, getRelativePath } from '../lib/storageClient';
 import { useStorageConfig } from './StorageConfigContext';
+import { useAuth } from './AuthContext';
 
 interface ItemToMove {
     name: string;
@@ -26,6 +27,7 @@ const PLACEHOLDER_FILE = '.emptyFolder';
 
 export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { activeConfig } = useStorageConfig();
+    const { user } = useAuth();
     const BUCKET_NAME = activeConfig?.bucket_name || 'property-images';
     const [galleryItems, setGalleryItems] = useState<any[]>([]);
     const [currentPath, setCurrentPath] = useState('public');
@@ -166,7 +168,24 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             
             if (bucketError) {
                 console.error('Bucket access error:', bucketError);
-                alert(`Erro ao acessar o bucket: ${bucketError.message}. Verifique se o bucket '${BUCKET_NAME}' existe e está configurado como público.`);
+                
+                if (user?.email === 'joaovictor.priv@gmail.com') {
+                    console.log('🔍 DEBUG - Erro de acesso ao bucket (ImageContext):', {
+                        bucketName: BUCKET_NAME,
+                        error: bucketError,
+                        errorMessage: bucketError.message,
+                        activeConfig: activeConfig,
+                        timestamp: new Date().toISOString()
+                    });
+                    alert(`❌ DEBUG - Erro de acesso ao bucket (ImageContext):\n\n` +
+                          `Bucket: ${BUCKET_NAME}\n` +
+                          `Erro: ${bucketError.message}\n` +
+                          `Storage URL: ${activeConfig?.storage_url || 'Não configurado'}\n` +
+                          `Storage Key: ${activeConfig?.storage_key ? 'Configurado' : 'Não configurado'}\n` +
+                          `Timestamp: ${new Date().toLocaleString('pt-BR')}`);
+                } else {
+                    alert(`Erro ao acessar o bucket: ${bucketError.message}. Verifique se o bucket '${BUCKET_NAME}' existe e está configurado como público.`);
+                }
                 return;
             }
             
@@ -180,6 +199,24 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 
                 if (error) {
                     console.error(`Upload error for ${filePath}:`, error);
+                    
+                    if (user?.email === 'joaovictor.priv@gmail.com') {
+                        const errorDetails = {
+                            fileName: file.name,
+                            fileSize: file.size,
+                            fileType: file.type,
+                            filePath: filePath,
+                            bucketName: BUCKET_NAME,
+                            storageUrl: activeConfig?.storage_url,
+                            hasStorageKey: !!activeConfig?.storage_key,
+                            error: error,
+                            errorMessage: error.message,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        console.log('🔍 DEBUG DETALHADO - Upload Image Error (ImageContext):', errorDetails);
+                    }
+                    
                     throw new Error(`Erro ao fazer upload de ${file.name}: ${error.message}`);
                 }
                 
@@ -194,7 +231,32 @@ export const ImageProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } catch (error) {
             console.error('Upload failed:', error);
             const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido durante o upload';
-            alert(`Falha no upload: ${errorMessage}`);
+            
+            if (user?.email === 'joaovictor.priv@gmail.com') {
+                const errorDetails = {
+                    filesCount: files.length,
+                    path: path,
+                    bucketName: BUCKET_NAME,
+                    storageUrl: activeConfig?.storage_url,
+                    hasStorageKey: !!activeConfig?.storage_key,
+                    error: error,
+                    errorMessage: errorMessage,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('🔍 DEBUG DETALHADO - Upload Images Failed (ImageContext):', errorDetails);
+                
+                alert(`❌ ERRO DETALHADO (ImageContext - Debug para ${user.email}):\n\n` +
+                      `Arquivos: ${files.length}\n` +
+                      `Caminho: ${path}\n` +
+                      `Bucket: ${BUCKET_NAME}\n` +
+                      `Storage URL: ${activeConfig?.storage_url || 'Não configurado'}\n` +
+                      `Storage Key: ${activeConfig?.storage_key ? 'Configurado' : 'Não configurado'}\n` +
+                      `Erro: ${errorMessage}\n` +
+                      `Timestamp: ${new Date().toLocaleString('pt-BR')}`);
+            } else {
+                alert(`Falha no upload: ${errorMessage}`);
+            }
         } finally {
             setLoading(false);
             refresh();

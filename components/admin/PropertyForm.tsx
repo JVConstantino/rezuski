@@ -6,6 +6,7 @@ import { useAmenities } from '../../contexts/AmenityContext';
 import { useImages } from '../../contexts/ImageContext';
 import { useAIConfig } from '../../contexts/AIConfigContext';
 import { useStorageConfig } from '../../contexts/StorageConfigContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { getStorageClient, getRelativePath } from '../../lib/storageClient';
 import { getOptimizedImageUrl } from '../../lib/localize';
 import ImageGalleryModal from './ImageGalleryModal';
@@ -43,6 +44,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const { t, propertyTypes, supportedLanguages } = useLanguage();
     const { activeConfig: aiConfig, loading: aiConfigLoading } = useAIConfig();
     const { activeConfig: storageConfig } = useStorageConfig();
+    const { user } = useAuth();
     const [isGalleryOpen, setGalleryOpen] = useState(false);
     const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -79,6 +81,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
     const [images, setImages] = useState<ImageState[]>([]);
     const [documents, setDocuments] = useState<DocumentState[]>([]);
     const [translations, setTranslations] = useState<Property['translations']>({});
+    const [docUploadProgress, setDocUploadProgress] = useState({ current: 0, total: 0 });
+    const [docUploadStatus, setDocUploadStatus] = useState<string | null>(null);
 
     useEffect(() => {
         if (initialData) {
@@ -187,6 +191,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         const totalFiles = files.length;
         if (totalFiles === 0) return;
 
+        // Inicia barra de progresso
+        setDocUploadProgress({ current: 0, total: totalFiles });
+
         const client = getStorageClient(storageConfig?.storage_url, storageConfig?.storage_key);
         const bucketName = 'property-documents';
         const uploadedDocs: DocumentState[] = [];
@@ -196,13 +203,36 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
             
             // Validar tipo de arquivo
             if (file.type !== 'application/pdf') {
-                alert(`O arquivo ${file.name} não é um PDF válido.`);
+                if (user?.email === 'joaovictor.priv@gmail.com') {
+                    console.log('🔍 DEBUG - Tipo de arquivo inválido:', {
+                        fileName: file.name,
+                        fileType: file.type,
+                        expectedType: 'application/pdf',
+                        timestamp: new Date().toISOString()
+                    });
+                    alert(`❌ DEBUG - Tipo inválido:\n\nArquivo: ${file.name}\nTipo detectado: ${file.type}\nTipo esperado: application/pdf`);
+                } else {
+                    alert(`O arquivo ${file.name} não é um PDF válido.`);
+                }
+                setDocUploadProgress({ current: i + 1, total: totalFiles });
                 continue;
             }
 
             // Validar tamanho (10MB máximo)
             if (file.size > 10 * 1024 * 1024) {
-                alert(`O arquivo ${file.name} é muito grande. Máximo 10MB.`);
+                if (user?.email === 'joaovictor.priv@gmail.com') {
+                    console.log('🔍 DEBUG - Arquivo muito grande:', {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileSizeMB: (file.size / 1024 / 1024).toFixed(2),
+                        maxSizeMB: 10,
+                        timestamp: new Date().toISOString()
+                    });
+                    alert(`❌ DEBUG - Arquivo muito grande:\n\nArquivo: ${file.name}\nTamanho: ${(file.size / 1024 / 1024).toFixed(2)} MB\nTamanho máximo: 10 MB`);
+                } else {
+                    alert(`O arquivo ${file.name} é muito grande. Máximo 10MB.`);
+                }
+                setDocUploadProgress({ current: i + 1, total: totalFiles });
                 continue;
             }
 
@@ -223,13 +253,51 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
                 });
             } catch (error) {
                 console.error(`Erro ao enviar o arquivo ${file.name}:`, error);
-                alert(`Erro ao enviar o arquivo: ${file.name}`);
+                
+                // Debug detalhado apenas para o usuário específico
+                if (user?.email === 'joaovictor.priv@gmail.com') {
+                    const errorDetails = {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type,
+                        filePath: filePath,
+                        bucketName: bucketName,
+                        storageUrl: storageConfig?.storage_url,
+                        hasStorageKey: !!storageConfig?.storage_key,
+                        error: error,
+                        errorMessage: error instanceof Error ? error.message : JSON.stringify(error),
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    console.log('🔍 DEBUG DETALHADO - Upload PDF Error:', errorDetails);
+                    
+                    alert(`❌ ERRO DETALHADO (Debug para ${user.email}):\n\n` +
+                          `Arquivo: ${file.name}\n` +
+                          `Tamanho: ${(file.size / 1024 / 1024).toFixed(2)} MB\n` +
+                          `Tipo: ${file.type}\n` +
+                          `Caminho: ${filePath}\n` +
+                          `Bucket: ${bucketName}\n` +
+                          `Storage URL: ${storageConfig?.storage_url || 'Não configurado'}\n` +
+                          `Storage Key: ${storageConfig?.storage_key ? 'Configurado' : 'Não configurado'}\n` +
+                          `Erro: ${error instanceof Error ? error.message : JSON.stringify(error)}\n` +
+                          `Timestamp: ${new Date().toLocaleString('pt-BR')}`);
+                } else {
+                    alert(`Erro ao enviar o arquivo: ${file.name}`);
+                }
             }
+
+            setDocUploadProgress({ current: i + 1, total: totalFiles });
         }
 
         if (uploadedDocs.length > 0) {
             setDocuments(prev => [...prev, ...uploadedDocs]);
+            setDocUploadStatus(`${uploadedDocs.length} PDF(s) enviados com sucesso`);
+            setTimeout(() => setDocUploadStatus(null), 3000);
         }
+
+        setTimeout(() => {
+            setDocUploadProgress({ current: 0, total: 0 });
+        }, 1500);
     };
 
     const handleDeleteDocument = async (index: number) => {
@@ -264,14 +332,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ initialData, onSubmit, isEd
         }
     };
 
-    const handleDownloadDocument = (document: DocumentState) => {
+    const handleDownloadDocument = async (document: DocumentState) => {
         const client = getStorageClient(storageConfig?.storage_url, storageConfig?.storage_key);
-        const { data } = client.storage
+
+        // Tenta criar URL assinada (ideal para buckets privados)
+        const { data: signedData } = await client.storage
             .from('property-documents')
-            .getPublicUrl(document.url);
-        
-        if (data?.publicUrl) {
-            window.open(data.publicUrl, '_blank');
+            .createSignedUrl(document.url, 60);
+
+        let url = signedData?.signedUrl;
+
+        // Fallback para URL pública
+        if (!url) {
+            const { data: publicData } = client.storage
+                .from('property-documents')
+                .getPublicUrl(document.url);
+            url = publicData?.publicUrl;
+        }
+
+        if (url) {
+            window.open(url, '_blank');
+        } else {
+            alert('Não foi possível obter o link do PDF. Verifique as permissões do bucket.');
         }
     };
 
@@ -892,6 +974,15 @@ Agora, gere o objeto JSON completo.`;
                             </label>
                             <p className="text-xs text-slate-500">Apenas PDF. Máx. 10MB por arquivo.</p>
                         </div>
+
+                        {docUploadProgress.total > 0 && (
+                            <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
+                                <div className="bg-primary-blue h-2.5 rounded-full" style={{ width: `${(docUploadProgress.current / docUploadProgress.total) * 100}%` }}></div>
+                            </div>
+                        )}
+                        {docUploadStatus && (
+                            <p className="mt-2 text-sm text-green-600">{docUploadStatus}</p>
+                        )}
 
                         {documents.length > 0 && (
                             <div className="mt-4 space-y-3">
