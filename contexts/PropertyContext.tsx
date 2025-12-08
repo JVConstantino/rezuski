@@ -1,9 +1,10 @@
-
-
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { Property, PropertyStatus, Amenity, PriceHistory } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
+
+// Constante para modo de debug - desabilitar em produção
+const IS_DEV = import.meta.env.DEV;
 
 interface PropertyContextType {
     properties: Property[];
@@ -20,6 +21,7 @@ interface PropertyContextType {
     totalCount: number;
     loading: boolean;
     loadingMore: boolean;
+    refreshProperties: () => Promise<void>;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -31,8 +33,7 @@ const getStoredViewCounts = (): Record<string, number> => {
     try {
         const stored = localStorage.getItem(VIEW_COUNT_STORAGE_KEY);
         return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-        console.error("Error reading view counts from localStorage", error);
+    } catch {
         return {};
     }
 };
@@ -41,13 +42,13 @@ const getStoredViewCounts = (): Record<string, number> => {
 const setStoredViewCounts = (counts: Record<string, number>) => {
     try {
         localStorage.setItem(VIEW_COUNT_STORAGE_KEY, JSON.stringify(counts));
-    } catch (error) {
-        console.error("Error saving view counts to localStorage", error);
+    } catch {
+        // Silently fail if localStorage is full or unavailable
     }
 };
 
-
-const PROPERTIES_PER_PAGE = 1000; // Aumentado para carregar todas as propriedades
+// Configurações de paginação - carrega todos para o admin
+const PROPERTIES_PER_PAGE = 1000; // Carrega todas as propriedades para permitir ordenação completa
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 interface CacheData {
@@ -69,15 +70,24 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const getCacheKey = (page: number) => `properties_page_${page}`;
 
-    const isCacheValid = (cacheData: CacheData): boolean => {
+    const isCacheValid = useCallback((cacheData: CacheData): boolean => {
         return Date.now() - cacheData.timestamp < CACHE_TTL;
-    };
+    }, []);
 
-    const clearCache = () => {
+    const clearCache = useCallback(() => {
         setCache(new Map());
-    };
+    }, []);
 
-    const fetchProperties = useCallback(async (reset = true) => {
+    const fetchProperties = useCallback(async (reset = true, page = 0) => {
+        const cacheKey = getCacheKey(page);
+        const cachedData = cache.get(cacheKey);
+
+        // Verifica cache válido
+        if (cachedData && isCacheValid(cachedData) && !reset) {
+            if (IS_DEV) console.log('📦 Using cached properties for page:', page);
+            return;
+        }
+
         if (reset) {
             setLoading(true);
             setCurrentPage(0);
@@ -86,15 +96,18 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             setLoadingMore(true);
         }
 
-        // Carregar todas as propriedades de uma vez
+        const from = page * PROPERTIES_PER_PAGE;
+        const to = from + PROPERTIES_PER_PAGE - 1;
+
         const { data, error, count } = await supabase
             .from('properties')
             .select('*', { count: 'exact' })
             .order('display_order', { ascending: true, nullsFirst: false })
-            .order('createdAt', { ascending: false });
+            .order('createdAt', { ascending: false })
+            .range(from, to);
 
         if (error) {
-            console.error('Error fetching properties:', error);
+            if (IS_DEV) console.error('Error fetching properties:', error);
             if (reset) {
                 setProperties([]);
             }
@@ -102,74 +115,88 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             const fetchedProperties = data as unknown as Property[];
             const storedViewCounts = getStoredViewCounts();
 
-            // Merge stored view counts with fetched data. Prioritize higher value.
+            // Merge stored view counts with fetched data
             const propertiesWithLocalViews = fetchedProperties.map(prop => ({
                 ...prop,
                 viewCount: Math.max(storedViewCounts[prop.id] || 0, prop.viewCount || 0),
             }));
-            
-            // Sync back the merged counts to localStorage
+
+            // Sync back the merged counts to localStorage (batch update)
             const newStoredCounts = { ...storedViewCounts };
             propertiesWithLocalViews.forEach(prop => {
                 newStoredCounts[prop.id] = prop.viewCount || 0;
             });
             setStoredViewCounts(newStoredCounts);
 
+            // Atualiza cache
+            const newCacheData: CacheData = {
+                data: propertiesWithLocalViews,
+                timestamp: Date.now(),
+                totalCount: count || 0,
+                hasMore: (from + fetchedProperties.length) < (count || 0),
+                page
+            };
+            setCache(prev => new Map(prev).set(cacheKey, newCacheData));
+
             if (reset) {
                 setProperties(propertiesWithLocalViews);
             } else {
-                setProperties(prev => [...prev, ...propertiesWithLocalViews]);
+                // Evita duplicatas ao carregar mais
+                setProperties(prev => {
+                    const existingIds = new Set(prev.map(p => p.id));
+                    const newProperties = propertiesWithLocalViews.filter(p => !existingIds.has(p.id));
+                    return [...prev, ...newProperties];
+                });
             }
-            
-            setCurrentPage(0);
+
+            setCurrentPage(page);
             setTotalCount(count || 0);
-            setHasMoreProperties(false); // Não há mais páginas
+            setHasMoreProperties((from + fetchedProperties.length) < (count || 0));
         }
-        
+
         setLoading(false);
         setLoadingMore(false);
-    }, []);
+    }, [cache, isCacheValid]);
 
     const loadMoreProperties = useCallback(async () => {
         if (!loadingMore && hasMoreProperties) {
-            await fetchProperties(false);
+            await fetchProperties(false, currentPage + 1);
         }
-    }, [fetchProperties, loadingMore, hasMoreProperties]);
+    }, [fetchProperties, loadingMore, hasMoreProperties, currentPage]);
+
+    const refreshProperties = useCallback(async () => {
+        clearCache();
+        await fetchProperties(true, 0);
+    }, [fetchProperties, clearCache]);
 
     useEffect(() => {
-        fetchProperties(true);
+        fetchProperties(true, 0);
     }, []);
-    
+
     const updatePropertyOrder = async (updates: { id: string; display_order: number }[]) => {
-        console.log('🔄 Starting property order update with:', updates);
-        
+        if (IS_DEV) console.log('🔄 Starting property order update with:', updates);
+
         try {
             const updatePromises = updates.map(u => {
-                console.log(`📝 Updating property ${u.id} to display_order ${u.display_order}`);
                 return supabase.from('properties').update({ display_order: u.display_order }).eq('id', u.id);
             });
-        
+
             const results = await Promise.all(updatePromises);
-            console.log('📊 Update results:', results);
-            
+
             const firstError = results.find(res => res.error);
-        
+
             if (firstError) {
-                console.error('❌ Error updating property order:', firstError.error);
+                console.error('Error updating property order:', firstError.error);
                 alert(`Erro ao salvar a ordem: ${firstError.error.message}`);
                 return;
             }
-            
-            console.log('✅ Property order updated successfully');
-            clearCache(); // Clear cache when data changes
-            
-            // Refetch to get the correctly ordered list from the DB
-            console.log('🔄 Refetching properties with new order...');
-            await fetchProperties(true);
-            console.log('✅ Properties refetched successfully');
-            
+
+            if (IS_DEV) console.log('✅ Property order updated successfully');
+            clearCache();
+            await fetchProperties(true, 0);
+
         } catch (error) {
-            console.error('❌ Unexpected error in updatePropertyOrder:', error);
+            console.error('Unexpected error in updatePropertyOrder:', error);
             alert(`Erro inesperado ao salvar a ordem: ${error}`);
         }
     };
@@ -180,14 +207,14 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             const newProperties = prev.map(p =>
                 p.id === propertyId ? { ...p, viewCount: (p.viewCount || 0) + 1 } : p
             );
-            
+
             const propertyToUpdate = newProperties.find(p => p.id === propertyId);
             if (propertyToUpdate) {
                 const storedViewCounts = getStoredViewCounts();
                 storedViewCounts[propertyId] = propertyToUpdate.viewCount || 0;
                 setStoredViewCounts(storedViewCounts);
             }
-            
+
             return newProperties;
         });
 
@@ -196,53 +223,32 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             prop_id: propertyId
         });
 
-        if (error) {
+        if (error && IS_DEV) {
             console.error('Error incrementing view count in DB:', error.message);
-            // Optional: handle error, maybe revert optimistic update if needed
         }
     }, []);
 
     const addProperty = async (property: Omit<Property, 'id'>) => {
-        // Debug: verificar dados recebidos
-        console.log('PropertyContext - addProperty recebeu:', {
-            tourUrl: property.tourUrl,
-            youtubeUrl: property.youtubeUrl,
-            fullProperty: property
-        });
-        
-        console.log('PropertyContext - Dados sendo enviados para o Supabase:', JSON.stringify(property, null, 2));
-        
         const { data, error } = await supabase
             .from('properties')
             .insert([property])
             .select();
-            
-        console.log('PropertyContext - Resposta do Supabase:', { data, error });
-        
+
         if (error) {
             console.error('Error adding property:', error.message);
-            console.error('Error details:', error);
             alert(`Error adding property: ${error.message}`);
             return undefined;
         } else if (data) {
-            console.log('PropertyContext - Propriedade salva com sucesso:', data[0]);
-            clearCache(); // Clear cache when data changes
-            await fetchProperties(); // Refetch to maintain order
+            if (IS_DEV) console.log('PropertyContext - Propriedade salva com sucesso:', data[0]);
+            clearCache();
+            await fetchProperties(true, 0);
             return data[0] as unknown as Property;
         }
     };
 
     const updateProperty = async (updatedProperty: Property) => {
         const { id, ...updateData } = updatedProperty;
-        
-        // Debug: verificar dados recebidos
-        console.log('PropertyContext - updateProperty recebeu:', {
-            id: id,
-            tourUrl: updateData.tourUrl,
-            youtubeUrl: updateData.youtubeUrl,
-            fullUpdateData: updateData
-        });
-        
+
         const { data, error } = await supabase
             .from('properties')
             .update(updateData)
@@ -251,23 +257,22 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         if (error) {
             console.error('Error updating property:', error.message);
-            console.error('Error details:', error);
             alert(`Error updating property: ${error.message}`);
             return undefined;
         } else if (data) {
-            console.log('PropertyContext - Propriedade atualizada com sucesso:', data[0]);
-            clearCache(); // Clear cache when data changes
+            if (IS_DEV) console.log('PropertyContext - Propriedade atualizada com sucesso:', data[0]);
+            clearCache();
             setProperties(prev => prev.map(p => p.id === updatedProperty.id ? (data[0] as unknown as Property) : p));
             return data[0] as unknown as Property;
         }
     };
-    
+
     const toggleArchiveProperty = async (propertyId: string) => {
         const propertyToToggle = properties.find(p => p.id === propertyId);
         if (!propertyToToggle) return;
 
         const newStatus = propertyToToggle.status === 'ARCHIVED' ? 'AVAILABLE' : 'ARCHIVED';
-        
+
         const { data, error } = await supabase
             .from('properties')
             .update({ status: newStatus })
@@ -278,27 +283,21 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error toggling archive status:', error.message);
             alert(`Error toggling archive status: ${error.message}`);
         } else if (data) {
-            clearCache(); // Clear cache when data changes
+            clearCache();
             setProperties(prev => prev.map(p => p.id === propertyId ? (data[0] as unknown as Property) : p));
         }
     }
 
     const deleteProperty = async (propertyId: string) => {
-        console.log('🗑️ Starting property deletion for ID:', propertyId);
-        
         const propertyToDelete = properties.find(p => p.id === propertyId);
         if (!propertyToDelete) {
-            console.error('❌ Property not found in local state:', propertyId);
             alert('Propriedade não encontrada.');
             return;
         }
 
-        console.log('📋 Property to delete:', propertyToDelete.title);
-
         try {
             // 1. Delete images from storage
             if (propertyToDelete.images && propertyToDelete.images.length > 0) {
-                console.log('🖼️ Deleting images from storage:', propertyToDelete.images.length, 'images');
                 const bucketName = 'property-images';
                 const filePaths = propertyToDelete.images.map(url => {
                     try {
@@ -307,52 +306,42 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
                         if (pathParts.length > 1) {
                             return pathParts[1];
                         }
-                        console.warn('Could not extract file path from URL:', url);
                         return null;
-                    } catch (e) {
-                        console.warn('Could not parse image URL to delete from storage:', url);
+                    } catch {
                         return null;
                     }
                 }).filter((path): path is string => path !== null);
 
                 if (filePaths.length > 0) {
-                    console.log('📁 File paths to delete:', filePaths);
                     const { error: storageError } = await supabase.storage
                         .from(bucketName)
                         .remove(filePaths);
 
                     if (storageError) {
-                        console.error('❌ Error deleting property images:', storageError);
+                        console.error('Error deleting property images:', storageError);
                         alert(`Não foi possível remover as imagens do armazenamento. Erro: ${storageError.message}. O imóvel ainda será excluído.`);
-                    } else {
-                        console.log('✅ Images deleted successfully');
                     }
                 }
-            } else {
-                console.log('📷 No images to delete');
             }
 
             // 2. Delete the property record
-            console.log('🗄️ Deleting property record from database...');
             const { error: dbError } = await supabase
                 .from('properties')
                 .delete()
                 .eq('id', propertyId);
 
             if (dbError) {
-                console.error('❌ Error deleting property from database:', dbError);
+                console.error('Error deleting property from database:', dbError);
                 alert(`Erro ao excluir imóvel: ${dbError.message}`);
                 return;
             }
 
-            console.log('✅ Property deleted successfully from database');
-            clearCache(); // Clear cache when data changes
+            clearCache();
             setProperties(prev => prev.filter(p => p.id !== propertyId));
-            console.log('🔄 Local state updated');
             alert('Propriedade excluída com sucesso!');
-            
+
         } catch (error) {
-            console.error('❌ Unexpected error during property deletion:', error);
+            console.error('Unexpected error during property deletion:', error);
             alert(`Erro inesperado ao excluir propriedade: ${error}`);
         }
     };
@@ -367,8 +356,8 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error in bulk update:', error.message);
             alert(`Erro na atualização em massa: ${error.message}`);
         } else {
-            clearCache(); // Clear cache when data changes
-            await fetchProperties(); // Refetch to show changes
+            clearCache();
+            await fetchProperties(true, 0);
             alert(`${propertyIds.length} imóveis atualizados com sucesso.`);
         }
     };
@@ -376,7 +365,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     const bulkDeleteProperties = async (propertyIds: string[]) => {
         setLoading(true);
         const propertiesToDelete = properties.filter(p => propertyIds.includes(p.id));
-        
+
         // 1. Collect all image paths to delete
         const allImagePaths: string[] = [];
         const bucketName = 'property-images';
@@ -387,7 +376,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
                         const urlObject = new URL(url);
                         const pathParts = urlObject.pathname.split(`/${bucketName}/`);
                         return pathParts.length > 1 ? pathParts[1] : null;
-                    } catch (e) { return null; }
+                    } catch { return null; }
                 }).filter((path): path is string => path !== null);
                 allImagePaths.push(...filePaths);
             }
@@ -412,30 +401,43 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             console.error('Error deleting properties:', dbError.message);
             alert(`Erro ao excluir imóveis: ${dbError.message}`);
         } else {
-            clearCache(); // Clear cache when data changes
-            await fetchProperties();
+            clearCache();
+            await fetchProperties(true, 0);
             alert(`${propertyIds.length} imóveis excluídos com sucesso.`);
         }
         setLoading(false);
     };
 
+    // Memoiza o valor do contexto para evitar re-renders desnecessários
+    const contextValue = useMemo(() => ({
+        properties,
+        addProperty,
+        updateProperty,
+        toggleArchiveProperty,
+        deleteProperty,
+        incrementViewCount,
+        updatePropertyOrder,
+        bulkUpdateProperties,
+        bulkDeleteProperties,
+        loadMoreProperties,
+        hasMoreProperties,
+        totalCount,
+        loading,
+        loadingMore,
+        refreshProperties
+    }), [
+        properties,
+        hasMoreProperties,
+        totalCount,
+        loading,
+        loadingMore,
+        loadMoreProperties,
+        incrementViewCount,
+        refreshProperties
+    ]);
+
     return (
-        <PropertyContext.Provider value={{
-            properties,
-            addProperty,
-            updateProperty,
-            toggleArchiveProperty,
-            deleteProperty,
-            incrementViewCount,
-            updatePropertyOrder,
-            bulkUpdateProperties,
-            bulkDeleteProperties,
-            loadMoreProperties,
-            hasMoreProperties,
-            totalCount,
-            loading,
-            loadingMore
-        }}>
+        <PropertyContext.Provider value={contextValue}>
             {children}
         </PropertyContext.Provider>
     );

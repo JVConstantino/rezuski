@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LOGO_URL, LOGO_URL_FALLBACK } from '../constants';
+
+// Cache global para a logo - evita recarregamentos desnecessários
+const logoCache = {
+  loaded: false,
+  url: '',
+  error: false
+};
 
 interface LogoProps {
   className?: string;
@@ -14,12 +21,29 @@ const Logo: React.FC<LogoProps> = ({
   onClick,
   variant = 'default'
 }) => {
-  const [currentUrl, setCurrentUrl] = useState(LOGO_URL);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState(() => {
+    // Usa o cache se disponível
+    return logoCache.loaded ? logoCache.url : LOGO_URL;
+  });
+  const [isLoading, setIsLoading] = useState(() => !logoCache.loaded);
+  const [hasError, setHasError] = useState(() => logoCache.error);
   const [usedFallback, setUsedFallback] = useState(false);
 
-  console.log('Logo component rendering with URL:', currentUrl);
+  // Memoize a URL para evitar recarregamentos desnecessários
+  const logoUrl = useMemo(() => {
+    return currentUrl;
+  }, [currentUrl]);
+
+  // Inicializa com cache se disponível
+  useEffect(() => {
+    if (logoCache.loaded && logoCache.url) {
+      setCurrentUrl(logoCache.url);
+      setIsLoading(false);
+      setHasError(logoCache.error);
+    }
+  }, []);
+
+  console.log('Logo component rendering with URL:', logoUrl, 'Cache loaded:', logoCache.loaded);
 
   const handleError = (e: any) => {
     console.error('Logo failed to load:', currentUrl, e);
@@ -48,6 +72,11 @@ const Logo: React.FC<LogoProps> = ({
     console.log('Logo loaded successfully:', currentUrl);
     setHasError(false);
     setIsLoading(false);
+    
+    // Atualiza o cache global
+    logoCache.loaded = true;
+    logoCache.url = currentUrl;
+    logoCache.error = false;
   };
 
   // Show fallback text if both images fail
@@ -65,7 +94,7 @@ const Logo: React.FC<LogoProps> = ({
 
   return (
     <img 
-      src={currentUrl + (currentUrl === LOGO_URL ? '?t=' + Date.now() : '')}
+      src={logoUrl}
       alt={alt}
       className={`${className} ${variant === 'inverted' ? 'filter brightness-0 invert' : ''}`}
       onError={handleError}
@@ -74,6 +103,8 @@ const Logo: React.FC<LogoProps> = ({
       style={{ 
         cursor: onClick ? 'pointer' : 'default'
       }}
+      // Adiciona cache headers para melhor performance
+      crossOrigin="anonymous"
     />
   );
 };

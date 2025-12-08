@@ -342,37 +342,37 @@ export type Database = {
       },
       property_type_translations: {
         Row: {
-            id: string
-            name: string
-            translations: { [locale: string]: string } | null
+          id: string
+          name: string
+          translations: { [locale: string]: string } | null
         },
         Insert: {
-            id?: string
-            name: string
-            translations?: { [locale: string]: string } | null
+          id?: string
+          name: string
+          translations?: { [locale: string]: string } | null
         },
         Update: {
-            id?: string
-            name?: string
-            translations?: { [locale: string]: string } | null
+          id?: string
+          name?: string
+          translations?: { [locale: string]: string } | null
         },
         Relationships: []
       },
       resources: {
         Row: {
-            id: string
-            title: string
-            fileUrl: string
+          id: string
+          title: string
+          fileUrl: string
         },
         Insert: {
-            id?: string
-            title: string
-            fileUrl: string
+          id?: string
+          title: string
+          fileUrl: string
         },
         Update: {
-            id?: string
-            title?: string
-            fileUrl?: string
+          id?: string
+          title?: string
+          fileUrl?: string
         },
         Relationships: []
       },
@@ -432,31 +432,6 @@ export type Database = {
           content?: string
         },
         Relationships: []
-      }
-    },
-    Views: {
-      [_ in never]: never
-    },
-    Functions: {
-      increment_view_count: {
-        Args: {
-          prop_id: string
-        }
-        Returns: undefined
-      },
-      set_active_ai_config: {
-        Args: {
-          config_id: string
-        }
-        Returns: undefined
-      }
-    },
-    Enums: {
-      [_ in never]: never
-    },
-    CompositeTypes: {
-      [_ in never]: never
-    }
       },
       database_configs: {
         Row: {
