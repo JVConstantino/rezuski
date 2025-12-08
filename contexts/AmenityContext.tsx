@@ -28,17 +28,17 @@ const CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
 const cleanAIResponse = (response: string): string => {
     // Remove markdown code blocks first
     let cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
-    
+
     // Find the start and end of the main JSON object or array
     const firstBrace = cleaned.indexOf('{');
     const firstBracket = cleaned.indexOf('[');
-    
+
     let startIndex = -1;
-    
+
     if (firstBrace === -1 && firstBracket === -1) {
         return cleaned; // No JSON structure found
     }
-    
+
     if (firstBrace !== -1 && firstBracket !== -1) {
         startIndex = Math.min(firstBrace, firstBracket);
     } else if (firstBrace !== -1) {
@@ -49,7 +49,7 @@ const cleanAIResponse = (response: string): string => {
 
     const lastBrace = cleaned.lastIndexOf('}');
     const lastBracket = cleaned.lastIndexOf(']');
-    
+
     let endIndex = -1;
 
     if (lastBrace !== -1 && lastBracket !== -1) {
@@ -96,7 +96,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
         } else {
             const amenitiesData = data as ManagedAmenity[] || [];
             setAmenities(amenitiesData);
-            
+
             // Cache the data
             setCache({
                 data: amenitiesData,
@@ -118,8 +118,9 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
                     // Refetch all data on any change to ensure consistency and order
                     fetchAmenities();
                 }
-            )
-            .subscribe();
+            );
+
+        // .subscribe(); // Realtime disabled due to server limitations
 
         return () => {
             supabase.removeChannel(channel);
@@ -129,7 +130,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
     const addAmenity = async (name: string) => {
         const trimmedName = name.trim();
         const normalizedName = trimmedName.toLowerCase();
-        
+
         const existingAmenity = amenities.find(a => a.name.trim().toLowerCase() === normalizedName);
         if (existingAmenity) {
             alert(`A comodidade "${trimmedName}" já existe.`);
@@ -151,7 +152,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
     const updateAmenity = async (id: string, name: string) => {
         const trimmedName = name.trim();
         const normalizedName = trimmedName.toLowerCase();
-        
+
         const existingAmenity = amenities.find(a => a.name.trim().toLowerCase() === normalizedName && a.id !== id);
         if (existingAmenity) {
             alert(`A comodidade "${trimmedName}" já existe.`);
@@ -176,7 +177,7 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
             .from('amenities')
             .delete()
             .eq('id', amenityId);
-        
+
         if (error) {
             console.error('Error deleting amenity:', error);
             alert(`Erro ao remover comodidade: ${error.message}`);
@@ -188,37 +189,37 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
     const translateAllAmenitiesWithAI = async (aiConfig: AIConfig) => {
         setLoading(true);
         const languagesToTranslate = supportedLanguages.filter(l => l.code !== 'pt-BR');
-        
+
         const amenitiesToTranslate = amenities.filter(amenity => {
             if (!amenity.translations) return true;
             const amenityTranslations = amenity.translations as { [key: string]: string };
             return languagesToTranslate.some(lang => !amenityTranslations[lang.code]);
         });
-    
+
         if (amenitiesToTranslate.length === 0) {
             alert('Todas as comodidades já foram traduzidas para todos os idiomas.');
             setLoading(false);
             return;
         }
-    
+
         const namesToTranslate = amenitiesToTranslate.map(a => a.name);
-    
+
         try {
             const systemInstruction = `Você é um tradutor profissional. Sua tarefa é traduzir uma lista de nomes de comodidades imobiliárias do português (pt-BR) para vários idiomas. Você DEVE retornar um único objeto JSON válido onde cada chave é um dos nomes de comodidade originais em português, e seu valor é outro objeto. Este objeto interno deve ter chaves para cada código de idioma ('en-US', 'es-ES', 'fr-FR', 'it-IT') com a tradução correspondente como valor.`;
             const userPrompt = `Traduza a seguinte lista de nomes de comodidades: ${JSON.stringify(namesToTranslate)}. Forneça as traduções para estes códigos de idioma: ${languagesToTranslate.map(l => l.code).join(', ')}. Retorne os dados como um único objeto JSON.`;
-    
+
             let content: string | null = null;
             const provider = aiConfig.provider.toLowerCase();
-            
+
             if (provider === 'gemini') {
                 const ai = new GoogleGenAI({ apiKey: aiConfig.api_key! });
                 const response = await ai.models.generateContent({ model: aiConfig.model!, contents: userPrompt, config: { systemInstruction, responseMimeType: "application/json" } });
                 content = response.text;
             } else {
-                const openai = new OpenAI({ 
+                const openai = new OpenAI({
                     apiKey: aiConfig.api_key!,
                     baseURL: provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1',
-                    dangerouslyAllowBrowser: true 
+                    dangerouslyAllowBrowser: true
                 });
                 const response = await openai.chat.completions.create({
                     model: aiConfig.model!,
@@ -227,9 +228,9 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
                 });
                 content = response.choices[0].message.content;
             }
-    
+
             if (!content) throw new Error("A resposta da IA estava vazia.");
-            
+
             let jsonResponse;
             try {
                 const cleanedContent = cleanAIResponse(content);
@@ -240,11 +241,11 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
                 console.error("Erro de parse:", parseError);
                 throw new Error("A IA retornou uma resposta em formato JSON inválido.");
             }
-            
+
             const updates = amenitiesToTranslate.map(amenity => {
                 const aiTranslations = jsonResponse[amenity.name];
                 if (!aiTranslations) return null;
-    
+
                 const newTranslations = { ...(amenity.translations || {}) };
                 for (const lang of languagesToTranslate) {
                     if (aiTranslations[lang.code]) {
@@ -253,16 +254,16 @@ export const AmenityProvider: React.FC<{ children: ReactNode }> = ({ children })
                 }
                 return { id: amenity.id, name: amenity.name, translations: newTranslations };
             }).filter((u): u is { id: string; name: string; translations: any; } => u !== null);
-    
+
             if (updates.length > 0) {
                 const { error } = await supabase.from('amenities').upsert(updates);
                 if (error) throw error;
                 clearCache(); // Clear cache when data changes
                 // Realtime listener will handle the UI update
             }
-            
+
             alert('Tradução das comodidades concluída com sucesso!');
-    
+
         } catch (error: any) {
             console.error("Erro ao traduzir comodidades com IA:", error);
             const errorMessage = error.message ? error.message : "Ocorreu um erro desconhecido.";

@@ -1,52 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rezuski Imóveis - Negócios Imobiliários</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="description" content="Plataforma de imóveis para compra, venda e aluguel" />
-    <meta name="theme-color" content="#3b82f6" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Rezuski" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- PWA Icons -->
-    <link rel="icon" type="image/svg+xml" href="/pwa-icon-192.svg" />
-    <link rel="apple-touch-icon" href="/pwa-icon-192.svg" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'primary-green': '#61CE70',
-              'primary-blue': '#2A7ADA',
-              'secondary-blue': '#0C335A',
-            }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rezuski Imóveis - Negócios Imobiliários</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Plataforma de imóveis para compra, venda e aluguel" />
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Rezuski" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- PWA Icons -->
+  <link rel="icon" type="image/svg+xml" href="/pwa-icon-192.svg" />
+  <link rel="apple-touch-icon" href="/pwa-icon-192.svg" />
+  <link rel="icon" type="image/svg+xml" href="/pwa-icon-192.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary-green': '#61CE70',
+            'primary-blue': '#2A7ADA',
+            'secondary-blue': '#0C335A',
           }
         }
       }
-    </script>
-    <style>
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .hide-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-      }
-    </style>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css' rel='stylesheet' />
+    }
+  </script>
+  <style>
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
+    }
+  </style>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css' rel='stylesheet' />
 </head>
-  <body>
-    <div id="root"></div>
-    <script src='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'></script>
-    <script type="module" src="./index.tsx"></script>
+
+<body>
+  <div id="root"></div>
+  <script src='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'></script>
+  <script type="module" src="./index.tsx"></script>
 </body>
+
 </html>

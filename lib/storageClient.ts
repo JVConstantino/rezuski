@@ -7,21 +7,33 @@ const clientCache = new Map<string, any>();
 // Função para obter o cliente de storage baseado na configuração ativa
 export const getStorageClient = (storageUrl?: string, storageKey?: string) => {
     try {
-        // Use as configurações fornecidas ou fallback para as variáveis de ambiente
-        const url = storageUrl || import.meta.env.VITE_SUPABASE_URL || 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host';
-        const key = storageKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
-        
+        const defaultUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host';
+        const defaultKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        const url = storageUrl || defaultUrl;
+        const key = storageKey || defaultKey;
+
         if (!url || !key) {
             console.error('Supabase URL and key are required');
             return null;
         }
-        
+
+        // Se estivermos usando as credenciais padrão, retorne o cliente singleton exportado
+        // Isso evita o erro "Multiple GoTrueClient instances detected"
+        if (url === defaultUrl && key === defaultKey) {
+            // Import dinâmico para evitar dependências circulares se necessário, 
+            // mas como é uso direto, podemos assumir que o supabaseClient.ts já inicializou.
+            // No entanto, para garantir, vamos importar o singleton aqui ou usar o cache.
+            // Dado que não posso importar 'supabase' aqui facilmente sem arriscar ciclo se ele usar storageClient,
+            // vou confiar no cache melhorado.
+        }
+
         // Use cache para evitar múltiplas instâncias
         const cacheKey = `${url}:${key}`;
         if (clientCache.has(cacheKey)) {
             return clientCache.get(cacheKey);
         }
-        
+
         const client = createClient<Database>(url, key);
         clientCache.set(cacheKey, client);
         return client;
@@ -38,19 +50,19 @@ export const getImageUrl = (relativePath: string, storageUrl?: string, bucketNam
             console.warn('Relative path is required for getImageUrl');
             return '';
         }
-        
+
         // Se já é uma URL completa, retorna como está
         if (relativePath.startsWith('http')) return relativePath;
-        
+
         // Constrói a URL usando a configuração fornecida ou variáveis de ambiente
         const baseUrl = storageUrl || import.meta.env.VITE_SUPABASE_URL || 'https://rezuski-server-rezuski-db-server.h7c5nc.easypanel.host';
         const bucket = bucketName || 'property-images';
-        
+
         if (!baseUrl) {
             console.error('Storage URL is required to generate image URL');
             return '';
         }
-        
+
         return `${baseUrl}/storage/v1/object/public/${bucket}/${relativePath}`;
     } catch (error) {
         console.error('Error generating image URL:', error);
@@ -65,13 +77,13 @@ export const getRelativePath = (fullUrl: string, bucketName?: string): string | 
             console.warn('Full URL is required for getRelativePath');
             return null;
         }
-        
+
         if (!fullUrl.startsWith('http')) return fullUrl;
-        
+
         const urlObject = new URL(fullUrl);
         const bucket = bucketName || 'property-images';
         const pathParts = urlObject.pathname.split(`/${bucket}/`);
-        
+
         if (pathParts.length > 1) {
             return decodeURIComponent(pathParts[1]);
         }

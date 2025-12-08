@@ -6,7 +6,7 @@ import { Database } from '../../types/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const SendIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
 );
 
 
@@ -18,11 +18,11 @@ const ConversationList: React.FC<{
     return (
         <div className="flex flex-col h-full">
             <div className="p-4 border-b border-slate-200">
-                 <div className="relative">
+                <div className="relative">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <SearchIcon className="w-5 h-5 text-slate-400" />
                     </span>
-                    <input type="text" placeholder="Buscar conversas..." className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue"/>
+                    <input type="text" placeholder="Buscar conversas..." className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue" />
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto">
@@ -31,8 +31,8 @@ const ConversationList: React.FC<{
                         key={convo.id}
                         onClick={() => onSelect(convo)}
                         className={`p-4 cursor-pointer border-l-4 flex items-center space-x-3 transition-colors
-                            ${selectedConversationId === convo.id 
-                                ? 'bg-primary-blue/10 border-primary-blue' 
+                            ${selectedConversationId === convo.id
+                                ? 'bg-primary-blue/10 border-primary-blue'
                                 : 'border-transparent hover:bg-slate-100'
                             }`
                         }
@@ -51,7 +51,7 @@ const ConversationList: React.FC<{
                     </div>
                 ))}
                 {conversations.length === 0 && (
-                     <div className="text-center py-10 text-slate-500">
+                    <div className="text-center py-10 text-slate-500">
                         <MessageSquareIcon className="w-12 h-12 mx-auto" />
                         <p className="mt-2">Nenhuma conversa encontrada.</p>
                     </div>
@@ -61,7 +61,7 @@ const ConversationList: React.FC<{
     );
 };
 
-const ChatWindow: React.FC<{ 
+const ChatWindow: React.FC<{
     conversation: Conversation | null;
     onBack: () => void;
 }> = ({ conversation, onBack }) => {
@@ -82,14 +82,14 @@ const ChatWindow: React.FC<{
                 .select('*')
                 .eq('conversation_id', conversation.id)
                 .order('created_at', { ascending: true });
-            
+
             if (error) console.error("Error fetching messages:", error);
             else setMessages(data || []);
         };
         fetchMessages();
     }, [conversation]);
 
-     useEffect(() => {
+    useEffect(() => {
         if (!conversation) return;
 
         const channel = supabase.channel(`messages:${conversation.id}`, {
@@ -107,9 +107,9 @@ const ChatWindow: React.FC<{
                     }
                     return [...prev, payload.new as Message];
                 });
-            })
-            .subscribe();
-        
+            });
+        // .subscribe(); // Realtime disabled due to server limitations
+
         return () => { supabase.removeChannel(channel); };
     }, [conversation]);
 
@@ -121,13 +121,13 @@ const ChatWindow: React.FC<{
 
         const messageContent = newMessage.trim();
         setNewMessage('');
-        
+
         const messagePayload: Database['public']['Tables']['messages']['Insert'] = {
             conversation_id: conversation.id,
             sender: 'ADMIN',
             content: messageContent
         };
-        
+
         const { error: msgError } = await supabase
             .from('messages')
             .insert([messagePayload]);
@@ -144,7 +144,7 @@ const ChatWindow: React.FC<{
             await supabase.from('conversations').update(conversationUpdate).eq('id', conversation.id);
         }
     };
-    
+
     if (!conversation) {
         return (
             <div className="h-full flex-col items-center justify-center bg-slate-50 text-slate-500 hidden md:flex">
@@ -153,11 +153,11 @@ const ChatWindow: React.FC<{
             </div>
         );
     }
-    
+
     return (
         <div className="flex flex-col h-full bg-slate-50">
             <header className="p-4 bg-white border-b border-slate-200 flex items-center space-x-3">
-                 <button onClick={onBack} className="md:hidden p-1 text-slate-500 hover:text-primary-blue">
+                <button onClick={onBack} className="md:hidden p-1 text-slate-500 hover:text-primary-blue">
                     <ChevronLeftIcon className="w-6 h-6" />
                 </button>
                 <div>
@@ -174,19 +174,19 @@ const ChatWindow: React.FC<{
                         </div>
                     </div>
                 ))}
-                 <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} />
             </main>
             <footer className="p-4 bg-white">
                 <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         value={newMessage}
                         onChange={e => setNewMessage(e.target.value)}
                         placeholder="Digite sua mensagem..."
                         className="flex-1 w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-blue"
                     />
                     <button type="submit" className="p-3 bg-primary-blue text-white rounded-full hover:opacity-90 transition-opacity disabled:opacity-50" disabled={!newMessage.trim()}>
-                        <SendIcon className="w-5 h-5"/>
+                        <SendIcon className="w-5 h-5" />
                     </button>
                 </form>
             </footer>
@@ -213,31 +213,27 @@ const MessagesPage: React.FC = () => {
         fetchConversations();
 
         const channel = supabase.channel('conversations')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, 
-            (payload: RealtimePostgresChangesPayload<Conversation>) => {
-                const updatedConvo = payload.new as Conversation;
-                setConversations(prev => {
-                    const existing = prev.find(c => c.id === updatedConvo.id);
-                    let newConvos;
-                    if (existing) {
-                        newConvos = prev.map(c => c.id === updatedConvo.id ? updatedConvo : c);
-                    } else {
-                        newConvos = [updatedConvo, ...prev];
-                    }
-                    return newConvos.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' },
+                (payload: RealtimePostgresChangesPayload<Conversation>) => {
+                    const updatedConvo = payload.new as Conversation;
+                    setConversations(prev => {
+                        const existing = prev.find(c => c.id === updatedConvo.id);
+                        let newConvos;
+                        if (existing) {
+                            newConvos = prev.map(c => c.id === updatedConvo.id ? updatedConvo : c);
+                        } else {
+                            newConvos = [updatedConvo, ...prev];
+                        }
+                        return newConvos.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+                    });
                 });
-
-                setSelectedConversation(current => 
-                    (current?.id === updatedConvo.id) ? updatedConvo : current
-                );
-            })
-            .subscribe();
+        // .subscribe(); // Realtime disabled due to server limitations
 
         return () => { supabase.removeChannel(channel); };
     }, []);
-    
-     useEffect(() => {
-        if(conversations.length > 0 && !selectedConversation && window.innerWidth >= 768) {
+
+    useEffect(() => {
+        if (conversations.length > 0 && !selectedConversation && window.innerWidth >= 768) {
             setSelectedConversation(conversations[0]);
         }
     }, [conversations, selectedConversation]);
@@ -253,25 +249,25 @@ const MessagesPage: React.FC = () => {
             if (error) console.error('Error marking conversation as read:', error);
         }
     };
-    
+
     const handleBackFromChat = () => {
         setIsMobileChatOpen(false);
     }
 
-  return (
-    <div className="h-full flex bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-        <div className={`w-full md:w-1/3 border-r border-slate-200 flex-col ${isMobileChatOpen ? 'hidden' : 'flex'} md:flex`}>
-            <ConversationList 
-                conversations={conversations}
-                selectedConversationId={selectedConversation?.id || null}
-                onSelect={handleSelectConversation}
-            />
+    return (
+        <div className="h-full flex bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div className={`w-full md:w-1/3 border-r border-slate-200 flex-col ${isMobileChatOpen ? 'hidden' : 'flex'} md:flex`}>
+                <ConversationList
+                    conversations={conversations}
+                    selectedConversationId={selectedConversation?.id || null}
+                    onSelect={handleSelectConversation}
+                />
+            </div>
+            <div className={`w-full md:w-2/3 flex-col ${isMobileChatOpen ? 'flex' : 'hidden'} md:flex`}>
+                <ChatWindow conversation={selectedConversation} onBack={handleBackFromChat} />
+            </div>
         </div>
-        <div className={`w-full md:w-2/3 flex-col ${isMobileChatOpen ? 'flex' : 'hidden'} md:flex`}>
-            <ChatWindow conversation={selectedConversation} onBack={handleBackFromChat} />
-        </div>
-    </div>
-  );
+    );
 };
 
 export default MessagesPage;

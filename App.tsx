@@ -2,17 +2,14 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAutoReload } from './hooks/useAutoReload';
 
-// Service Worker registration
+// Service Worker unregistration to clear legacy cache
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`)
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            registration.unregister();
+            console.log('Service Worker unregistered');
+        }
+    });
 }
 
 import { AuthProvider } from './contexts/AuthContext';
@@ -81,9 +78,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Wrapper component to connect database and storage configurations
 const StorageWithDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { activeConfig: activeDatabase } = useDatabaseConfig();
-    
+
     console.log('StorageWithDatabaseProvider: Active database changed:', activeDatabase);
-    
+
     return (
         <StorageConfigProvider activeDatabase={activeDatabase}>
             {children}
@@ -98,7 +95,7 @@ const AppContent: React.FC = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [location.pathname]);
-    
+
     return (
         <DatabaseConfigProvider>
             <LanguageProvider>
@@ -169,9 +166,9 @@ const AppContent: React.FC = () => {
                                                                 </Routes>
                                                                 {!isAdminPage && <ChatWidget />}
                                                                 <CookieConsent />
-                                                                 <HotReloadIndicator />
-                                                                 <DatabaseImageDiagnostic />
-                                                                 {/* <AdminDiagnostic /> */} {/* Temporarily disabled due to infinite loop */}
+                                                                <HotReloadIndicator />
+                                                                <DatabaseImageDiagnostic />
+                                                                {/* <AdminDiagnostic /> */} {/* Temporarily disabled due to infinite loop */}
                                                             </AIConfigProvider>
                                                         </ImageProvider>
                                                     </StorageWithDatabaseProvider>
@@ -190,20 +187,20 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  // Ativa o sistema de auto-reload
-  const { forceReload, isHMRActive } = useAutoReload({
-    enabled: true,
-    interval: 2000, // Verifica a cada 2 segundos
-    onReload: () => {
-      console.log('🔄 Sistema detectou mudanças, recarregando...');
-    }
-  });
+    // Ativa o sistema de auto-reload
+    const { forceReload, isHMRActive } = useAutoReload({
+        enabled: true,
+        interval: 2000, // Verifica a cada 2 segundos
+        onReload: () => {
+            console.log('🔄 Sistema detectou mudanças, recarregando...');
+        }
+    });
 
-  return (
-    <HashRouter>
-      <AppContent />
-    </HashRouter>
-  );
+    return (
+        <HashRouter>
+            <AppContent />
+        </HashRouter>
+    );
 };
 
 export default App;

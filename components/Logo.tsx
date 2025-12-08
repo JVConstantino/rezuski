@@ -15,8 +15,8 @@ interface LogoProps {
   variant?: 'default' | 'inverted';
 }
 
-const Logo: React.FC<LogoProps> = ({ 
-  className = "h-20 object-contain", 
+const Logo: React.FC<LogoProps> = ({
+  className = "h-20 object-contain",
   alt = "Rezuski Imóveis Logo",
   onClick,
   variant = 'default'
@@ -43,11 +43,11 @@ const Logo: React.FC<LogoProps> = ({
     }
   }, []);
 
-  console.log('Logo component rendering with URL:', logoUrl, 'Cache loaded:', logoCache.loaded);
+  // console.log('Logo component rendering with URL:', logoUrl, 'Cache loaded:', logoCache.loaded);
 
   const handleError = (e: any) => {
     console.error('Logo failed to load:', currentUrl, e);
-    
+
     // Skip URLs that contain base64 data as they cause 414 errors
     if (currentUrl.includes('data:image') || currentUrl.includes('base64')) {
       console.log('Skipping base64 URL, trying fallback:', LOGO_URL_FALLBACK);
@@ -55,7 +55,7 @@ const Logo: React.FC<LogoProps> = ({
       setUsedFallback(true);
       return;
     }
-    
+
     // Try fallback if not already used
     if (!usedFallback && currentUrl !== LOGO_URL_FALLBACK) {
       console.log('Trying fallback logo:', LOGO_URL_FALLBACK);
@@ -63,7 +63,7 @@ const Logo: React.FC<LogoProps> = ({
       setUsedFallback(true);
       return;
     }
-    
+
     setHasError(true);
     setIsLoading(false);
   };
@@ -72,7 +72,7 @@ const Logo: React.FC<LogoProps> = ({
     console.log('Logo loaded successfully:', currentUrl);
     setHasError(false);
     setIsLoading(false);
-    
+
     // Atualiza o cache global
     logoCache.loaded = true;
     logoCache.url = currentUrl;
@@ -82,7 +82,7 @@ const Logo: React.FC<LogoProps> = ({
   // Show fallback text if both images fail
   if (hasError) {
     return (
-      <div 
+      <div
         className={`${className} flex items-center justify-center bg-blue-600 text-white font-bold text-lg rounded`}
         onClick={onClick}
         style={{ cursor: onClick ? 'pointer' : 'default' }}
@@ -93,14 +93,14 @@ const Logo: React.FC<LogoProps> = ({
   }
 
   return (
-    <img 
+    <img
       src={logoUrl}
       alt={alt}
       className={`${className} ${variant === 'inverted' ? 'filter brightness-0 invert' : ''}`}
       onError={handleError}
       onLoad={handleLoad}
       onClick={onClick}
-      style={{ 
+      style={{
         cursor: onClick ? 'pointer' : 'default'
       }}
       // Adiciona cache headers para melhor performance

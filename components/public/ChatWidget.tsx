@@ -7,7 +7,7 @@ import { Database } from '../../types/supabase';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const SendIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
 );
 
 const LOCAL_STORAGE_KEY = 'rezuski_chat_conversation_id';
@@ -21,7 +21,7 @@ const ChatWidget: React.FC = () => {
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const match = useMatch('/property/:propertyId');
     const propertyId = match?.params.propertyId;
@@ -53,15 +53,15 @@ const ChatWidget: React.FC = () => {
                         }
                         return [...prev, payload.new as Message]
                     });
-                })
-                .subscribe();
+                });
+            // .subscribe(); // Realtime disabled due to server limitations
 
             return () => {
                 supabase.removeChannel(channel);
             };
         }
     }, [conversation]);
-    
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -85,7 +85,7 @@ const ChatWidget: React.FC = () => {
                 .select('*')
                 .eq('conversation_id', conversationId)
                 .order('created_at', { ascending: true });
-            
+
             setMessages(msgData || []);
             setView('chat');
         }
@@ -101,7 +101,7 @@ const ChatWidget: React.FC = () => {
             .select('id, customer_name, customer_email, property_id, last_message_at, last_message_preview, admin_has_unread')
             .eq('customer_email', email)
             .single();
-        
+
         if (data) {
             await fetchConversation(data.id);
             localStorage.setItem(LOCAL_STORAGE_KEY, data.id);
@@ -119,7 +119,7 @@ const ChatWidget: React.FC = () => {
                 .insert([newConvoPayload])
                 .select()
                 .single();
-            
+
             if (insertError || !newConvo) {
                 console.error("Error creating conversation:", insertError);
             } else {
@@ -131,29 +131,29 @@ const ChatWidget: React.FC = () => {
         }
         setIsLoading(false);
     };
-    
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
 
         const messageContent = newMessage.trim();
-        
+
         // Número do WhatsApp da Rezuski Imóveis
         const recipientPhone = "5521967567178";
-        
+
         // Codifica a mensagem para URL
         const encodedMessage = encodeURIComponent(messageContent);
-        
+
         // Cria a URL do WhatsApp
         const whatsappUrl = `https://wa.me/${recipientPhone}?text=${encodedMessage}`;
-        
+
         // Abre o WhatsApp em uma nova aba
         window.open(whatsappUrl, '_blank');
-        
+
         // Limpa o campo de mensagem
         setNewMessage('');
     };
-    
+
     const handleEndChat = () => {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         setConversation(null);
@@ -177,31 +177,31 @@ const ChatWidget: React.FC = () => {
                             <h3 className="font-bold">Olá, {conversation.customer_name}</h3>
                             <p className="text-xs opacity-80">Estamos aqui para ajudar!</p>
                         </div>
-                         <button onClick={handleEndChat} className="text-xs opacity-80 hover:opacity-100">Encerrar</button>
+                        <button onClick={handleEndChat} className="text-xs opacity-80 hover:opacity-100">Encerrar</button>
                     </header>
                     <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-100">
                         {messages.map(msg => (
-                             <div key={msg.id} className={`flex ${msg.sender === 'CUSTOMER' ? 'justify-end' : 'justify-start'}`}>
-                                {msg.sender === 'ADMIN' && <UserCircleIcon className="w-8 h-8 text-slate-400 mr-2 flex-shrink-0"/>}
+                            <div key={msg.id} className={`flex ${msg.sender === 'CUSTOMER' ? 'justify-end' : 'justify-start'}`}>
+                                {msg.sender === 'ADMIN' && <UserCircleIcon className="w-8 h-8 text-slate-400 mr-2 flex-shrink-0" />}
                                 <div className={`max-w-xs p-3 rounded-lg ${msg.sender === 'CUSTOMER' ? 'bg-primary-green text-white' : 'bg-white'}`}>
                                     <p className="text-sm">{msg.content}</p>
                                     <p className="text-xs mt-1 text-right opacity-70">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                 </div>
                             </div>
                         ))}
-                         <div ref={messagesEndRef} />
+                        <div ref={messagesEndRef} />
                     </main>
                     <footer className="p-2 bg-white border-t">
                         <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
-                             <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 value={newMessage}
                                 onChange={e => setNewMessage(e.target.value)}
                                 placeholder="Digite sua mensagem..."
                                 className="flex-1 w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-blue"
                             />
                             <button type="submit" className="p-3 bg-primary-green text-white rounded-full hover:opacity-90 transition-opacity disabled:opacity-50" disabled={!newMessage.trim()}>
-                                <SendIcon className="w-5 h-5"/>
+                                <SendIcon className="w-5 h-5" />
                             </button>
                         </form>
                     </footer>
@@ -214,13 +214,13 @@ const ChatWidget: React.FC = () => {
                 <h3 className="font-bold text-lg text-center">Fale Conosco</h3>
                 <p className="text-sm text-slate-600 text-center mt-1">Preencha seus dados para iniciar ou continuar uma conversa.</p>
                 <form onSubmit={handleStartOrContinue} className="mt-6 space-y-4">
-                     <div>
+                    <div>
                         <label htmlFor="chat-name" className="text-sm font-medium text-slate-700">Nome</label>
-                        <input id="chat-name" type="text" value={name} onChange={e => setName(e.target.value)} required className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue"/>
+                        <input id="chat-name" type="text" value={name} onChange={e => setName(e.target.value)} required className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue" />
                     </div>
-                     <div>
+                    <div>
                         <label htmlFor="chat-email" className="text-sm font-medium text-slate-700">Email</label>
-                        <input id="chat-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue"/>
+                        <input id="chat-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue" />
                     </div>
                     <button type="submit" className="w-full py-2.5 bg-primary-green text-white font-semibold rounded-lg shadow-md hover:opacity-95">Iniciar Conversa</button>
                 </form>
@@ -233,10 +233,10 @@ const ChatWidget: React.FC = () => {
             {/* Chat Window */}
             {isOpen && (
                 <div className="bg-white rounded-lg shadow-2xl w-80 h-96 mb-2 flex flex-col">
-                   {renderView()}
+                    {renderView()}
                 </div>
             )}
-            
+
             {/* Launcher Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}

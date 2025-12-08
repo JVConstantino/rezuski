@@ -53,8 +53,8 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode; activeDataba
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error fetching storage configs:', error);
-                console.log('StorageConfigContext: Using fallback configs');
+                // console.error('Error fetching storage configs:', error);
+                // console.log('StorageConfigContext: Using fallback configs');
                 // Se a tabela não existe, vamos usar configurações padrão
                 const defaultConfigs: StorageConfig[] = [
 
@@ -221,7 +221,7 @@ export const StorageConfigProvider: React.FC<{ children: ReactNode; activeDataba
         const timeoutId = setTimeout(() => {
             fetchConfigs();
         }, 100);
-        
+
         return () => clearTimeout(timeoutId);
     }, [activeDatabase?.database_url, activeDatabase?.database_key]); // Use specific properties for more precise dependency tracking
 

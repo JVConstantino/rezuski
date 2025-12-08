@@ -462,6 +462,40 @@ export type Database = {
           category_order?: string | null
         },
         Relationships: []
+      },
+      property_documents: {
+        Row: {
+          id: string
+          property_id: string
+          document_name: string
+          document_url: string
+          file_size: number | null
+          uploaded_at: string
+        }
+        Insert: {
+          id?: string
+          property_id: string
+          document_name: string
+          document_url: string
+          file_size?: number | null
+          uploaded_at?: string
+        }
+        Update: {
+          id?: string
+          property_id?: string
+          document_name?: string
+          document_url?: string
+          file_size?: number | null
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_documents_property_id_fkey"
+            columns: ["property_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     },
     Views: {
