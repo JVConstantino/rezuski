@@ -175,7 +175,7 @@ export type Database = {
           purpose: "RENT" | "SALE" | "SEASONAL"
           rentPrice?: number
           salePrice?: number
-          propertyType: "Casa" | "Apartamento" | "Condomínio" | "Comercial" | "Terreno" | "Sobrado"
+          propertyType: string
           categoryId?: string
           bedrooms?: number
           bathrooms?: number
@@ -209,7 +209,7 @@ export type Database = {
           purpose: "RENT" | "SALE" | "SEASONAL"
           rentPrice?: number
           salePrice?: number
-          propertyType: "Casa" | "Apartamento" | "Condomínio" | "Comercial" | "Terreno" | "Sobrado"
+          propertyType: string
           categoryId?: string
           bedrooms?: number
           bathrooms?: number
@@ -243,7 +243,7 @@ export type Database = {
           purpose?: "RENT" | "SALE" | "SEASONAL"
           rentPrice?: number
           salePrice?: number
-          propertyType?: "Casa" | "Apartamento" | "Condomínio" | "Comercial" | "Terreno" | "Sobrado"
+          propertyType?: string
           categoryId?: string
           bedrooms?: number
           bathrooms?: number

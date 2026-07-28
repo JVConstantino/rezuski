@@ -35,9 +35,7 @@ export enum PriceHistoryEvent {
 
 export type PropertyPurpose = 'RENT' | 'SALE' | 'SEASONAL';
 
-export type PropertyType = 'Casa' | 'Apartamento' | 'Condomínio' | 'Comercial' | 'Terreno' | 'Sobrado';
-
-export const PropertyTypes: PropertyType[] = ['Casa', 'Apartamento', 'Condomínio', 'Comercial', 'Terreno', 'Sobrado'];
+export type PropertyType = string;
 
 
 export type MessageSender = 'ADMIN' | 'CUSTOMER';
@@ -74,6 +72,12 @@ export interface Amenity {
 }
 
 export interface ManagedAmenity {
+  id: string;
+  name: string;
+  translations?: { [locale: string]: string; };
+}
+
+export interface ManagedPropertyType {
   id: string;
   name: string;
   translations?: { [locale: string]: string; };

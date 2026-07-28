@@ -20,6 +20,7 @@ import { ResourceProvider } from './contexts/ResourceContext';
 import { ImageProvider } from './contexts/ImageContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AmenityProvider } from './contexts/AmenityContext';
+import { PropertyTypeProvider } from './contexts/PropertyTypeContext';
 import { UserProvider } from './contexts/UserContext';
 import { ApplicationProvider } from './contexts/ApplicationContext';
 import { TenantProvider } from './contexts/TenantContext';
@@ -68,6 +69,7 @@ const AddResourcePage = lazy(() => import('./pages/admin/AddResourcePage'));
 const EditResourcePage = lazy(() => import('./pages/admin/EditResourcePage'));
 const GalleryPage = lazy(() => import('./pages/admin/GalleryPage'));
 const AmenitiesPage = lazy(() => import('./pages/admin/AmenitiesPage'));
+const PropertyTypesPage = lazy(() => import('./pages/admin/PropertyTypesPage'));
 const DataPreviewPage = lazy(() => import('./pages/admin/DataPreviewPage'));
 const StorageTestPage = lazy(() => import('./pages/admin/StorageTestPage'));
 const DatabaseMigrationPage = lazy(() => import('./pages/admin/DatabaseMigrationPage'));
@@ -108,6 +110,7 @@ const AppContent: React.FC = () => {
                                         <BrokerProvider>
                                             <PropertyProvider>
                                                 <AmenityProvider>
+                                                <PropertyTypeProvider>
                                                     <StorageWithDatabaseProvider>
                                                         <ImageProvider>
                                                             <AIConfigProvider>
@@ -155,6 +158,7 @@ const AppContent: React.FC = () => {
                                                                                 <Route path="database-migration" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando migração..." />}><DatabaseMigrationPage /></Suspense>} />
                                                                             </Route>
                                                                             <Route path="amenities" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando comodidades..." />}><AmenitiesPage /></Suspense>} />
+                                                                            <Route path="property-types" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando tipos de imóvel..." />}><PropertyTypesPage /></Suspense>} />
                                                                             <Route path="messages" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando mensagens..." />}><MessagesPage /></Suspense>} />
                                                                             <Route path="reports" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando relatórios..." />}><ReportsPage /></Suspense>} />
                                                                             <Route path="settings" element={<Suspense fallback={<Preloader isLoading={true} message="Carregando configurações..." />}><SettingsPage /></Suspense>} />
@@ -172,6 +176,7 @@ const AppContent: React.FC = () => {
                                                             </AIConfigProvider>
                                                         </ImageProvider>
                                                     </StorageWithDatabaseProvider>
+                                                </PropertyTypeProvider>
                                                 </AmenityProvider>
                                             </PropertyProvider>
                                         </BrokerProvider>

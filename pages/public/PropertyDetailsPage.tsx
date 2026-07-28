@@ -435,7 +435,7 @@ const PropertyDetailsPage: React.FC = () => {
         if (map.current || !property || !mapContainer.current) return;
 
         const fullAddress = `${property.address}, ${property.neighborhood}, ${property.city}, ${property.state}, ${property.zipCode}`;
-        const mapboxToken = 'pk.eyJ1Ijoiam9hbzAyMTIiLCJhIjoiY2t1MnByc2Z4MTNvazJ2cXJwaHlqOGdteiJ9.cW_NceC9Jo4smWPBMBkEgA';
+        const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
         mapboxgl.accessToken = mapboxToken;
 
         const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`;
