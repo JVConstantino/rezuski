@@ -12,7 +12,7 @@
     "migrate": "node scripts/migrate.mjs",
     "migrate-help": "node scripts/migrate-help.mjs",
     "test-migration": "node test/migration-test.js",
-    "reload": "echo 'Forçando hot reload...' && touch src/main.tsx"
+    "reload": "echo 'Forçando hot reload...' && touch src/index.tsx"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",

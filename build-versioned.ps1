@@ -82,5 +82,5 @@ Write-Host "3. Navegue ate public_html" -ForegroundColor White
 Write-Host "4. Faca upload de TODOS os arquivos da pasta: $buildPath" -ForegroundColor White
 Write-Host "5. Verifique se o arquivo .htaccess foi enviado" -ForegroundColor White
 Write-Host "" 
-Write-Host "Consulte DEPLOY_HOSTGATOR_INSTRUCTIONS.md para detalhes completos." -ForegroundColor Cyan
+Write-Host "Consulte docs/DEPLOY_HOSTGATOR_INSTRUCTIONS.md para detalhes completos." -ForegroundColor Cyan
 Write-Host ""

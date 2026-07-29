@@ -65,4 +65,4 @@ Write-Host "5. Extraia o arquivo ZIP" -ForegroundColor White
 Write-Host "6. Delete o arquivo ZIP após extrair" -ForegroundColor White
 Write-Host "7. Teste seu site!" -ForegroundColor White
 Write-Host ""
-Write-Host "📖 Consulte DEPLOY_HOSTGATOR.md para instruções detalhadas" -ForegroundColor Cyan
+Write-Host "📖 Consulte docs/DEPLOY_HOSTGATOR.md para instruções detalhadas" -ForegroundColor Cyan

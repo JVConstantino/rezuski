@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       base: '/',
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, '.'),
+          '@': path.resolve(__dirname, './src'),
         }
       },
       // Configurações de otimização de cache e performance
